@@ -2,6 +2,7 @@ import os,sys,re
 import numpy as np
 from   devmemX import devmem
 import cv2
+from time import sleep
 from   pdb import *
 
 n_classes = 20
@@ -228,23 +229,41 @@ def main():
 #    saver = tf.train.Saver()
 #    _ = weights_loader.load(sess,weights_path,ckpt_folder_path,saver)
 
+    verbose=True
     # Preprocess the input image
     print('Preprocessing...')
     preprocessed_nchwRGB = preprocessing(input_img_path, ph_height, ph_width)
+    cnt=0
     with open('preprocessed_nchwRGB.txt','w') as f:
         for i in preprocessed_nchwRGB.reshape(-1):
+            cnt+=1
             f.write("%2x\n"%i)
+        print('dump preprocessed_nchwRGB.txt:',cnt)
+    d = preprocessed_nchwRGB.reshape(-1).astype(np.uint8).tostring()
+    devmem(0xe018c000,len(d),verbose=verbose).write(d).close()
+
+    print("start FPGA accelerator")
+    s = np.asarray([0x1],dtype=np.uint32).tostring()
+    devmem(0xe0c00004,len(s)).write(s).close()
+    #sleep(1)
+    for i in range(10000):
+        mem = devmem(0xe0c00008,0x4)
+        status = mem.read(np.uint32)
+        mem.close()
+        if status[0] == 0x2000:break
+    print("fpga status:0x%08x"%(status[0]))
     print("preprocessing to NCHW-RGB",preprocessed_nchwRGB.shape)
 
     # Compute the predictions on the input image
     print('Computing predictions...')
 #    predictions = inference(sess,preprocessed_image)
-    if False:
+    if True:
         v=True
         v=False
         mem = devmem(0xe0000000,0xc15c,v)
         predictions = mem.read(np.float32)
         mem.close()
+        assert predictions[0]==predictions[0],"invalid mem values:{}".format(predictions[:8])
         print("inference from FPGA",predictions.shape)
     else:
         filename = 'featuremap_8.txt'
