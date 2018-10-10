@@ -123,10 +123,8 @@ for reqNo,csi_cam in enumerate(camera.capture_continuous(rawCapture, format="bgr
 cv2.namedWindow(WindowName)
 if args.demo:cv2.moveWindow(WindowName,200,0)
 start = time()
-camera_start = time() # To include capture_continuous time
 done_frame=0
 view_frame=0
-playback_total_sec = 0
 reqNo     =0
 for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 
@@ -134,9 +132,9 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     frame_org= cv2.flip(csi_cam.array,0)
     in_frame = preproc(frame_org, (model_n, model_c, model_h, model_w))
     rawCapture.truncate(0)
-    camera_elapsed = time() - camera_start
 
     # Prediction
+    pred_wait = time()
     if exec_net.requests[reqNo].wait(0) == 0:
         exec_net.requests[reqNo].wait(-1)
         latest = res = exec_net.requests[reqNo].outputs[out_blob]
@@ -144,9 +142,9 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
         done_frame+=1
     else:
         res = latest
+    pred_elapsed = time() - pred_wait
 
     # Drawing Result
-    drawing_start = time()
     for j in range(res.shape[2]):
         if res[0][0][j][0] < 0:break
         overlay_on_image(frame_org, res[0][0][j])
@@ -154,13 +152,11 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     view_frame+=1
     key=cv2.waitKey(1)
     if key != -1:break
-    drawing_elapsed = time() - drawing_start
 
     # FPS
-    playback_total_sec += (camera_elapsed + drawing_elapsed) 
     end = time()+1e-10
     sys.stdout.write('\b'*60)
-    FPS_str  = "%7.2f FPS"%(done_frame/((end-start)-playback_total_sec))
+    FPS_str  = "%7.2f FPS"%(done_frame/(end-start+pred_elapsed))
     PBack_str= "%7.2f FPS"%(view_frame/(end-start))
     sys.stdout.write("Playback %s (Prediction %s)"%(PBack_str, FPS_str))
     sys.stdout.flush()
@@ -168,7 +164,6 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     if reqNo>=max_req:reqNo=0
 
     # CSI Camera-In
-    camera_start = time() # To include capture_continuous time
 
 print("\nfinalizing")
 cv2.destroyAllWindows()
