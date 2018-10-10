@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from pdb import *
 import argparse
 import sys,os
