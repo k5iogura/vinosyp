@@ -223,7 +223,7 @@ Oowh~
 
 SSD_Mobilenet sample,
 ```
-$ cd vinospy/ie/SSD_Mobilenet
+$ cd vinosyp/ie/SSD_Mobilenet
 $ python3 demo_ssd_mobilenet.py images/pedestiran-bridge.jpg
 n/c/h/w (from xml)= 1 3 300 300
 input_blob : out_blob = data : detection_out
@@ -245,3 +245,18 @@ draw 15.0 45 person (45%)
 ![](files/pedestorian-bridge-result.png)
 
 Huuhmul
+
+## Using CSI Camera element14 with RaspberryPi and OpenVINO
+
+- Setup CSI Camera hardware  
+  Refer to [Setup MIPI-CSI Camera on RaspberryPI-3](https://github.com/k5iogura/ncsdk_v2/blob/master/RaspberryPi_CSI.md)  
+
+- Run SSD_Mobilenet with CSI Camera, RaspberryPi and OpenVINO
+
+```
+$ cd vinosyp/ie/SSD_Mobilenet
+$ python3 demo_csi_ssd_mobilenet.py
+   5.4FPS
+```
+Wooh, too slow!  
+NCS-2 OpenVINO may need many inference requests a NCS device.  
