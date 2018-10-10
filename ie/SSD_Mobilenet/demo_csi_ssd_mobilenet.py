@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-#STEP-1
 from pdb import *
+import argparse
 import sys,os
 import cv2
 import numpy as np
@@ -15,6 +15,16 @@ LABELS = ('background',
           'cow', 'diningtable', 'dog', 'horse',
           'motorbike', 'person', 'pottedplant',
           'sheep', 'sofa', 'train', 'tvmonitor')
+
+def preproc(frame_org, input_image_sizeNCHW):
+    model_n, model_c, model_w, model_h = input_image_sizeNCHW
+    frame = cv2.resize(frame_org,(model_w, model_h)).astype(dtype=np.float)
+    frame-= 127.5       # means
+    frame*= 0.007853    # scale
+    in_frame = cv2.resize(frame, (model_w, model_h))
+    in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
+    in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
+    return in_frame
 
 def overlay_on_image(display_image, object_info):
 
@@ -58,70 +68,87 @@ def overlay_on_image(display_image, object_info):
     # label text above the box
     cv2.putText(display_image, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 1)
 
-input_image_size=(300,300)
+args = argparse.ArgumentParser()
+args.add_argument("-d",   "--device",   type=str, default="MYRIAD", help="MYRIAD/CPU")
+args.add_argument("-r",   "--requests", type=int, default=3   , help="Maximum requests for NCS")
+args.add_argument("-cfr", "--camera_framerate",   type=int,     default= 120,help="Maximum Framerate for CSI")
+args.add_argument("-crw", "--camera_resolution_w",type=int,     default= 320,help="Camera Width")
+args.add_argument("-crh", "--camera_resolution_h",type=int,     default= 240,help="Camera Height")
+args = args.parse_args()
 
-#STEP-2
 model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
 model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)	#R5
 
-#STEP-3
+max_req=args.requests
 plugin = IEPlugin(device='MYRIAD', plugin_dirs=None)
-exec_net = plugin.load(network=net, num_requests=1)
+exec_net = plugin.load(network=net, num_requests=max_req)
 
-#STEP-4
 input_blob = next(iter(net.inputs))  #input_blob = 'data'
 out_blob   = next(iter(net.outputs)) #out_blob   = 'detection_out'
 model_n, model_c, model_h, model_w = net.inputs[input_blob].shape #Tool kit R4
+input_image_size=(model_w,model_h)   # for cv2
+print("max requests for NCS:",max_req)
 print("n/c/h/w (from xml)= %d %d %d %d"%(model_n, model_c, model_h, model_w))
 print("input_blob : out_blob =",input_blob,":",out_blob)
 
 del net
 
 camera = PiCamera()
-camera.resolution = (320, 240)
-camera.framerate = 32
-rawCapture = PiRGBArray(camera, size=(320, 240))
+camera.framerate = 33   # slow
+camera.framerate = 60   # fast
+camera.framerate = 90   # more fast
+camera.framerate = 120  # more more fast Total(camera + prediction) 18FPS over
+camera.framerate = args.camera_framerate
+camera.resolution = (args.camera_resolution_w, args.camera_resolution_h)
+rawCapture = PiRGBArray(camera, size=(args.camera_resolution_w, args.camera_resolution_h))
 
+results = []
+latest  = None
+for reqNo,csi_cam in enumerate(camera.capture_continuous(rawCapture, format="bgr", use_video_port=True)):
+    frame_org = csi_cam.array
+    in_frame  = preproc(frame_org, (model_n, model_c, model_h, model_w))
+    rawCapture.truncate(0)
+    exec_net.start_async(request_id=reqNo, inputs={input_blob: in_frame})
+    if exec_net.requests[reqNo].wait(-1)==0:
+        latest = res = exec_net.requests[reqNo].outputs[out_blob]
+        results.append(res)
+    if reqNo == max_req-1:break
+    
 start = time()
 done_frame=0
-#STEP-5
+reqNo     =0
 for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    frame_org = cv2.flip(csi_cam.array,0)
-    frame = cv2.resize(frame_org,input_image_size).astype(dtype=np.float)
-    frame-= 127.5       # means
-    frame*= 0.007853    # scale
+
+    frame_org= cv2.flip(csi_cam.array,0)
+    in_frame = preproc(frame_org, (model_n, model_c, model_h, model_w))
     rawCapture.truncate(0)
 
-    #STEP-6
-    in_frame = cv2.resize(frame, (model_w, model_h))
-    in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
-    in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
-
-    #STEP-7
-    exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
-
-    if exec_net.requests[0].wait(-1) == 0:
-        res = exec_net.requests[0].outputs[out_blob]
-        for j in range(res.shape[2]):
-            if res[0][0][j][0] < 0:break
-            overlay_on_image(frame_org, res[0][0][j])
-        cv2.imshow('CSI-Camera',frame_org)
-        key=cv2.waitKey(1)
-        if key != -1:break
+    if exec_net.requests[reqNo].wait(0) == 0:
+        exec_net.requests[reqNo].wait(-1)
+        latest = res = exec_net.requests[reqNo].outputs[out_blob]
+        exec_net.start_async(request_id=reqNo, inputs={input_blob: in_frame})
     else:
-        print("error")
+        res = latest
+    for j in range(res.shape[2]):
+        if res[0][0][j][0] < 0:break
+        overlay_on_image(frame_org, res[0][0][j])
+    cv2.imshow('CSI-Camera',frame_org)
+    key=cv2.waitKey(1)
+    if key != -1:break
+
     # FPS
     done_frame+=1
     end = time()+1e-10
     sys.stdout.write('\b'*20)
     sys.stdout.write("%10.2f FPS"%(done_frame/(end-start)))
     sys.stdout.flush()
+    reqNo+=1
+    if reqNo>=max_req:reqNo=0
 
 print("\nfinalizing")
-#STEP-10
 cv2.destroyAllWindows()
 del exec_net
 del plugin
