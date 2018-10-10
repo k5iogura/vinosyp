@@ -74,7 +74,10 @@ args.add_argument("-r",   "--requests", type=int, default=3   , help="Maximum re
 args.add_argument("-cfr", "--camera_framerate",   type=int,     default= 120,help="Maximum Framerate for CSI")
 args.add_argument("-crw", "--camera_resolution_w",type=int,     default= 320,help="Camera Width")
 args.add_argument("-crh", "--camera_resolution_h",type=int,     default= 240,help="Camera Height")
+args.add_argument("-demo","--demo",action='store_true',         help="Demonstration Mode")
 args = args.parse_args()
+
+WindowName ='CSI-Camera'
 
 model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
 model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
@@ -83,7 +86,7 @@ model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)	#R5
 
 max_req=args.requests
-plugin = IEPlugin(device='MYRIAD', plugin_dirs=None)
+plugin   = IEPlugin(device='MYRIAD', plugin_dirs=None)
 exec_net = plugin.load(network=net, num_requests=max_req)
 
 input_blob = next(iter(net.inputs))  #input_blob = 'data'
@@ -117,8 +120,11 @@ for reqNo,csi_cam in enumerate(camera.capture_continuous(rawCapture, format="bgr
         latest = res = exec_net.requests[reqNo].outputs[out_blob]
         results.append(res)
     if reqNo == max_req-1:break
-    
+
+cv2.namedWindow(WindowName)
+if args.demo:cv2.moveWindow(WindowName,200,0)
 start = time()
+camera_start = time() # To include capture_continuous time
 done_frame=0
 view_frame=0
 playback_total_sec = 0
@@ -126,7 +132,6 @@ reqNo     =0
 for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 
     # CSI Camera-In
-    camera_start = time()
     frame_org= cv2.flip(csi_cam.array,0)
     in_frame = preproc(frame_org, (model_n, model_c, model_h, model_w))
     rawCapture.truncate(0)
@@ -146,7 +151,7 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     for j in range(res.shape[2]):
         if res[0][0][j][0] < 0:break
         overlay_on_image(frame_org, res[0][0][j])
-    cv2.imshow('CSI-Camera',frame_org)
+    cv2.imshow(WindowName,frame_org)
     view_frame+=1
     key=cv2.waitKey(1)
     if key != -1:break
@@ -162,6 +167,9 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     sys.stdout.flush()
     reqNo+=1
     if reqNo>=max_req:reqNo=0
+
+    # CSI Camera-In
+    camera_start = time() # To include capture_continuous time
 
 print("\nfinalizing")
 cv2.destroyAllWindows()
