@@ -156,8 +156,8 @@ for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_por
     # FPS
     end = time()+1e-10
     sys.stdout.write('\b'*60)
-    FPS_str  = "%7.2f FPS"%(done_frame/(end-start+pred_elapsed))
-    PBack_str= "%7.2f FPS"%(view_frame/(end-start))
+    FPS_str  = "%7.2f FPS"%(done_frame/(end-start))
+    PBack_str= "%7.2f FPS"%(view_frame/(end-start-pred_elapsed))
     sys.stdout.write("Playback %s (Prediction %s)"%(PBack_str, FPS_str))
     sys.stdout.flush()
     reqNo+=1
