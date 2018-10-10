@@ -93,6 +93,7 @@ input_image_size=(model_w,model_h)   # for cv2
 print("max requests for NCS:",max_req)
 print("n/c/h/w (from xml)= %d %d %d %d"%(model_n, model_c, model_h, model_w))
 print("input_blob : out_blob =",input_blob,":",out_blob)
+print("CSI Reso W/H",args.camera_resolution_w,args.camera_resolution_h)
 
 del net
 
@@ -119,31 +120,45 @@ for reqNo,csi_cam in enumerate(camera.capture_continuous(rawCapture, format="bgr
     
 start = time()
 done_frame=0
+view_frame=0
+playback_total_sec = 0
 reqNo     =0
 for csi_cam in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 
+    # CSI Camera-In
+    camera_start = time()
     frame_org= cv2.flip(csi_cam.array,0)
     in_frame = preproc(frame_org, (model_n, model_c, model_h, model_w))
     rawCapture.truncate(0)
+    camera_elapsed = time() - camera_start
 
+    # Prediction
     if exec_net.requests[reqNo].wait(0) == 0:
         exec_net.requests[reqNo].wait(-1)
         latest = res = exec_net.requests[reqNo].outputs[out_blob]
         exec_net.start_async(request_id=reqNo, inputs={input_blob: in_frame})
+        done_frame+=1
     else:
         res = latest
+
+    # Drawing Result
+    drawing_start = time()
     for j in range(res.shape[2]):
         if res[0][0][j][0] < 0:break
         overlay_on_image(frame_org, res[0][0][j])
     cv2.imshow('CSI-Camera',frame_org)
+    view_frame+=1
     key=cv2.waitKey(1)
     if key != -1:break
+    drawing_elapsed = time() - drawing_start
 
     # FPS
-    done_frame+=1
+    playback_total_sec += (camera_elapsed + drawing_elapsed) 
     end = time()+1e-10
-    sys.stdout.write('\b'*20)
-    sys.stdout.write("%10.2f FPS"%(done_frame/(end-start)))
+    sys.stdout.write('\b'*60)
+    FPS_str  = "%7.2f FPS"%(done_frame/((end-start)-playback_total_sec))
+    PBack_str= "%7.2f FPS"%(view_frame/(end-start))
+    sys.stdout.write("Playback %s (Prediction %s)"%(PBack_str, FPS_str))
     sys.stdout.flush()
     reqNo+=1
     if reqNo>=max_req:reqNo=0
