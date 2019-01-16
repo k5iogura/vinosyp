@@ -92,14 +92,19 @@ $ ./demo_security_barrier_camera.sh -d MYRIAD
 Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
 
 ## Model Optimizer
+
 To import caffe or tensorflow trained model into OpenVINO, use convertion scripts such as mo_caffe.py or mo_tf.py on /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/.  
+
+Example to convert from graph_freeze.pb to FP16 .bin and .xml files for NCS-1.  
+Bellow assume that you have tensorflow frozen model under ~/tf-openpose/models/graph/mobilenet_thin/ directory(it is implementation of OpenPose via tensorflow) and output .bin and .xml under current directory.  
+
 
 ```
 $ python3 /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_tf.py --input_model ~/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb --input_shape=[1,368,432,3] --data_type=FP16
 Model Optimizer arguments:
 Common parameters:
-    - Path to the Input Model:  /home/ogura/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb
-    - Path for generated IR:    /home/ogura/tf-openpose/mo_tf/.
+    - Path to the Input Model:  ~/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb
+    - Path for generated IR:    ~/tf-openpose/mo_tf/.
     - IR output name:   graph_freeze
     - Log level:    ERROR
     - Batch:    Not specified, inherited from the model
@@ -127,8 +132,8 @@ TensorFlow specific parameters:
 Model Optimizer version:    1.4.292.6ef7232d
 
 [ SUCCESS ] Generated IR model.
-[ SUCCESS ] XML file: /home/ogura/tf-openpose/mo_tf/./graph_freeze.xml
-[ SUCCESS ] BIN file: /home/ogura/tf-openpose/mo_tf/./graph_freeze.bin
+[ SUCCESS ] XML file: ~/tf-openpose/mo_tf/./graph_freeze.xml
+[ SUCCESS ] BIN file: ~/tf-openpose/mo_tf/./graph_freeze.bin
 [ SUCCESS ] Total execution time: 8.57 seconds. 
 
 
