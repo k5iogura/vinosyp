@@ -14,6 +14,25 @@ After registration we can get OpenVINO from [here](https://software.intel.com/en
 
 According to [here(Install the Intel® Distribution of OpenVINO™ toolkit for Linux)](https://software.intel.com/en-us/articles/OpenVINO-Install-Linux), we can do from install to check by running DEMO(inference car.png) on CPU processing(We employed caffe optimizer installation only).  
 
+**After Download l_openvino_toolkit_p_<version>.tgz,**
+```
+$ tar xzf l_openvino_toolkit_p_<version>.tgz
+$ cd l_openvino_toolkit_p_<version>
+# ./install_cv_sdk_dependencies.sh
+# ./install_GUI.sh
+$ . /opt/intel/computer_vision_sdk/bin/setupvars.sh ## add your .bashrc
+```
+**Setup Caffe and Tensorflow Model Optimizer**  
+```
+$ cd /opt/intel/l_openvino_toolkit_p_<version>/deployment_tools/model_optimizer/install_prerequistes
+$ ./install_prerequisites_caffe.sh
+$ ./install_prerequisites_tf.sh
+```
+If you need more Framework, run bellow,  
+```
+install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.  
+```
+
 **1st DEMO result is bellow,**  
 
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
@@ -47,6 +66,19 @@ But it shows performance as 6.39fps for 1st pipe, 19.69fps for 2nd pipe, 9.55fps
 
 ## Using Movidius NCS-1
 
+To run demo scripts on NCS-1, **add usbboot rule** and **add your user id into "users group"**, finally run demo scripts with **-d MYRIAD option**.
+
+Setup udev rules for MYRIAD.  
+Place [97-myriad-usbboot.rules](./etc/udev/rules.d/97-myriad-usbboot.rules) on /etc/udev/rules.d/
+
+```
+# usermod -a -G users "$(whoami)"
+# cp 97-usbboot.rules /etc/udev/rules.d/
+# udevadm control --reload-rules
+# udevadm trigger
+# ldconfig
+```
+
 On the our way to install, we selected option for Movidius NCS-1 and NCS-2 support, so that we are ready to run NCS via OpenVINO as inference engin(called IE) **by adding -d MYRIAD** with sample script.  
 
 ```
@@ -54,7 +86,8 @@ $ cd ~/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh -d MYRIAD
 $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
+Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
 
-Refer below web site,  
+## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
