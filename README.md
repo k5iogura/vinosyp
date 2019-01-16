@@ -94,6 +94,48 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 ## Model Optimizer
 To import caffe or tensorflow trained model into OpenVINO, use convertion scripts such as mo_caffe.py or mo_tf.py on /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/.  
 
+```
+$ python3 /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_tf.py --input_model ~/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb --input_shape=[1,368,432,3] --data_type=FP16
+Model Optimizer arguments:
+Common parameters:
+    - Path to the Input Model:  /home/ogura/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb
+    - Path for generated IR:    /home/ogura/tf-openpose/mo_tf/.
+    - IR output name:   graph_freeze
+    - Log level:    ERROR
+    - Batch:    Not specified, inherited from the model
+    - Input layers:     Not specified, inherited from the model
+    - Output layers:    Not specified, inherited from the model
+    - Input shapes:     [1,368,432,3]
+    - Mean values:  Not specified
+    - Scale values:     Not specified
+    - Scale factor:     Not specified
+    - Precision of IR:  FP16
+    - Enable fusing:    True
+    - Enable grouped convolutions fusing:   True
+    - Move mean values to preprocess section:   False
+    - Reverse input channels:   False
+TensorFlow specific parameters:
+    - Input model in text protobuf format:  False
+    - Offload unsupported operations:   False
+    - Path to model dump for TensorBoard:   None
+    - List of shared libraries with TensorFlow custom layers implementation:    None
+    - Update the configuration file with input/output node names:   None
+    - Use configuration file used to generate the model with Object Detection API:  None
+    - Operations to offload:    None
+    - Patterns to offload:  None
+    - Use the config file:  None
+Model Optimizer version:    1.4.292.6ef7232d
+
+[ SUCCESS ] Generated IR model.
+[ SUCCESS ] XML file: /home/ogura/tf-openpose/mo_tf/./graph_freeze.xml
+[ SUCCESS ] BIN file: /home/ogura/tf-openpose/mo_tf/./graph_freeze.bin
+[ SUCCESS ] Total execution time: 8.57 seconds. 
+
+
+$ ls
+graph_freeze.bin  graph_freeze.mapping  graph_freeze.xml
+```
+
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
