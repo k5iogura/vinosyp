@@ -33,7 +33,7 @@ If you need more Framework, run bellow,
 install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.  
 ```
 
-**1st DEMO on CPU result is bellow,**  
+**1st DEMO result is bellow,**  
 
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
 
@@ -48,7 +48,7 @@ $ ./demo_squeezenet_download_convert_run.sh
 
 In my first impression, download and installation of OpenVINO is very easy!, great.  
 
-**2nd DEMO on CPU result is bellow,**
+**2nd DEMO result is bellow,**
 
 1pipe : recognize car region box  
 2pipe : recognize licence plate region box  
@@ -64,9 +64,7 @@ $ ./demo_security_barrier_camera.sh
 Our DEMO-environment is on VirtualBox Ubuntu16.04 on Intel Celeron CPU.  
 But it shows performance as 6.39fps for 1st pipe, 19.69fps for 2nd pipe, 9.55fps for 3rd pipe.  
 
-## DEMOs using Movidius NCS-1
-**2 DEMOs on MYRIAD**  
-(demo_squeezenet_download_convert_run.sh, demo_security_barrier_camera.sh)
+## Using Movidius NCS-1
 
 To run demo scripts on NCS-1, **add usbboot rule** and **add your user id into "users group"**, finally run demo scripts with **-d MYRIAD option**.
 
@@ -86,77 +84,9 @@ On the our way to install, we selected option for Movidius NCS-1 and NCS-2 suppo
 ```
 $ cd ~/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh -d MYRIAD
-  or
 $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
 Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
-
-## Model Optimizer
-
-To import caffe or tensorflow trained model into OpenVINO, use convertion scripts such as mo_caffe.py or mo_tf.py on /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/.  
-
-Example to convert from graph_freeze.pb to FP16 .bin and .xml files for NCS-1.  
-Bellow assume that you have tensorflow frozen model under ~/tf-openpose/models/graph/mobilenet_thin/ directory(it is implementation of OpenPose via tensorflow) and output .bin and .xml under current directory.  
-
-
-```
-$ python3 /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_tf.py --input_model ~/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb --input_shape=[1,368,432,3] --data_type=FP16
-Model Optimizer arguments:
-Common parameters:
-    - Path to the Input Model:  ~/tf-openpose/models/graph/mobilenet_thin/graph_freeze.pb
-    - Path for generated IR:    ~/tf-openpose/mo_tf/.
-    - IR output name:   graph_freeze
-    - Log level:    ERROR
-    - Batch:    Not specified, inherited from the model
-    - Input layers:     Not specified, inherited from the model
-    - Output layers:    Not specified, inherited from the model
-    - Input shapes:     [1,368,432,3]
-    - Mean values:  Not specified
-    - Scale values:     Not specified
-    - Scale factor:     Not specified
-    - Precision of IR:  FP16
-    - Enable fusing:    True
-    - Enable grouped convolutions fusing:   True
-    - Move mean values to preprocess section:   False
-    - Reverse input channels:   False
-TensorFlow specific parameters:
-    - Input model in text protobuf format:  False
-    - Offload unsupported operations:   False
-    - Path to model dump for TensorBoard:   None
-    - List of shared libraries with TensorFlow custom layers implementation:    None
-    - Update the configuration file with input/output node names:   None
-    - Use configuration file used to generate the model with Object Detection API:  None
-    - Operations to offload:    None
-    - Patterns to offload:  None
-    - Use the config file:  None
-Model Optimizer version:    1.4.292.6ef7232d
-
-[ SUCCESS ] Generated IR model.
-[ SUCCESS ] XML file: ~/tf-openpose/mo_tf/./graph_freeze.xml
-[ SUCCESS ] BIN file: ~/tf-openpose/mo_tf/./graph_freeze.bin
-[ SUCCESS ] Total execution time: 8.57 seconds. 
-
-
-$ ls
-graph_freeze.bin  graph_freeze.mapping  graph_freeze.xml
-```
-
-Infer Pose in images with above generated.bin and .xml,
-```
-$ cd scripts
-$ infer_simple.py images/*
-n/c/h/w (from xml)= 1 3 368 432
-input_blob : out_blob = image : Openpose/concat_stage7
-input image = images/Human-Body.jpg
-(1,57,46,54)
-input image = images/facebook.jpg
-(1,57,46,54)
-input image = images/schema.jpg
-(1,57,46,54)
-$
-```
-Check no error end and output shape is (1, 57, 46,54) that is output of OpenPose algorithm.  
-Above scripts assumes that .bin and .xml are placed under ~/openvino_models/ir/OpenPose/.
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
