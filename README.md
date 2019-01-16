@@ -141,6 +141,23 @@ $ ls
 graph_freeze.bin  graph_freeze.mapping  graph_freeze.xml
 ```
 
+Infer Pose in images with above generated.bin and .xml,
+```
+$ cd scripts
+$ infer_simple.py images/*
+n/c/h/w (from xml)= 1 3 368 432
+input_blob : out_blob = image : Openpose/concat_stage7
+input image = images/Human-Body.jpg
+(1,57,46,54)
+input image = images/facebook.jpg
+(1,57,46,54)
+input image = images/schema.jpg
+(1,57,46,54)
+$
+```
+Check no error end and output shape is (1, 57, 46,54) that is output of OpenPose algorithm.  
+Above scripts assumes that .bin and .xml are placed under ~/openvino_models/ir/OpenPose/.
+
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
