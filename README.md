@@ -33,7 +33,7 @@ If you need more Framework, run bellow,
 install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.  
 ```
 
-**1st DEMO result is bellow,**  
+**1st DEMO on CPU result is bellow,**  
 
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
 
@@ -48,7 +48,7 @@ $ ./demo_squeezenet_download_convert_run.sh
 
 In my first impression, download and installation of OpenVINO is very easy!, great.  
 
-**2nd DEMO result is bellow,**
+**2nd DEMO on CPU result is bellow,**
 
 1pipe : recognize car region box  
 2pipe : recognize licence plate region box  
@@ -64,7 +64,9 @@ $ ./demo_security_barrier_camera.sh
 Our DEMO-environment is on VirtualBox Ubuntu16.04 on Intel Celeron CPU.  
 But it shows performance as 6.39fps for 1st pipe, 19.69fps for 2nd pipe, 9.55fps for 3rd pipe.  
 
-## Using Movidius NCS-1
+## DEMOs using Movidius NCS-1
+**2 DEMOs on MYRIAD**  
+(demo_squeezenet_download_convert_run.sh, demo_security_barrier_camera.sh)
 
 To run demo scripts on NCS-1, **add usbboot rule** and **add your user id into "users group"**, finally run demo scripts with **-d MYRIAD option**.
 
@@ -84,9 +86,13 @@ On the our way to install, we selected option for Movidius NCS-1 and NCS-2 suppo
 ```
 $ cd ~/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh -d MYRIAD
+  or
 $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
 Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
+
+## Model Optimizer
+To import caffe or tensorflow trained model into OpenVINO, use convertion scripts such as mo_caffe.py or mo_tf.py on /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/.  
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
