@@ -82,7 +82,7 @@ Place [97-myriad-usbboot.rules](./etc/udev/rules.d/97-myriad-usbboot.rules) on /
 On the our way to install, we selected option for Movidius NCS-1 and NCS-2 support, so that we are ready to run NCS via OpenVINO as inference engin(called IE) **by adding -d MYRIAD** with sample script.  
 
 ```
-$ cd ~/intel/computer_vision_sdk/deployment_tools/demo
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh -d MYRIAD
 $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
