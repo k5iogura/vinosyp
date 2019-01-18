@@ -38,9 +38,9 @@ install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
 
 ```
-$ cd ~/intel/computer_vision_sdk/deployment_tools/model_optimizer/install_prerequisites/
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/install_prerequisites/
 # ./install_prerequisites.sh
-$ cd ~/intel/computer_vision_sdk/deployment_tools/demo
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh
 ```
 
