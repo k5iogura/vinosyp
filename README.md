@@ -24,7 +24,7 @@ $ . /opt/intel/computer_vision_sdk/bin/setupvars.sh ## add your .bashrc
 ```
 **Setup Caffe and Tensorflow Model Optimizer**  
 ```
-$ cd /opt/intel/l_openvino_toolkit_p_<version>/deployment_tools/model_optimizer/install_prerequistes
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/install_prerequistes
 $ ./install_prerequisites_caffe.sh
 $ ./install_prerequisites_tf.sh
 ```
