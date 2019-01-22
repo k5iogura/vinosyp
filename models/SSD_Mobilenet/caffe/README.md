@@ -1,1 +1,1 @@
-From https://github.com/k5iogura/ncappzoo
+From https://github.com/k5iogura/ncappzoo/stables
