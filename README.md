@@ -221,6 +221,11 @@ each line means that "N/A  class  x1  y1  x2  y2" and here classes are as VOC be
 
 #### Drawing result of inference on inferred image
 Next script named "demo_ssd_mobilenet.py" shows results of inferenced region boxes on image.  
+
+```
+$ python3 ssd_mobilenet.py images/pedestiran-bridge.jpg
+```
+
 ![](./files/pedestiran-bridge_result.jpg)  
 
 #### Using USB Camera as input of demo
