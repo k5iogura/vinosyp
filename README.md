@@ -88,7 +88,7 @@ $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
 Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
 
-## Additional demo for other models  
+## Additional demo for other models on NCS-1  
 
 ### SSD_MobileNet
 - Download ncappzoo from [here](https://github.com/k5iogura/ncappzoo)  
