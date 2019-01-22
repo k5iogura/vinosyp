@@ -95,6 +95,7 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 - Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
 - Run DEMO script
 
+#### model conversion to ir  
 OpenVINO Model Optimizer help is bellow,  
 ```
 $ /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_caffe.py --help
@@ -120,7 +121,9 @@ usage: mo_caffe.py [-h] [--input_model INPUT_MODEL] [--model_name MODEL_NAME]
 For Movidius use data_type with FP16 only.  
 command line may be bellow,
 ```
-$ python mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --mean_values data[127,127,127] --data_type FP16
+$ export MO=/opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/
+$ cd ~/openvino_fs/models/SSD_Mobilenet/caffe
+$ python $MO/mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --data_type FP16
 Model Optimizer arguments:
 Common parameters:
 	- Path to the Input Model: 	~/openvino_fs/models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.caffemodel
@@ -151,7 +154,77 @@ Model Optimizer version: 	1.4.292.6ef7232d
 [ SUCCESS ] XML file: ~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/MobileNetSSD_deploy.xml
 [ SUCCESS ] BIN file: ~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/MobileNetSSD_deploy.bin
 [ SUCCESS ] Total execution time: 2.85 seconds. 
+
+$ ls ../FP16
+MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml
 ```
+
+#### Try to infer sample images with SSD_Mobilenet model as text output  
+Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
+
+```
+$ cd ~/openvino_fs/ie/SSD_Mobilenet/
+$ ls
+images/  ssd_mobilenet.py
+
+$ python3 ssd_mobilenet.py images/*
+n/c/h/w (from xml)= 1 3 300 300
+input_blob : out_blob = data : detection_out
+input image = images/DAR_Facts_17.jpg
+in-frame (1, 3, 300, 300)
+fin (1, 1, 100, 7)
+top
+[0.          6.           1.          0.5126953   0.20935059  0.9482422  0.70410156]
+[0.          7.           0.29614258  0.43115234  0.39086914  0.49072266 0.49487305]
+[ 0.         15.          0.4152832   0.34228516  0.41918945  0.38720703 0.625     ]
+[ 0.         15.          0.26489258  0.25732422  0.41308594  0.3178711  0.79785156]
+input image = images/Gene-Murtagh-Kingspan-670x310.jpg
+in-frame (1, 3, 300, 300)
+fin (1, 1, 100, 7)
+top
+[ 0.         15.          0.9980469   0.10913086  0.0234375   0.86035156  0.9892578 ]
+input image = images/car.jpg
+in-frame (1, 3, 300, 300)
+fin (1, 1, 100, 7)
+top
+[0.         7.         1.         0.10473633 0.38916016 0.8925781 0.91552734]
+input image = images/pedestiran-bridge.jpg
+in-frame (1, 3, 300, 300)
+fin (1, 1, 100, 7)
+top
+[ 0.         15.          0.7158203   0.32128906  0.08862305  0.43945312  0.87402344]
+[ 0.         15.          0.5390625   0.4086914   0.11035156  0.52197266  0.8515625 ]
+[ 0.         15.          0.45532227  0.6220703   0.12280273  0.7216797   0.75      ]
+```
+each line means that "N/A  class  x1  y1  x2  y2" and here classes are as VOC bellow,  
+0: background  
+1: aeroplane  
+2: bicycle  
+3: bird  
+4: boat  
+5: bottle  
+6: bus  
+7: car  
+8: cat  
+9: chair  
+10: cow  
+11: diningtable  
+12: dog  
+13: horse  
+14: motorbike  
+15: person  
+16: pottedplant  
+17: sheep  
+18: sofa  
+19: train  
+20: tvmonitor  
+
+#### Drawing result of inference on inferred image
+Next script named "demo_ssd_mobilenet.py" shows results of inferenced region boxes on image.  
+![](./ie/SSD_Mobilenet/images/pedestiran-bridge.jpg)  
+
+#### Using USB Camera as input of demo
+Next scripts named "demo_uvc_ssd_mobilenet.py" provides real-time inference demonstration.  
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
