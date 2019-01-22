@@ -88,6 +88,13 @@ $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
 Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.  
 
+## Additional demo for other models  
+
+### SSD_MobileNet
+- Download nappzoo from [here](https://githum.com/k5iogura/ncappzoo)  
+- Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
+- Run DEMO script
+
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
