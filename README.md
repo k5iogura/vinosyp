@@ -136,7 +136,7 @@ Common parameters:
 	- Input layers: 	Not specified, inherited from the model
 	- Output layers: 	Not specified, inherited from the model
 	- Input shapes: 	Not specified, inherited from the model
-	- Mean values: 	data[255,255,255]
+	- Mean values:  	Not specified	
 	- Scale values: 	Not specified
 	- Scale factor: 	Not specified
 	- Precision of IR: 	FP16
@@ -148,9 +148,9 @@ Caffe specific parameters:
 	- Enable resnet optimization: 	True
 	- Path to the Input prototxt: 	~/openvino_fs/models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt
 	- Path to CustomLayersMapping.xml: 	Default
-	- Path to a mean file: 	Not specified
+	- Path to a mean file:  	Not specified
 	- Offsets for a mean file: 	Not specified
-Model Optimizer version: 	1.4.292.6ef7232d
+Model Optimizer version: 	        1.4.292.6ef7232d
 
 [ SUCCESS ] Generated IR model.
 [ SUCCESS ] XML file: ~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/MobileNetSSD_deploy.xml
