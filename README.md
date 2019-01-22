@@ -159,7 +159,9 @@ $ ls ../FP16
 MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml
 ```
 
-#### infer sample images with SSD_Mobilenet model  
+#### Try to infer sample images with SSD_Mobilenet model as text output  
+Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
+
 ```
 $ cd ~/openvino_fs/ie/SSD_Mobilenet/
 $ ls
@@ -172,9 +174,9 @@ input image = images/DAR_Facts_17.jpg
 in-frame (1, 3, 300, 300)
 fin (1, 1, 100, 7)
 top
-[0.         6.         1.         0.5126953  0.20935059 0.9482422 0.70410156]
-[0.         7.         0.29614258 0.43115234 0.39086914 0.49072266 0.49487305]
-[ 0.         15.          0.4152832   0.34228516  0.41918945  0.38720703  0.625     ]
+[0.          6.           1.          0.5126953   0.20935059  0.9482422  0.70410156]
+[0.          7.           0.29614258  0.43115234  0.39086914  0.49072266 0.49487305]
+[ 0.         15.          0.4152832   0.34228516  0.41918945  0.38720703 0.625     ]
 [ 0.         15.          0.26489258  0.25732422  0.41308594  0.3178711  0.79785156]
 input image = images/Gene-Murtagh-Kingspan-670x310.jpg
 in-frame (1, 3, 300, 300)
@@ -192,9 +194,9 @@ fin (1, 1, 100, 7)
 top
 [ 0.         15.          0.7158203   0.32128906  0.08862305  0.43945312  0.87402344]
 [ 0.         15.          0.5390625   0.4086914   0.11035156  0.52197266  0.8515625 ]
-[ 0.         15.          0.45532227  0.6220703   0.12280273  0.7216797  0.75      ]
+[ 0.         15.          0.45532227  0.6220703   0.12280273  0.7216797   0.75      ]
 ```
-each line means that "N/A  class  x1  y1  x2  y2" and class are as VOC bellow,
+each line means that "N/A  class  x1  y1  x2  y2" and here classes are as VOC bellow,  
 0: background  
 1: aeroplane  
 2: bicycle  
@@ -216,6 +218,10 @@ each line means that "N/A  class  x1  y1  x2  y2" and class are as VOC bellow,
 18: sofa  
 19: train  
 20: tvmonitor  
+
+### Drawing result of inference on inferred image
+Next script named "demo_ssd_mobilenet.py" show results of inferenced region bixes on image.  
+![](./ie/SSD_Mobilenet/images/pedestiran-bridge.jpg)  
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
