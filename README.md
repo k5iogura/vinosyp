@@ -91,7 +91,7 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 ## Additional demo for other models  
 
 ### SSD_MobileNet
-- Download nappzoo from [here](https://githum.com/k5iogura/ncappzoo)  
+- Download ncappzoo from [here](https://githum.com/k5iogura/ncappzoo)  
 - Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
 - Run DEMO script
 
