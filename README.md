@@ -95,7 +95,7 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 - Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
 - Run DEMO script
 
-#### model conversion to ir  
+#### model conversion caffe to ir  
 OpenVINO Model Optimizer help is bellow,  
 ```
 $ /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_caffe.py --help
