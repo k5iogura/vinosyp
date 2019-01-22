@@ -230,6 +230,15 @@ $ python3 demo_ssd_mobilenet.py images/pedestiran-bridge.jpg
 
 #### Using USB Camera as input of demo
 Next scripts named "demo_uvc_ssd_mobilenet.py" provides real-time inference demonstration.  
+Ubuntu16.04 supports UVC Camera by default kernel **via /dev/video0**.  
+
+```
+// check uvc camera device
+$ ls /dev/video*
+/dev/video0
+
+$ python3 demo_uvc_ssd_mobilenet.py
+```
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
