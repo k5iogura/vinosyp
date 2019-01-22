@@ -95,6 +95,34 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 - Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
 - Run DEMO script
 
+OpenVINO Model Optimizer help is bellow,  
+```
+$ /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_caffe.py --help
+usage: mo_caffe.py [-h] [--input_model INPUT_MODEL] [--model_name MODEL_NAME]
+                   [--output_dir OUTPUT_DIR] [--input_shape INPUT_SHAPE]
+                   [--scale SCALE] [--reverse_input_channels]
+                   [--log_level {CRITICAL,ERROR,WARN,WARNING,INFO,DEBUG,NOTSET}]
+                   [--input INPUT] [--output OUTPUT]
+                   [--mean_values MEAN_VALUES] [--scale_values SCALE_VALUES]
+                   [--data_type {FP16,FP32,half,float}] [--disable_fusing]
+                   [--disable_resnet_optimization]
+                   [--finegrain_fusing FINEGRAIN_FUSING] [--disable_gfusing]
+                   [--move_to_preprocess] [--extensions EXTENSIONS]
+                   [--batch BATCH] [--version] [--silent]
+                   [--freeze_placeholder_with_value FREEZE_PLACEHOLDER_WITH_VALUE]
+                   [--generate_deprecated_IR_V2] [--input_proto INPUT_PROTO]
+                   [-k K] [--mean_file MEAN_FILE]
+                   [--mean_file_offsets MEAN_FILE_OFFSETS]
+                   [--disable_omitting_optional]
+                   [--enable_flattening_nested_params]
+```
+
+For Movidius use data_type with FP16 only.  
+command line may be bellow,
+```
+$ python mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --mean_values 127 --data_type FP16
+```
+
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
