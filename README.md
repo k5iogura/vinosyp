@@ -77,7 +77,10 @@ Place [97-myriad-usbboot.rules](./etc/udev/rules.d/97-myriad-usbboot.rules) on /
 # udevadm control --reload-rules
 # udevadm trigger
 # ldconfig
+# reboot
 ```
+
+After Rebooting plugin NCS-1 on USB port.  
 
 On the our way to install, we selected option for Movidius NCS-1 and NCS-2 support, so that we are ready to run NCS via OpenVINO as inference engin(called IE) **by adding -d MYRIAD** with sample script.  
 
