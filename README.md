@@ -219,9 +219,12 @@ each line means that "N/A  class  x1  y1  x2  y2" and here classes are as VOC be
 19: train  
 20: tvmonitor  
 
-### Drawing result of inference on inferred image
-Next script named "demo_ssd_mobilenet.py" show results of inferenced region boxes on image.  
+#### Drawing result of inference on inferred image
+Next script named "demo_ssd_mobilenet.py" shows results of inferenced region boxes on image.  
 ![](./ie/SSD_Mobilenet/images/pedestiran-bridge.jpg)  
+
+#### Using USB Camera as input of demo
+Next scripts named "demo_uvc_ssd_mobilenet.py" provides real-time inference demonstration.  
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
