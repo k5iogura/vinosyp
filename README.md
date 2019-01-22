@@ -223,7 +223,7 @@ each line means that "N/A  class  x1  y1  x2  y2" and here classes are as VOC be
 Next script named "demo_ssd_mobilenet.py" shows results of inferenced region boxes on image.  
 
 ```
-$ python3 ssd_mobilenet.py images/pedestiran-bridge.jpg
+$ python3 demo_ssd_mobilenet.py images/pedestiran-bridge.jpg
 ```
 
 ![](./files/pedestiran-bridge_result.jpg)  
