@@ -120,7 +120,37 @@ usage: mo_caffe.py [-h] [--input_model INPUT_MODEL] [--model_name MODEL_NAME]
 For Movidius use data_type with FP16 only.  
 command line may be bellow,
 ```
-$ python mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --mean_values 127 --data_type FP16
+$ python mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --mean_values data[127,127,127] --data_type FP16
+Model Optimizer arguments:
+Common parameters:
+	- Path to the Input Model: 	~/openvino_fs/models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.caffemodel
+	- Path for generated IR: 	~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/
+	- IR output name: 	MobileNetSSD_deploy
+	- Log level: 	ERROR
+	- Batch: 	Not specified, inherited from the model
+	- Input layers: 	Not specified, inherited from the model
+	- Output layers: 	Not specified, inherited from the model
+	- Input shapes: 	Not specified, inherited from the model
+	- Mean values: 	data[255,255,255]
+	- Scale values: 	Not specified
+	- Scale factor: 	Not specified
+	- Precision of IR: 	FP16
+	- Enable fusing: 	True
+	- Enable grouped convolutions fusing: 	True
+	- Move mean values to preprocess section: 	False
+	- Reverse input channels: 	False
+Caffe specific parameters:
+	- Enable resnet optimization: 	True
+	- Path to the Input prototxt: 	~/openvino_fs/models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt
+	- Path to CustomLayersMapping.xml: 	Default
+	- Path to a mean file: 	Not specified
+	- Offsets for a mean file: 	Not specified
+Model Optimizer version: 	1.4.292.6ef7232d
+
+[ SUCCESS ] Generated IR model.
+[ SUCCESS ] XML file: ~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/MobileNetSSD_deploy.xml
+[ SUCCESS ] BIN file: ~/openvino_fs/models/SSD_Mobilenet/caffe/../FP16/MobileNetSSD_deploy.bin
+[ SUCCESS ] Total execution time: 2.85 seconds. 
 ```
 
 ## Also refer below web site,  
