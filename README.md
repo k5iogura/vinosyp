@@ -308,7 +308,8 @@ Darknet code is based on pure C language code and very simple function.
 Some github supports conversion darknet to other framework such as caffe, tensorflow, chainer.  
 To impliment YOLO onto other Framework, we can use these convert tools.  
 
-#### [darkflow](https://github.com/feng1sun/YOLO-OpenVINO)
+#### [darkflow](https://github.com/thtrieu/darkflow)
+According to [YOLO-OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)
 
 darkflow is tools that convert darknet .cfg and .weights to tensorflow.  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
