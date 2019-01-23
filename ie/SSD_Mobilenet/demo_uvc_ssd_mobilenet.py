@@ -4,6 +4,7 @@ from pdb import *
 import sys,os
 import cv2
 import numpy as np
+from time import time
 from openvino.inference_engine import IENetwork, IEPlugin
 
 LABELS = ('background',
@@ -49,7 +50,6 @@ def overlay_on_image(display_image, object_info):
         label_top = 1
     label_right = label_left + label_size[0]
     label_bottom = label_top + label_size[1]
-    #print("draw",class_id,percentage,label_text)
     cv2.rectangle(display_image, (label_left - 1, label_top - 1), (label_right + 1, label_bottom + 1),
                   label_background_color, -1)
 
@@ -81,13 +81,15 @@ del net
 cameraNo=0
 cap = cv2.VideoCapture(cameraNo)
 if not cap.isOpened():sys.exit(-1)
+print("Opened UVC-Camera via /dev/video0")
 cap.set(cv2.CAP_PROP_FPS,30)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,320)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
+start = time()
+done_frame=0
 #STEP-5
 while True:
-    #print("input image = %s"%f)
     ret, frame_org = cap.read()
     if not ret:break
     frame = cv2.resize(frame_org,input_image_size).astype(dtype=np.float)
@@ -98,25 +100,28 @@ while True:
     in_frame = cv2.resize(frame, (model_w, model_h))
     in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
     in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
-    #print("in-frame",in_frame.shape)
 
     #STEP-7
     exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
 
     if exec_net.requests[0].wait(-1) == 0:
         res = exec_net.requests[0].outputs[out_blob]
-        #print("fin",res.shape)
-        #print("top")
         for j in range(res.shape[2]):
             if res[0][0][j][0] < 0:break
-            #print(res[0][0][j])
             overlay_on_image(frame_org, res[0][0][j])
         cv2.imshow('USB-Camera',frame_org)
         key=cv2.waitKey(1)
         if key != -1:break
     else:
         print("error")
+    # FPS
+    done_frame+=1
+    end = time()+1e-10
+    sys.stdout.write('\b'*20)
+    sys.stdout.write("%10.2f FPS"%(done_frame/(end-start)))
+    sys.stdout.flush()
 
+print("\nfinalizing")
 #STEP-10
 del exec_net
 del plugin
