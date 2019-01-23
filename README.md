@@ -296,12 +296,13 @@ Ubuntu16.04 supports UVC Camera by default kernel **via /dev/video0**.
 $ ls /dev/video*
 /dev/video0
 
+// result in video window
 $ python3 demo_uvc_ssd_mobilenet.py
 ```
 
 ![](./files/uvc_camera.png)
 
-My morning caffe!
+My morning coffee!
 
 ### YOLOv1/v2/v3  
 Famouse object detection DNN model called "YOLO" works on Darknet Framework.  
@@ -312,7 +313,7 @@ To impliment YOLO onto other Framework, we can use these convert tools.
 #### [darkflow](https://github.com/thtrieu/darkflow)
 According to [YOLO-OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)
 
-darkflow is tools that convert darknet .cfg and .weights to tensorflow.  
+darkflow is tools that convert darknet .cfg and .weights to tensorflow .pb.  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
 - convert .pb file to OpenVINO .bin and .xml files for NCS
 - run yolo.py to check
