@@ -305,7 +305,7 @@ $ python3 demo_uvc_ssd_mobilenet.py
 My morning coffee!
 
 ### YOLOv1/v2/v3  
-Famouse object detection DNN model called "YOLO" works on Darknet Framework.  
+Famous object detection DNN model called "YOLO" works on Darknet Framework.  
 Darknet code is based on pure C language code and very simple function.  
 Some github supports conversion darknet to other framework such as caffe, tensorflow, chainer.  
 To impliment YOLO onto other Framework, we can use these convert tools.  
@@ -313,7 +313,7 @@ To impliment YOLO onto other Framework, we can use these convert tools.
 #### [darkflow](https://github.com/thtrieu/darkflow)
 According to [YOLO-OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)
 
-darkflow is tools that convert darknet .cfg and .weights to tensorflow .pb.  
+darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb.  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
 - convert .pb file to OpenVINO .bin and .xml files for NCS
 - run yolo.py to check
