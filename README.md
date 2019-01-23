@@ -223,8 +223,9 @@ Simple script named "ssd_mobilenet.py" infer 3 images and output results as text
 ```
 $ cd ~/openvino_fs/ie/SSD_Mobilenet/
 $ ls
-images/  ssd_mobilenet.py
+images/  ssd_mobilenet.py demo_ssd_mobilenet.py demo_uvc_ssd_mobilenet.py
 
+// result as text printout
 $ python3 ssd_mobilenet.py images/*
 n/c/h/w (from xml)= 1 3 300 300
 input_blob : out_blob = data : detection_out
