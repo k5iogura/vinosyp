@@ -167,11 +167,12 @@ Model Optimizer version: 	        1.4.292.6ef7232d
 [ SUCCESS ] Total execution time: 2.85 seconds. 
 
 $ ls ../FP16
-MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml
+MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml  
 ```
+
 #### DetectionOutput Layer of OpenVINO
 
-DetectionOutput layer in models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt consists of bellow,
+*DetectionOutput* layer in **models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt** consists of bellow,
 
 ```
 layer {
@@ -199,7 +200,23 @@ layer {
 }
 ```
 
-In OpenVINO Framework, above DetectionOutput layer outputs bellow structure.  
+In OpenVINO Framework, above *DetectionOutput* layer outputs bellow numpy structure.  
+
+**DetectionOutput layer output structure, numpy shape is (1,1,100,7)**
+
+|Valid|class-id|conf|x1|y1|x2|y2|
+|   -:|      -:|  -:|-:|-:|-:|-:|
+|    0|class-id|conf|x1|y1|x2|y2|
+|    0|     ...| ...|..|..|..|..|
+|    0|class-id|conf|x1|y1|x2|y2|
+|   -1|       0|   0| 0| 0| 0| 0|
+|    0|     ...| ...|..|..|..|..|
+|    0|       0|   0| 0| 0| 0| 0|
+
+100 lines and 7 items a line are outputed.  
+Valid is 0 or -1 here 0 is valid and -1 is invalid beyond lines.  
+Analyze above structure and use result of inference with your custom way.  
+
 #### Try to infer sample images with SSD_Mobilenet model as text output  
 Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
 
