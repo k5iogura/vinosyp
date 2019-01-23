@@ -251,6 +251,10 @@ $ ls /dev/video*
 $ python3 demo_uvc_ssd_mobilenet.py
 ```
 
+![](./files/uvc_camera.png)
+
+My morning caffe!
+
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
 [AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
