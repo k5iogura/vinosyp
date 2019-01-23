@@ -169,7 +169,37 @@ Model Optimizer version: 	        1.4.292.6ef7232d
 $ ls ../FP16
 MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml
 ```
+#### DetectionOutput Layer of OpenVINO
 
+DetectionOutput layer in models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt consists of bellow,
+
+```
+layer {
+  name: "detection_out"
+  type: "DetectionOutput"
+  bottom: "mbox_loc"
+  bottom: "mbox_conf_flatten"
+  bottom: "mbox_priorbox"
+  top: "detection_out"
+  include {
+    phase: TEST
+  }
+  detection_output_param {
+    num_classes: 21
+    share_location: true
+    background_label_id: 0
+    nms_param {
+      nms_threshold: 0.45
+      top_k: 100
+    }
+    code_type: CENTER_SIZE
+    keep_top_k: 100
+    confidence_threshold: 0.25
+  }
+}
+```
+
+In OpenVINO Framework, above DetectionOutput layer outputs bellow structure.  
 #### Try to infer sample images with SSD_Mobilenet model as text output  
 Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
 
