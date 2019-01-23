@@ -111,7 +111,7 @@ while True:
             if res[0][0][j][0] < 0:break
             #print(res[0][0][j])
             overlay_on_image(frame_org, res[0][0][j])
-        cv2.imshow('detection',frame_org)
+        cv2.imshow('USB-Camera',frame_org)
         key=cv2.waitKey(1)
         if key != -1:break
     else:
