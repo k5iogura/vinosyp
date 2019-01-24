@@ -12,7 +12,7 @@ This is story of estimation of combination btn movidius NCS and OpenVINO.
 
 - Ubuntu16.04 on intelPC
 - Nueral Compute Stick(1st generation), maybe ok with NCS-2(2nd generation)
-- OpenVINO 2018.4.420
+- OpenVINO 2018.4.420(releases_openvino-2018-r4)
 
 ## Download and installation
 
@@ -167,8 +167,55 @@ Model Optimizer version: 	        1.4.292.6ef7232d
 [ SUCCESS ] Total execution time: 2.85 seconds. 
 
 $ ls ../FP16
-MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml
+MobileNetSSD_deploy.bin  MobileNetSSD_deploy.mapping  MobileNetSSD_deploy.xml  
 ```
+
+#### DetectionOutput Layer of OpenVINO
+
+*DetectionOutput* layer in **models/SSD_Mobilenet/caffe/MobileNetSSD_deploy.prototxt** consists of bellow,
+
+```
+layer {
+  name: "detection_out"
+  type: "DetectionOutput"
+  bottom: "mbox_loc"
+  bottom: "mbox_conf_flatten"
+  bottom: "mbox_priorbox"
+  top: "detection_out"
+  include {
+    phase: TEST
+  }
+  detection_output_param {
+    num_classes: 21
+    share_location: true
+    background_label_id: 0
+    nms_param {
+      nms_threshold: 0.45
+      top_k: 100
+    }
+    code_type: CENTER_SIZE
+    keep_top_k: 100
+    confidence_threshold: 0.25
+  }
+}
+```
+
+In OpenVINO Framework, above *DetectionOutput* layer outputs bellow numpy structure.  
+
+**DetectionOutput layer output structure, numpy shape is (1,1,100,7)**
+
+|Valid|class-id|conf|x1|y1|x2|y2|
+|   -:|      -:|  -:|-:|-:|-:|-:|
+|    0|class-id|conf|x1|y1|x2|y2|
+|    0|     ...| ...|..|..|..|..|
+|    0|class-id|conf|x1|y1|x2|y2|
+|   -1|       0|   0| 0| 0| 0| 0|
+|    0|     ...| ...|..|..|..|..|
+|    0|       0|   0| 0| 0| 0| 0|
+
+100 lines and 7 items a line are outputed.  
+Valid is 0 or -1 here 0 is valid and -1 is invalid beyond lines.  
+Analyze above structure and use result of inference with your custom way.  
 
 #### Try to infer sample images with SSD_Mobilenet model as text output  
 Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
@@ -176,8 +223,9 @@ Simple script named "ssd_mobilenet.py" infer 3 images and output results as text
 ```
 $ cd ~/openvino_fs/ie/SSD_Mobilenet/
 $ ls
-images/  ssd_mobilenet.py
+images/  ssd_mobilenet.py demo_ssd_mobilenet.py demo_uvc_ssd_mobilenet.py
 
+// result as text printout
 $ python3 ssd_mobilenet.py images/*
 n/c/h/w (from xml)= 1 3 300 300
 input_blob : out_blob = data : detection_out
@@ -248,12 +296,27 @@ Ubuntu16.04 supports UVC Camera by default kernel **via /dev/video0**.
 $ ls /dev/video*
 /dev/video0
 
+// result in video window
 $ python3 demo_uvc_ssd_mobilenet.py
 ```
 
 ![](./files/uvc_camera.png)
 
-My morning caffe!
+My morning coffee!
+
+### YOLOv1/v2/v3  
+Famous object detection DNN model called "YOLO" works on Darknet Framework.  
+Darknet code is based on pure C language code and very simple function.  
+Some github supports conversion darknet to other framework such as caffe, tensorflow, chainer.  
+To impliment YOLO onto other Framework, we can use these convert tools.  
+
+#### [darkflow](https://github.com/thtrieu/darkflow)
+According to [YOLO-OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)
+
+darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb.  
+- convert .cfg and .weights files to tensorflow .pb file via darkflow tool
+- convert .pb file to OpenVINO .bin and .xml files for NCS
+- run yolo.py to check
 
 ## Also refer below web site,  
 [Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
