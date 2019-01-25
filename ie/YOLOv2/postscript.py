@@ -1,8 +1,18 @@
 import cv2
 import numpy as np
+from pdb import *
 
 #import chainer
 #import chainer.functions as F
+
+class2nam = ["aeroplane", "bicycle", "bird", "boat", "bottle",
+         "bus", "car", "cat", "chair", "cow",
+         "diningtable", "dog", "horse", "motorbike", "person",
+         "pottedplant", "sheep", "sofa", "train","tvmonitor"]
+def snap(img):
+    cv2.imshow('snap',img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 class Box():
   def __init__(self,x,y,w,h):
@@ -78,6 +88,7 @@ def get_boxes(ans, block_x, block_y, bb_num,class_num,th, im_w,im_h,biases):
   # assertion : ans.shape (13, 13, 5, 25 )
   ans = ans.reshape(block_x, block_y, bb_num, -1)   #add
   sorted_boxes = []
+  max_id = max_conf = 0
   for by in range(block_y):
     for bx in range(block_x):
       for j in range(bb_num):
@@ -89,17 +100,23 @@ def get_boxes(ans, block_x, block_y, bb_num,class_num,th, im_w,im_h,biases):
 
         p_class = probs*conf
 
-        if np.max(p_class)<th:
+        #if np.max(p_class)<th: #PPAP
+        if conf<0.60:
           continue
         class_id = np.argmax(p_class)
+        if max_conf<conf:
+            max_conf=conf
+            max_id  =class_id
 
         x = (bx+sigmoid(box[0]))*(im_w/float(block_x))
         y = (by+sigmoid(box[1]))*(im_h/float(block_y))
         w = np.exp(box[2])*biases[j][0]*(im_w/float(block_x))
         h = np.exp(box[3])*biases[j][1]*(im_h/float(block_y))
         b = Box(x,y,w,h)
+        #print(j,class2nam[class_id],conf,x,y,w,h)
 
         sorted_boxes.append([b,j,class_id, max(p_class)])
+  print(class2nam[max_id], max_conf)
   return sorted_boxes
 
 #def go_cnn(model, im_org,img_x,img_y,block_x,block_y,bb_num,class_num):    #PPAP

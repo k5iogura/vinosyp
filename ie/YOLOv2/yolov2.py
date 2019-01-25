@@ -6,7 +6,9 @@ import numpy as np
 from time import time
 import cv2
 import argparse
+from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
+
 
 args = argparse.ArgumentParser()
 args.add_argument("images", nargs='*', type=str)
@@ -55,25 +57,37 @@ if len(args.images)>0:files = args.images
 for f in files:
     print("input image = %s"%f)
     frame = cv2.imread(f)
-    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-    frame = cv2.resize(frame,input_image_size)
-    frame = frame.astype(dtype=np.float)
-    frame/=255.0
+    #frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+    #frame = cv2.resize(frame,input_image_size)
+    #frame = frame.astype(dtype=np.float)
+    #frame = frame[np.newaxis, :, :, :]
+    #frame = frame.transpose(0,3,1,2)
+    #frame/=255.0
 
     #STEP-6
     in_frame = cv2.resize(frame, (model_w, model_h))
-    in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
-    in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
+    in_frame = in_frame[np.newaxis,:,:,:]
+    in_frame = in_frame.transpose((0, 3, 1, 2))  # Change data layout from HWC to CHW
+    #in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
+    #in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
     print("in-frame",in_frame.shape)
 
     start = time()
     #STEP-7
-    exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
+    #exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
+    res = exec_net.infer(inputs={input_blob: in_frame})
+    set_trace()
+    print("res",res.keys())
+    break
 
+    biases =[[1.3221 ,1.73145],[3.19275,4.00944],
+             [5.05587,8.09892],[9.47112,4.84053],
+             [11.2364,10.0071]]
     if exec_net.requests[0].wait(-1) == 0:
         sec = time()-start
         res = exec_net.requests[0].outputs[out_blob]
         res2=res.reshape(-1,125)
+        print("res",res.shape)
         print("fin",res2.shape)
         print("top")
         for j in range(res2.shape[0]):
@@ -83,6 +97,7 @@ for f in files:
                 print(res2[j][4]*res2[j][5:25])
                 break
         print("elapse = %.3fmsec %.3fFPS"%(1000.0*sec,1.0/sec))
+        boxes = get_boxes(res, 13, 13, 5, 20, 0.8, frame.shape[0], frame.shape[1], biases)
     else:
         print("error")
 
