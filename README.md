@@ -350,8 +350,9 @@ Layer [shortcut] not implemented
 Error occurence, refer Intel information about YoloV3 tensorflow convertion problems.  
 
 ```
-//check convertion Yolov2
+//check convertion with Yolov2
 $ wget https://pjreddie.com/media/files/yolov2.weights
+$ cp data/coco.names labels.txt
 $ flow --model cfg/yolov2.cfg --load yolov2.weights --savepb
 
 Parsing ./cfg/yolov2.cfg
@@ -411,12 +412,76 @@ results tensorflow .pb file was placed in **built_graph directory**.
 Empty bin/ ckpt/ sample_img/ directories ware created but i dont know why.  
 
 ```
+//check convertion with Yolov1
 $ wget https://pjreddie.com/media/files/yolov1.weights
+$ cp data voc.names labels.txt
+$ flow --model cfg/yolov1.cfg --load yolov1.weights --savepb
+
+Parsing ./cfg/yolov1.cfg
+Parsing cfg/yolov1.cfg
+Loading yolov1.weights ...
+Successfully identified 789312988 bytes
+Finished in 0.0449588298798s
+Model has a VOC model name, loading VOC labels.
+
+Building net ...
+Source | Train? | Layer description                | Output size
+-------+--------+----------------------------------+---------------
+       |        | input                            | (?, 448, 448, 3)
+ Load  |  Yep!  | conv 7x7p3_2  +bnorm  leaky      | (?, 224, 224, 64)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 112, 112, 64)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 112, 112, 192)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 56, 56, 192)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 56, 56, 128)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 56, 56, 256)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 56, 56, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 56, 56, 512)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 28, 28, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 28, 28, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 28, 28, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 28, 28, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 28, 28, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 28, 28, 1024)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 14, 14, 1024)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 14, 14, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 14, 14, 1024)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 14, 14, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 14, 14, 1024)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 14, 14, 1024)
+ Load  |  Yep!  | conv 3x3p1_2  +bnorm  leaky      | (?, 7, 7, 1024)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 7, 7, 1024)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 7, 7, 1024)
+ Load  |  Yep!  | loca 3x3p1_1  leaky              | (?, 7, 7, 256)
+ Load  |  Yep!  | drop                             | (?, 7, 7, 256)
+ Load  |  Yep!  | flat                             | (?, 12544)
+ Load  |  Yep!  | full 12544 x 1715  linear        | (?, 1715)
+-------+--------+----------------------------------+---------------
+Running entirely on CPU
+2019-01-25 18:17:37.315643: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2
+2019-01-25 18:17:37.601772: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
+2019-01-25 18:17:38.788114: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
+2019-01-25 18:17:39.266294: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
+2019-01-25 18:17:39.742040: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
+2019-01-25 18:17:40.789931: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
+Finished in 18.2570509911s
+
+Rebuild a constant version ...
+Done
+
+$ ls built_graph
+yolov1.meta  yolov1.pb
 ```
 
+### convertion flow
+Main workflow to implement Yolo on OpenVINO is bellow,  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
 - convert .pb file to OpenVINO .bin and .xml files for NCS
-- run yolo.py to check
+- run script to check
 
 ## Also refer below web site,  
 None
