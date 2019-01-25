@@ -337,6 +337,8 @@ $ flow --h
 
 **Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.**
 
+#### convertion to tensorflow .pb files
+
 ```
 //check convertion Yolov3
 $ git clone https://github.com/pjreddi/darknet
@@ -476,6 +478,30 @@ Done
 $ ls built_graph
 yolov1.meta  yolov1.pb
 ```
+#### check downloaded weight and cfg on Darknet
+Check that weight and cfg files work fine on Darknet framework.  
+
+```
+$ make
+$ ./darknet
+usage: ./darknet <function>
+
+$ ./darknet detect cfg/yolov2.cfg yolov2.weights data/dog.jpg
+...
+Loading weights from yolov2.weights...Done!
+data/dog.jpg: Predicted in 27.621588 seconds.
+dog: 82%
+truck: 64%
+bicycle: 85%
+
+$ ./darknet detect cfg/yolov1.cfg yolov1.weights data/dog.jpg
+...
+Loading weights from yolov1.weights...Done!
+data/dog.jpg: Predicted in 16.605034 seconds.
+train: 55%
+```
+Yolov2 work fine.  
+Yolov1 seems not work correctly but on coco.names train==7 and on voc.names car==7, so maybe right.   
 
 ### convertion flow
 Main workflow to implement Yolo on OpenVINO is bellow,  
