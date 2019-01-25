@@ -347,7 +347,7 @@ Parsing ./cfg/yolov3.cfg
 Layer [shortcut] not implemented
 ```
 
-Error occurrence, see Intel information about YoloV3.  
+Error occurence, refer Intel information about YoloV3 tensorflow convertion problems.  
 
 ```
 //check convertion Yolov2
@@ -407,8 +407,8 @@ Done
 $ ls built_graph/
 yolov2.meta  yolov2.pb
 ```
-
-Empty bin/ ckpt/ sample_img/ ware created but i dont know why.  
+results tensorflow .pb file was placed in **built_graph directory**.  
+Empty bin/ ckpt/ sample_img/ directories ware created but i dont know why.  
 
 ```
 $ wget https://pjreddie.com/media/files/yolov1.weights
