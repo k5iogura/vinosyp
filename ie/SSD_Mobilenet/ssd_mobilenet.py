@@ -22,11 +22,12 @@ model_xml='openvino_fs/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.xm
 model_bin='openvino_fs/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
-net = IENetwork.from_ir(model=model_xml, weights=model_bin)
+plugin = IEPlugin(device=args.device, plugin_dirs=None)
+if args.device == "CPU":plugin.add_cpu_extension("lib/libcpu_extension.so") #R5
+net = IENetwork(model=model_xml, weights=model_bin)	# R5
 
 #STEP-3
 print(model_bin, "on", args.device)
-plugin = IEPlugin(device=args.device, plugin_dirs=None)
 exec_net = plugin.load(network=net, num_requests=1)
 
 #STEP-4
