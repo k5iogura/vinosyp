@@ -464,7 +464,8 @@ Source | Train? | Layer description                | Output size
  Load  |  Yep!  | full 12544 x 1715  linear        | (?, 1715)
 -------+--------+----------------------------------+---------------
 Running entirely on CPU
-2019-01-25 18:17:37.315643: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2
+2019-01-25 18:17:37.315643: I tensorflow/core/platform/cpu_feature_guard.cc:141]
+Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2
 2019-01-25 18:17:37.601772: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
 2019-01-25 18:17:38.788114: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
 2019-01-25 18:17:39.266294: W tensorflow/core/framework/allocator.cc:122] Allocation of 462422016 exceeds 10% of system memory.
