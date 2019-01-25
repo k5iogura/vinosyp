@@ -504,6 +504,57 @@ train: 55%
 Yolov2 work fine.  
 Yolov1 seems not work correctly but on coco.names train==7 and on voc.names car==7, so maybe right.   
 
+### convertion tensorflow .pb file to OpenVINO IR files
+Refer intel information [here](https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#yolov1-v2-to-ir)  
+
+```
+//convert .pb to .bin and xml
+/opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_tf.py \
+--input_model yolov2.pb  \
+--output_dir FP32  \
+--data_type FP32   \
+--batch 1          \
+--tensorflow_use_custom_operations_config  \
+        /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/extensions/front/tf/yolo_v1_v2.json 
+Model Optimizer arguments:
+Common parameters:
+	- Path to the Input Model: 	/home/ogura/darknet/built_graphV2/yolov2.pb
+	- Path for generated IR: 	/home/ogura/darknet/built_graphV2/FP32
+	- IR output name: 	yolov2
+	- Log level: 	ERROR
+	- Batch: 	1
+	- Input layers: 	Not specified, inherited from the model
+	- Output layers: 	Not specified, inherited from the model
+	- Input shapes: 	Not specified, inherited from the model
+	- Mean values: 	Not specified
+	- Scale values: 	Not specified
+	- Scale factor: 	Not specified
+	- Precision of IR: 	FP32
+	- Enable fusing: 	True
+	- Enable grouped convolutions fusing: 	True
+	- Move mean values to preprocess section: 	False
+	- Reverse input channels: 	False
+TensorFlow specific parameters:
+	- Input model in text protobuf format: 	False
+	- Offload unsupported operations: 	False
+	- Path to model dump for TensorBoard: 	None
+	- List of shared libraries with TensorFlow custom layers implementation: 	None
+	- Update the configuration file with input/output node names: 	None
+	- Use configuration file used to generate the model with Object Detection API: 	None
+	- Operations to offload: 	None
+	- Patterns to offload: 	None
+	- Use the config file: 	/opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/extensions/front/tf/yolo_v1_v2.json
+Model Optimizer version: 	1.5.12.49d067a0
+
+[ SUCCESS ] Generated IR model.
+[ SUCCESS ] XML file: ~/darknet/built_graphV2/FP32/yolov2.xml
+[ SUCCESS ] BIN file: ~/darknet/built_graphV2/FP32/yolov2.bin
+[ SUCCESS ] Total execution time: 18.28 seconds. 
+
+$ ls FP32/
+yolov2.bin  yolov2.mapping  yolov2.xml
+```
+
 ### convertion flow
 Main workflow to implement Yolo on OpenVINO is bellow,  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
