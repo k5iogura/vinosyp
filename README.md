@@ -317,6 +317,8 @@ darkflow includes tool called **"flow"** that convert darknet .cfg and .weights 
 Look at [How to install darkflow](https://github.com/thtrieu/darkflow)
 
 #### install
+clone and check  
+
 ```
 //clone
 $ git clone https://github.com/thtrieu/darkflow
@@ -331,7 +333,10 @@ $ pip tensorflow==1.12.0
 //check by showing help
 $ cd
 $ flow --h
+```
+**Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.  **
 
+```
 //check convertion Yolov3
 $ git clone https://github.com/pjreddi/darknet
 $ cd darknet
@@ -339,10 +344,71 @@ $ wget https://pjreddie.com/media/files/yolov3.weights
 $ flow --model cfg/yolov3.cfg --load yolov3.weights --savepb
 Parsing ./cfg/yolov3.cfg
 Layer [shortcut] not implemented
+```
+Error occurrence, see Intel information about YoloV3.  
 
+```
 //check convertion Yolov2
 $ wget https://pjreddie.com/media/files/yolov2.weights
 $ flow --model cfg/yolov2.cfg --load yolov2.weights --savepb
+
+Parsing ./cfg/yolov2.cfg
+Parsing cfg/yolov2.cfg
+Loading yolov2.weights ...
+Successfully identified 203934260 bytes
+Finished in 0.041063785553s
+
+Building net ...
+Source | Train? | Layer description                | Output size
+-------+--------+----------------------------------+---------------
+       |        | input                            | (?, 608, 608, 3)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 608, 608, 32)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 304, 304, 32)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 304, 304, 64)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 152, 152, 64)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 152, 152, 128)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 152, 152, 64)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 152, 152, 128)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 76, 76, 128)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 76, 76, 256)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 76, 76, 128)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 76, 76, 256)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 38, 38, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 38, 38, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 38, 38, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 38, 38, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 38, 38, 256)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 38, 38, 512)
+ Load  |  Yep!  | maxp 2x2p0_2                     | (?, 19, 19, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 19, 19, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 19, 19, 512)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | concat [16]                      | (?, 38, 38, 512)
+ Load  |  Yep!  | conv 1x1p0_1  +bnorm  leaky      | (?, 38, 38, 64)
+ Load  |  Yep!  | local flatten 2x2                | (?, 19, 19, 256)
+ Load  |  Yep!  | concat [27, 24]                  | (?, 19, 19, 1280)
+ Load  |  Yep!  | conv 3x3p1_1  +bnorm  leaky      | (?, 19, 19, 1024)
+ Load  |  Yep!  | conv 1x1p0_1    linear           | (?, 19, 19, 425)
+-------+--------+----------------------------------+---------------
+Running entirely on CPU
+2019-01-25 17:48:08.137460: I tensorflow/core/platform/cpu_feature_guard.cc:141]
+Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2
+Finished in 7.60918092728s
+
+Rebuild a constant version ...
+Done
+
+$ ls built_graph/
+yolov2.meta  yolov2.pb
+```
+Empty bin/ ckpt/ sample_img/ ware created but i dont know why.  
+
+```
+$ wget https://pjreddie.com/media/files/yolov1.weights
 ```
 
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
@@ -350,5 +416,4 @@ $ flow --model cfg/yolov2.cfg --load yolov2.weights --savepb
 - run yolo.py to check
 
 ## Also refer below web site,  
-[Intel Neural Compute Stick Getting start](https://software.intel.com/en-us/neural-compute-stick/get-started)  
-[AIを始めよう！PythonでOpenVINOの仕組みを理解する](https://qiita.com/ammo0613/items/ff7452f2c7fab36b2efc)  
+None
