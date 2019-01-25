@@ -13,7 +13,7 @@ This is story of estimation of combination btn movidius NCS and OpenVINO.
 - Ubuntu16.04 on intelPC
 - Nueral Compute Stick(1st generation), maybe ok with NCS-2(2nd generation)
 - **OpenVINO 2018.5.445(releases_openvino-2018-r5)**
-
+  If you work with OpenVINO-R4 see this repo. branch **"OpenVINOR4"**.
 ## Download and installation
 
 After registration we can get OpenVINO from [here](https://software.intel.com/en-us/openvino-toolkit).  
