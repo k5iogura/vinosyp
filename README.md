@@ -311,9 +311,38 @@ Some github supports conversion darknet to other framework such as caffe, tensor
 To impliment YOLO onto other Framework, we can use these convert tools.  
 
 #### [darkflow](https://github.com/thtrieu/darkflow)
-According to [YOLO-OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)
+darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb file.  
+Look at [How to install darkflow](https://github.com/thtrieu/darkflow)
 
-darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb.  
+#### install
+```
+//clone
+$ git clone https://github.com/thtrieu/darkflow
+$ cd darkflow
+
+//requirement
+$ pip Cython  
+# apt python-numpy  
+$ pip tensorflow==1.12.0  
+# apt python-opencv  
+
+//check by showing help
+$ cd
+$ flow --h
+
+//check convertion Yolov3
+$ git clone https://github.com/pjreddi/darknet
+$ cd darknet
+$ wget https://pjreddie.com/media/files/yolov3.weights
+$ flow --model cfg/yolov3.cfg --load yolov3.weights --savepb
+Parsing ./cfg/yolov3.cfg
+Layer [shortcut] not implemented
+
+//check convertion Yolov2
+$ wget https://pjreddie.com/media/files/yolov2.weights
+$ flow --model cfg/yolov2.cfg --load yolov2.weights --savepb
+```
+
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
 - convert .pb file to OpenVINO .bin and .xml files for NCS
 - run yolo.py to check
