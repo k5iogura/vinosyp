@@ -316,7 +316,7 @@ Refer [Using the Model Optimizer to Convert TensorFlow* Models]
 darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb file.  
 Look at [How to install darkflow](https://github.com/thtrieu/darkflow)
 
-#### install
+#### install darkflow
 clone and check  
 
 ```
@@ -334,7 +334,8 @@ $ pip tensorflow==1.12.0
 $ cd
 $ flow --h
 ```
-**Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.  **
+
+**Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.**
 
 ```
 //check convertion Yolov3
@@ -345,6 +346,7 @@ $ flow --model cfg/yolov3.cfg --load yolov3.weights --savepb
 Parsing ./cfg/yolov3.cfg
 Layer [shortcut] not implemented
 ```
+
 Error occurrence, see Intel information about YoloV3.  
 
 ```
@@ -405,6 +407,7 @@ Done
 $ ls built_graph/
 yolov2.meta  yolov2.pb
 ```
+
 Empty bin/ ckpt/ sample_img/ ware created but i dont know why.  
 
 ```
