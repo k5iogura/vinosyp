@@ -21,11 +21,11 @@ data_type="FP16"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml='darknet/models/'+data_type+'/yolov2-voc.xml'
-model_bin='darknet/models/'+data_type+'/yolov2-voc.bin'
+model_xml='darknet/built_graph/'+data_type+'/yolov2.xml'
+model_bin='darknet/built_graph/'+data_type+'/yolov2.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
-net = IENetwork.from_ir(model=model_xml, weights=model_bin)
+net = IENetwork(model=model_xml, weights=model_bin)
 
 #STEP-3
 print(model_bin, "on", args.device)
