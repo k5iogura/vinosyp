@@ -332,7 +332,7 @@ $ pip tensorflow==1.12.0
 
 //install global
 $ pip install .
-Processing /home/ogura/darkflow
+Processing ~/darkflow
 Installing collected packages: darkflow
   Running setup.py install for darkflow ... done
 Successfully installed darkflow-1.0.0
