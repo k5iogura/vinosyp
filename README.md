@@ -562,6 +562,8 @@ $ ls FP32/
 yolov2.bin  yolov2.mapping  yolov2.xml
 ```
 
+sudo apt install libomp-dev  @ YOLO-OpenVINO
+
 ### convertion flow
 Main workflow to implement Yolo on OpenVINO is bellow,  
 - convert .cfg and .weights files to tensorflow .pb file via darkflow tool
