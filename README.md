@@ -330,6 +330,13 @@ $ pip Cython
 $ pip tensorflow==1.12.0  
 # apt python-opencv  
 
+//install global
+$ pip install .
+Processing /home/ogura/darkflow
+Installing collected packages: darkflow
+  Running setup.py install for darkflow ... done
+Successfully installed darkflow-1.0.0
+
 //check by showing help
 $ cd
 $ flow --h
