@@ -559,17 +559,20 @@ Model Optimizer version: 	1.5.12.49d067a0
 [ SUCCESS ] Total execution time: 18.28 seconds. 
 
 $ ls FP32/
-
-// maybe bellow also,
 yolov2.bin  yolov2.mapping  yolov2.xml
+
+```
+
+```
+// maybe bellow also,
 git clone https://github.com/gflags/gflags
 cd gflags
 mkdir build;cd build
 cmake .. && make
 # make install
-```
-
+// needs bellow,
 sudo apt install libomp-dev  @ YOLO-OpenVINO
+```
 
 ### convertion flow
 Main workflow to implement Yolo on OpenVINO is bellow,  
