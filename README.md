@@ -15,7 +15,7 @@ This is story of estimation of combination btn movidius NCS and OpenVINO.
 - Ubuntu16.04 on intelPC
 - Nueral Compute Stick(1st generation), maybe ok with NCS-2(2nd generation)
 - **OpenVINO 2018.5.445(releases_openvino-2018-r5)**  
-  If you work with OpenVINO-R4 see this repo. branch **"OpenVINOR4"**.
+  If you work with OpenVINO-R4 see this repo. **branch "OpenVINOR4"**.
 ## Download and installation
 
 After registration we can get OpenVINO from [here](https://software.intel.com/en-us/openvino-toolkit).  
@@ -611,6 +611,19 @@ sudo apt install libomp-dev  @ YOLO-OpenVINO
 ```
 $ python3 yolov2_vino.py -d MYRIAD sample_image/dog.jpg
 ```
+
+#### About prescript to IE input
+- read image via opencv
+- convert color placement BGR to RGB
+- div 255.0
+- transform to letterbox
+
+#### About postscript from IE output
+- Understand output layout of yolo
+- nms
+- confidence
+- classification
+
 ### About difference btn darkflow and OpenVINO
 
 Notice implementation differences of two framework, see bellow,
