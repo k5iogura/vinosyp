@@ -104,7 +104,7 @@ Check "[INFO] Loading LPR model to **the MYRIAD plugin**" log messages.
 - Run model optimizer with .caffemodel and .prototxt for SSD_MobileNet  
 - Run DEMO script
 
-#### model conversion caffe to ir(OpenVINO intermidiate representation)  
+#### model conversion caffe model to IRmodel(OpenVINO Intermidiate Representation)  
 For OpenVINO generate intermidiate representation as .bin and .xml.  
 Here .bin file includes weights of model and .xml file includes network structure.  
 OpenVINO Model Optimizer help is bellow,  
@@ -312,6 +312,59 @@ To impliment YOLO onto other Framework, we can use these convert tools.
 Refer [Using the Model Optimizer to Convert TensorFlow* Models]
 (https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#yolov1-v2-to-tf)
 
+### convertion flow
+**Recommended workflow** to implement Yolo on OpenVINO is bellow,  
+- convert **.cfg and .weights** files to tensorflow **.pb** file **via darkflow tool called "flow"**
+- convert .pb file to OpenVINO **.bin and .xml** files for NCS **via model_optimizer called "mo_tf.py"**
+- run script to check
+
+**tool in/out**
+
+|no|in          |tool    |out       |process                             |
+|-:|   -        |   -    |   -      |   -                                |
+|1 |.cfg,weights|    flow|       .pb|darknet to tensorflow   built_graph/|
+|2 |.pb         |mo_tf.py|.bin, .xml|tensorflow to IRmodel   FP16/       |
+|3 |.bin, .xml  |yolov2_vino.py|.png|Execution IRmodel with NCS          |
+
+#### check downloaded weight and cfg on Darknet
+Check that .weights and .cfg files work fine on Darknet framework.  
+
+```
+$ git clone https://github.com/pjreddi/darknet
+$ cd darknet
+$ make
+$ ./darknet
+usage: ./darknet <function>
+
+$ wget https://pjreddie.com/media/files/yolov3.weights
+$ wget https://pjreddie.com/media/files/yolov2.weights
+$ wget https://pjreddie.com/media/files/yolov1.weights
+
+$ ./darknet detect cfg/yolov2.cfg yolov2.weights data/dog.jpg
+...
+Loading weights from yolov2.weights...Done!
+data/dog.jpg: Predicted in 27.621588 seconds.
+dog: 82%
+truck: 64%
+bicycle: 85%
+
+$ ./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg
+...
+Loading weights from yolov3.weights...Done!
+data/dog.jpg
+dog: 100%
+truck: 92%
+bicycle: 99%
+
+$ ./darknet detect cfg/yolov1.cfg yolov1.weights data/dog.jpg
+...
+Loading weights from yolov1.weights...Done!
+data/dog.jpg: Predicted in 16.605034 seconds.
+train: 55%
+```
+Yolov2 and Yolov3 work fine.  
+Yolov1 seems not work correctly but on coco.names train==7 and on voc.names car==7, so maybe right.   
+
 #### [darkflow](https://github.com/thtrieu/darkflow)
 darkflow includes tool called **"flow"** that convert darknet .cfg and .weights to tensorflow .pb file.  
 Look at [How to install darkflow](https://github.com/thtrieu/darkflow)
@@ -344,13 +397,12 @@ $ flow --h
 
 **Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.**
 
-#### convertion to tensorflow .pb files
+#### convert .cfg, .weights to tensorflow .pb files
+
+**convertion with YOLOv3**
 
 ```
 //check convertion Yolov3
-$ git clone https://github.com/pjreddi/darknet
-$ cd darknet
-$ wget https://pjreddie.com/media/files/yolov3.weights
 $ flow --model cfg/yolov3.cfg --load yolov3.weights --savepb
 Parsing ./cfg/yolov3.cfg
 Layer [shortcut] not implemented
@@ -358,9 +410,10 @@ Layer [shortcut] not implemented
 
 Error occurence, refer Intel information about YoloV3 tensorflow convertion problems.  
 
+**convertion with YOLOv2**
+
 ```
 //check convertion with Yolov2
-$ wget https://pjreddie.com/media/files/yolov2.weights
 $ cp data/coco.names labels.txt
 $ flow --model cfg/yolov2.cfg --load yolov2.weights --savepb
 
@@ -420,9 +473,10 @@ yolov2.meta  yolov2.pb
 results tensorflow .pb file was placed in **built_graph directory**.  
 Empty bin/ ckpt/ sample_img/ directories ware created but i dont know why.  
 
+**convertion with YOLOv1**
+
 ```
 //check convertion with Yolov1
-$ wget https://pjreddie.com/media/files/yolov1.weights
 $ cp data voc.names labels.txt
 $ flow --model cfg/yolov1.cfg --load yolov1.weights --savepb
 
@@ -486,32 +540,8 @@ Done
 $ ls built_graph
 yolov1.meta  yolov1.pb
 ```
-#### check downloaded weight and cfg on Darknet
-Check that weight and cfg files work fine on Darknet framework.  
 
-```
-$ make
-$ ./darknet
-usage: ./darknet <function>
-
-$ ./darknet detect cfg/yolov2.cfg yolov2.weights data/dog.jpg
-...
-Loading weights from yolov2.weights...Done!
-data/dog.jpg: Predicted in 27.621588 seconds.
-dog: 82%
-truck: 64%
-bicycle: 85%
-
-$ ./darknet detect cfg/yolov1.cfg yolov1.weights data/dog.jpg
-...
-Loading weights from yolov1.weights...Done!
-data/dog.jpg: Predicted in 16.605034 seconds.
-train: 55%
-```
-Yolov2 work fine.  
-Yolov1 seems not work correctly but on coco.names train==7 and on voc.names car==7, so maybe right.   
-
-### convertion tensorflow .pb file to OpenVINO IR files
+### convert tensorflow .pb file to OpenVINO IRmodel
 Refer intel information [here](https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#yolov1-v2-to-ir)  
 
 ```
@@ -574,11 +604,23 @@ cmake .. && make
 sudo apt install libomp-dev  @ YOLO-OpenVINO
 ```
 
-### convertion flow
-Main workflow to implement Yolo on OpenVINO is bellow,  
-- convert .cfg and .weights files to tensorflow .pb file via darkflow tool
-- convert .pb file to OpenVINO .bin and .xml files for NCS
-- run script to check
+### Execute script to check
+
+```
+$ python3 yolov2_vino.py -d MYRIAD sample_image/dog.jpg
+```
+### About difference btn darkflow and OpenVINO
+
+Notice implementation differences of two framework, see bellow,
+- darkflow execute Region layer of yolov2.cfg on python(Cython) without tensorflow.  
+- OpenVINO execute Region layer on NCS.  
+
+Therefore postscript codes are difference. Attempt bellow,  
+
+```
+// result of darkflow
+// result of python_vino.py
+```
 
 ## Also refer below web site,  
 None
