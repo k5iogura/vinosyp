@@ -643,3 +643,5 @@ Therefore postscript codes are difference. Attempt bellow,
 [YOLO implementation by OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)  
 [YoloV3/tiny-YoloV3+RaspberryPi3/Ubuntu LaptopPC+NCS/NCS2+USB Camera+Python+OpenVINO](https://github.com/PINTO0309/OpenVINO-YoloV3)  
 [tensorflow implementation of 'YOLO : Real-Time Object Detection'](https://github.com/gliese581gg/YOLO_tensorflow)  
+
+Jan.29 2019
