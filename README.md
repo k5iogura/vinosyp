@@ -638,4 +638,8 @@ Therefore postscript codes are difference. Attempt bellow,
 ```
 
 ## Also refer below web site,  
-None
+[YOLOv2のリアルタイム物体検出をTensorFlowとPythonで実装する方法](http://ai-coordinator.jp/yolov2-tensorflow-python)  
+[darkflow github](https://github.com/thtrieu/darkflow)  
+[YOLO implementation by OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)  
+[YoloV3/tiny-YoloV3+RaspberryPi3/Ubuntu LaptopPC+NCS/NCS2+USB Camera+Python+OpenVINO](https://github.com/PINTO0309/OpenVINO-YoloV3)  
+[tensorflow implementation of 'YOLO : Real-Time Object Detection'](https://github.com/gliese581gg/YOLO_tensorflow)  
