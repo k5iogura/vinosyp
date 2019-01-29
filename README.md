@@ -630,6 +630,9 @@ Notice implementation differences of two framework, see bellow,
 - darkflow execute Region layer of yolov2.cfg on python(Cython) without tensorflow.  
 - OpenVINO execute Region layer on NCS.  
 
+### About difference btn C++ and Python
+- OpenVINO uses python-opencv on the other hand darknet uses C++ opencv. So image resizing result is difference.  
+
 Therefore postscript codes are difference. Attempt bellow,  
 
 ```
@@ -643,5 +646,6 @@ Therefore postscript codes are difference. Attempt bellow,
 [YOLO implementation by OpenVINO](https://github.com/feng1sun/YOLO-OpenVINO)  
 [YoloV3/tiny-YoloV3+RaspberryPi3/Ubuntu LaptopPC+NCS/NCS2+USB Camera+Python+OpenVINO](https://github.com/PINTO0309/OpenVINO-YoloV3)  
 [tensorflow implementation of 'YOLO : Real-Time Object Detection'](https://github.com/gliese581gg/YOLO_tensorflow)  
+[YOLOv2のchainerの再現実装です(darknetのchainerローダと、完全なchainer上での訓練コードを含みます)](https://github.com/leetenki/YOLOv2)  
 
 Jan.29 2019
