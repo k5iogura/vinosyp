@@ -18,8 +18,8 @@ data_type="FP16"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml='openvino_fs/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.xml'
-model_bin='openvino_fs/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.bin'
+model_xml='vinosyp/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.xml'
+model_bin='vinosyp/models/SSD_Mobilenet/'+data_type+'/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork.from_ir(model=model_xml, weights=model_bin)
