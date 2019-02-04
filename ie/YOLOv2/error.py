@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 import sys
 
@@ -22,8 +23,8 @@ l2 = np.asarray(l2,dtype=np.float64)
         #print(i0,i1)
 
 (std_l1, std_l2 ) = np.std(l1), np.std(l2)
-(max_l1, max_l2 ) = np.max(l1), np.max(l1)
-(min_l1, min_l2 ) = np.min(l1), np.min(l1)
+(max_l1, max_l2 ) = np.max(l1), np.max(l2)
+(min_l1, min_l2 ) = np.min(l1), np.min(l2)
 
 print("%44s"%"std/max/min")
 print("%30s ="%(sys.argv[--2]),"%.10f %.10f %.10f"%(std_l1, max_l1, min_l1))
