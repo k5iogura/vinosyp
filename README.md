@@ -42,7 +42,7 @@ install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.
 ```
 
 **1st DEMO result is bellow,**  
-
+**Notice!:** After execution it, opencv with python3 becames available.  
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
 
 ```
