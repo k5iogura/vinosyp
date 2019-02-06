@@ -6,6 +6,7 @@ import numpy as np
 from time import time
 import cv2
 import argparse
+import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 
@@ -51,6 +52,18 @@ def softmax(a):
     sum_exp_a = np.sum(exp_a)
     y= exp_a / sum_exp_a
     return y
+
+def IntersectionOverUnion(box_1, box_2):
+    width_of_overlap_area  = min(box_1.xmax, box_2.xmax) - max(box_1.xmin, box_2.xmin)
+    height_of_overlap_area = min(box_1.ymax, box_2.ymax) - max(box_1.ymin, box_2.ymin);
+    if width_of_overlap_area < 0 or height_of_overlap_area < 0:
+        area_of_overlap = 0
+    else:
+        area_of_overlap = width_of_overlap_area * height_of_overlap_area
+    box_1_area = (box_1.ymax - box_1.ymin)  * (box_1.xmax - box_1.xmin)
+    box_2_area = (box_2.ymax - box_2.ymin)  * (box_2.xmax - box_2.xmin)
+    area_of_union = box_1_area + box_2_area - area_of_overlap
+    return area_of_overlap / area_of_union
 
 class DetectionObject:
     def __init__(self, x, y, h, w, class_id, confidence, h_scale, w_scale):
@@ -186,7 +199,7 @@ for f in files:
 
     start = time()
     #STEP-7
-    ASYNC = False
+    ASYNC = True
     if ASYNC:
         exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
     else:
@@ -196,7 +209,7 @@ for f in files:
         if ASYNC:
             res = exec_net.requests[0].outputs[out_blob]
             print("res.shape",res.shape)
-            result = res
+            result = res.reshape(-1)
         else:
             for outkey in res.keys(): print("outkey=",outkey)
             result = res[outkey][0]
@@ -211,14 +224,27 @@ for f in files:
             original_im_w,
             0.5
         )
-        for i in objects:
-            print("%.3f%% %s (%d %d) - (%d %d)"%(
-                i.confidence,
-                class_names[i.class_id],
-                i.xmin, i.ymin,
-                i.xmax, i.ymax
+        condidates = len(objects)
+
+        # NMS
+        for i, obj1 in enumerate(objects):
+            if obj1.confidence <= 0: continue
+            for j, obj2 in enumerate(objects):
+                if j<=i:continue
+                if IntersectionOverUnion(obj1, obj2) >= 0.45:
+                    objects[i].confidence = 0.0
+
+        high_probs = 0
+        for obj in objects:
+            if obj.confidence <= 0:continue
+            high_probs += 1
+            print("%10.3f%% %s (%d %d) - (%d %d)"%(
+                obj.confidence,
+                class_names[obj.class_id],
+                obj.xmin, obj.ymin,
+                obj.xmax, obj.ymax
             ))
-        print("objects len=",len(objects))
+        print("high_probs/condidates = %d/%d objects"%(high_probs,condidates))
         print("elapse = %.3fmsec %.3fFPS"%(1000.0*sec,1.0/sec))
     else:
         print("error")
