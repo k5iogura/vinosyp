@@ -128,8 +128,8 @@ for f in files:
     h   = [ res[outkey][0][i] for i in range(3,res[outkey].shape[-1],85) ]
     conf= [ res[outkey][0][i] for i in range(4,res[outkey].shape[-1],85) ]
     prob= [ softmax(res[outkey][0][i:i+20]) for i in range(5,res[outkey].shape[-1],85) ]
-    for i in range(5,res[outkey].shape[-1],85):
-        res[outkey][0][i:i+20] = softmax(res[outkey][0][i:i+20])
+    #for i in range(5,res[outkey].shape[-1],85):
+        #res[outkey][0][i:i+20] = softmax(res[outkey][0][i:i+20])
     save_as_txt(res[outkey][0],"dog_region.txt")
 
 #    print("res",res.keys(),res['output/YoloRegion'][0].shape)
