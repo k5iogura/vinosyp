@@ -137,6 +137,7 @@ def ParseYOLOV2Output(
 args = argparse.ArgumentParser()
 args.add_argument("images", nargs='*', type=str)
 args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="Default MYRIAD or CPU")
+args.add_argument("-p", "--prefix", type=str, help="debug file prefix")
 args = args.parse_args()
 
 input_image_size=(300,300)
@@ -169,13 +170,14 @@ del net
 #STEP-5
 # VOC YOLOv2 region layer memory layout
 # res.shape = (1, 21125)
-# 21125     = 13*13*125
-# 125       = 25 (=xywh+conf+class)  * 5    5:region-layer.num in cfg
+# 21125     = 13*13*5*5 + 13*13*5*20
+# 13*13*5*5 = 13*13 *  5(=xywhc) * 5(=num)   5:region-layer.num in cfg
+# 13*13*5*20= 13*13 * 20(=class) * 5(=num)  20:region-layer.classes in cfg
 # 13        = 416(=input_image_size) / 32  32:down-sampling ratio
 # threshold = 0.6                         0.6:region-layer.thresh in cfg
-# :x1:y1:x2:y2:conf:20*classes_prob:
 
-thresh=0.6
+thresh_conf=0.69 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+thresh_iou =0.45
 files=[]
 if len(args.images)>0:files = args.images
 for f in files:
@@ -185,11 +187,12 @@ for f in files:
     original_im_h, original_im_w = frame.shape[:2]
 
     frame =frame/255.0
-    save_as_txt(frame.transpose(2,0,1),"dog_im.txt")
+    if args.prefix is not None:
+        save_as_txt(frame.transpose(2,0,1),args.prefix+"_im_"+args.device+".txt")
 
     frame =letterbox_image(frame, model_w, model_h)
     flat_ = frame.transpose(2,0,1).reshape(-1)
-    save_as_txt(flat_,"dog_sized.txt")
+    if args.prefix is not None:save_as_txt(flat_,args.prefix+"_sized_"+args.device+".txt")
 
     #STEP-6
     in_frame = cv2.resize(frame, (model_w, model_h))
@@ -208,13 +211,13 @@ for f in files:
     if exec_net.requests[0].wait(-1) == 0:
         if ASYNC:
             res = exec_net.requests[0].outputs[out_blob]
-            print("res.shape",res.shape)
+            print("ASYNC: res.shape",res.shape)
             result = res.reshape(-1)
         else:
             for outkey in res.keys(): print("outkey=",outkey)
             result = res[outkey][0]
-            print("result.shape",result.shape)
-        save_as_txt(result,"dog_region.txt")
+            print("SYNC: result.shape",result.shape)
+        if args.prefix is not None:save_as_txt(result,args.prefix+"_region_"+args.device+".txt")
         sec = time()-start
         objects = ParseYOLOV2Output(
             result,
@@ -222,7 +225,7 @@ for f in files:
             model_h,
             original_im_h,
             original_im_w,
-            0.5
+            thresh_conf
         )
         condidates = len(objects)
 
@@ -231,7 +234,7 @@ for f in files:
             if obj1.confidence <= 0: continue
             for j, obj2 in enumerate(objects):
                 if j<=i:continue
-                if IntersectionOverUnion(obj1, obj2) >= 0.45:
+                if IntersectionOverUnion(obj1, obj2) >= thresh_iou:
                     objects[i].confidence = 0.0
 
         high_probs = 0
