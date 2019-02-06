@@ -2,30 +2,22 @@
 import numpy as np
 import sys
 
-if len(sys.argv)!=3:
-    print("Usage: %s text1 text2"%sys.argv[0])
+if len(sys.argv)<=1:
+    print("Usage: %s text1 text2 ..."%sys.argv[0])
     sys.exit(-1)
 
-with open(sys.argv[-2]) as inx:
-    l1 = inx.read().strip().split()
-print("%s len=%d"%(sys.argv[-2],len(l1)))
-
-with open(sys.argv[-1]) as inx:
-    l2 = inx.read().strip().split()
-print("%s len=%d"%(sys.argv[-2],len(l2)))
-
-l1 = np.asarray(l1,dtype=np.float64)
-l2 = np.asarray(l2,dtype=np.float64)
-
-#for i in zip(l1,l2):
-    #[i0, i1]=(np.float32(i[0]), np.float32(i[1]))
-    #if i0 != i1:
-        #print(i0,i1)
-
-(std_l1, std_l2 ) = np.std(l1), np.std(l2)
-(max_l1, max_l2 ) = np.max(l1), np.max(l2)
-(min_l1, min_l2 ) = np.min(l1), np.min(l2)
+def readtxt(filename):
+    with open(filename) as inx:
+        l = inx.read().strip().split()
+    lines = len(l)
+    l = np.asarray(l,dtype=np.float32)
+    std_l = np.std(l)
+    max_l = np.max(l)
+    min_l = np.min(l)
+    return (lines, std_l, max_l, min_l)
 
 print("%44s"%"std/max/min")
-print("%30s ="%(sys.argv[--2]),"%.10f %.10f %.10f"%(std_l1, max_l1, min_l1))
-print("%30s ="%(sys.argv[--1]),"%.10f %.10f %.10f"%(std_l2, max_l2, min_l2))
+
+for f in sys.argv[1:]:
+    lines, std_l, max_l, min_l = readtxt(f)
+    print("%30s ="%(f),"%.8f %.8f %.8f"%(std_l, max_l, min_l))
