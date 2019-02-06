@@ -176,7 +176,8 @@ del net
 # 13        = 416(=input_image_size) / 32  32:down-sampling ratio
 # threshold = 0.6                         0.6:region-layer.thresh in cfg
 
-thresh_conf=0.69 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
+thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
 thresh_iou =0.45
 files=[]
 if len(args.images)>0:files = args.images
