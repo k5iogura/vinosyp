@@ -9,6 +9,18 @@ import argparse
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 
+class_names = [
+    "aeroplane", "bicycle", "bird", "boat", "bottle",
+    "bus", "car", "cat", "chair", "cow", "diningtable",
+    "dog", "horse", "motorbike", "person", "pottedplant",
+    "sheep", "sofa", "train", "tvmonitor"
+]
+
+def save_as_txt(data,outfile):
+    a1 = data.reshape(-1)
+    with open(outfile,"w") as fp:
+        for i in range(len(a1)):
+            fp.write("%.7f\n"%a1[i])
 
 def embed_image(source, dest, dx, dy):
     (h,w,c)=source.shape
@@ -31,24 +43,97 @@ def letterbox_image(im, w, h):
         new_w =int((im_w * h)/ im_h)
     resized = cv2.resize(im, (new_w,new_h))
     boxed   = np.full((h,w,3),0.5)
-    print("embed_image(resized, boxed,",int((w-new_w)//2), int((h-new_h)//2))
     embed_image(resized, boxed, int((w-new_w)//2), int((h-new_h)//2))
-    for i in range(46208,46218): print(resized.transpose((2,0,1)).reshape(-1)[i])
     return boxed
+
+def softmax(a):
+    exp_a = np.exp( a )
+    sum_exp_a = np.sum(exp_a)
+    y= exp_a / sum_exp_a
+    return y
+
+class DetectionObject:
+    def __init__(self, x, y, h, w, class_id, confidence, h_scale, w_scale):
+        self.xmin = int((x - w / 2) * w_scale) 
+        self.ymin = int((y - h / 2) * h_scale)
+        self.xmax = int(self.xmin + w * w_scale)
+        self.ymax = int(self.ymin + h * h_scale)
+        self.class_id = class_id
+        self.confidence = confidence
+
+def EntryIndex(side_w, side_h, lcoords, lclasses, location, entry):
+    n   = int(location / (side_w * side_h))
+    loc = int(location % (side_w * side_h))
+    return n * side_w * side_h * (lcoords + lclasses + 1) + entry * side_w * side_h + loc
+
+def ParseYOLOV2Output(
+    output_blob,
+    resized_im_h,
+    resized_im_w,
+    original_im_h,
+    original_im_w,
+    threshold
+):
+    num = 5
+    coords = 4
+    classes=20
+    side_h = 13
+    side_w = 13
+
+    anchors = [ 
+        0.572730, 0.677385, 
+        1.874460, 2.062530, 
+        3.338430, 5.474340,
+        7.882820, 3.527780,
+        9.770520, 9.168280,
+    ]
+    #side = side_h
+    side_square = side_h * side_w;
+    output_blob = output_blob.astype(dtype=np.float32)
+
+    objects = []
+    for i in range(side_square):
+        row = int(i/side_w)
+        col = int(i%side_w)
+        for n in range(num):
+            obj_index = EntryIndex(side_h,side_w,coords,classes,n*side_h*side_w+i,coords)
+            box_index = EntryIndex(side_h,side_w,coords,classes,n*side_h*side_w+i,0)
+            scale = output_blob[obj_index]
+            if scale < threshold: continue;
+
+            x = (col + output_blob[box_index + 0 * side_square]) / side_w * original_im_w;
+            y = (row + output_blob[box_index + 1 * side_square]) / side_w * original_im_h;
+            height = np.exp(
+                    output_blob[box_index + 3 * side_square]
+                ) * anchors[2 * n + 1] / side_h * original_im_h
+            width  = np.exp(
+                    output_blob[box_index + 2 * side_square]
+                ) * anchors[2 * n + 0] / side_h * original_im_w
+
+            for j in range(classes):
+                class_index = EntryIndex(side_h,side_w,coords,classes,n*side_square+i,coords+1+j)
+                prob = scale * output_blob[class_index]
+                if prob < threshold: continue;
+                obj  = DetectionObject(x, y, height, width, j, prob,
+                        float(original_im_h) / float(resized_im_h),
+                        float(original_im_w) / float(resized_im_w)
+                )
+                objects.append(obj);
+    return objects
 
 args = argparse.ArgumentParser()
 args.add_argument("images", nargs='*', type=str)
-args.add_argument("-d", "--device"   , type=str, default="CPU", help="Default MYRIAD or CPU")
+args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="Default MYRIAD or CPU")
 args = args.parse_args()
 
 input_image_size=(300,300)
 
-data_type="FP16"
+data_type="FP16_2"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml='tfnet/'+data_type+'/yolov2.xml'
-model_bin='tfnet/'+data_type+'/yolov2.bin'
+model_xml='tfnet/'+data_type+'/yolov2-voc.xml'
+model_bin='tfnet/'+data_type+'/yolov2-voc.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)
@@ -69,7 +154,7 @@ print(net.outputs[out_blob].shape)
 del net
 
 #STEP-5
-# VOC YOLOv2 output layer structure
+# VOC YOLOv2 region layer memory layout
 # res.shape = (1, 21125)
 # 21125     = 13*13*125
 # 125       = 25 (=xywh+conf+class)  * 5    5:region-layer.num in cfg
@@ -84,64 +169,57 @@ for f in files:
     print("input image = %s"%f)
     frame = cv2.imread(f)   # HWC
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-    for i in range(10):
-        print(i,frame.transpose((2,0,1)).reshape(-1)[i]/255.0)
+    original_im_h, original_im_w = frame.shape[:2]
+
     frame =frame/255.0
-    print("orig shape:", frame.shape)
+    save_as_txt(frame.transpose(2,0,1),"dog_im.txt")
+
     frame =letterbox_image(frame, model_w, model_h)
     flat_ = frame.transpose(2,0,1).reshape(-1)
-    j=0
-    for i in range(frame.shape[0]*frame.shape[1]):
-        if flat_[i] != 0.5:
-            print(i,flat_[i])
-            j+=1
-        if j>=10:break
+    save_as_txt(flat_,"dog_sized.txt")
 
     #STEP-6
     in_frame = cv2.resize(frame, (model_w, model_h))
     in_frame = in_frame[np.newaxis,:,:,:]
     in_frame = in_frame.transpose((0, 3, 1, 2))  # Change data layout from HWC to CHW
-    #in_frame = in_frame/255.0
-    #in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
-    #in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
     print("in-frame",in_frame.shape)
 
     start = time()
     #STEP-7
-    #exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
-    res = exec_net.infer(inputs={input_blob: in_frame})
-    print("res",res.keys())
-#    print(res['output/YoloRegion'].shape)
-#    print(res['output/YoloRegion'][0][:4])
-#    print(res['output/YoloRegion'][0][5])
-#    print(res['output/YoloRegion'][0][6:10])
-#    print(res['output/YoloRegion'][0][85:89])
-#    print(res['output/YoloRegion'][0][90])
-#    print(res['output/YoloRegion'][0][90:100])
-    j=5+100*85
-    for i in range(1,10):
-        print("conf",j,res['output/YoloRegion'][0][j])
-        j += i*85
-    break
+    ASYNC = False
+    if ASYNC:
+        exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
+    else:
+        res = exec_net.infer(inputs={input_blob: in_frame})
 
-    biases =[[1.3221 ,1.73145],[3.19275,4.00944],
-             [5.05587,8.09892],[9.47112,4.84053],
-             [11.2364,10.0071]]
     if exec_net.requests[0].wait(-1) == 0:
+        if ASYNC:
+            res = exec_net.requests[0].outputs[out_blob]
+            print("res.shape",res.shape)
+            result = res
+        else:
+            for outkey in res.keys(): print("outkey=",outkey)
+            result = res[outkey][0]
+            print("result.shape",result.shape)
+        save_as_txt(result,"dog_region.txt")
         sec = time()-start
-        res = exec_net.requests[0].outputs[out_blob]
-        res2=res.reshape(-1,125)
-        print("res",res.shape)
-        print("fin",res2.shape)
-        print("top")
-        for j in range(res2.shape[0]):
-            if res2[j][4] > thresh:
-                print(res2[j][4])
-                print(res2[j][0:4])
-                print(res2[j][4]*res2[j][5:25])
-                break
+        objects = ParseYOLOV2Output(
+            result,
+            model_w,
+            model_h,
+            original_im_h,
+            original_im_w,
+            0.5
+        )
+        for i in objects:
+            print("%.3f%% %s (%d %d) - (%d %d)"%(
+                i.confidence,
+                class_names[i.class_id],
+                i.xmin, i.ymin,
+                i.xmax, i.ymax
+            ))
+        print("objects len=",len(objects))
         print("elapse = %.3fmsec %.3fFPS"%(1000.0*sec,1.0/sec))
-#        boxes = get_boxes(res, 13, 13, 5, 20, 0.8, frame.shape[0], frame.shape[1], biases)
     else:
         print("error")
 
