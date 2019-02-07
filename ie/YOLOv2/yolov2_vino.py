@@ -155,6 +155,14 @@ net = IENetwork(model=model_xml, weights=model_bin)
 #STEP-3
 print(model_bin, "on", args.device)
 plugin = IEPlugin(device=args.device, plugin_dirs=None)
+if args.device == "CPU":
+    HOME = os.environ['HOME']
+    PATHLIBEXTENSION = os.getenv(
+        "PATHLIBEXTENSION",
+        HOME+"/inference_engine_samples_build/intel64/Release/lib/libcpu_extension.so"
+    )
+    plugin.add_cpu_extension(PATHLIBEXTENSION)
+
 exec_net = plugin.load(network=net, num_requests=1)
 
 #STEP-4
