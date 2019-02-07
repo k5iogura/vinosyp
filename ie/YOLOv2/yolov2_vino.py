@@ -142,14 +142,14 @@ args = args.parse_args()
 
 input_image_size=(300,300)
 
-data_type="FP16_2"
+data_type="FP16"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml='tfnet/'+data_type+'/yolov2-voc.xml'
-model_bin='tfnet/'+data_type+'/yolov2-voc.bin'
-model_xml = os.environ['HOME'] + "/" + model_xml
-model_bin = os.environ['HOME'] + "/" + model_bin
+model_xml=data_type+'/yolov2-voc.xml'
+model_bin=data_type+'/yolov2-voc.bin'
+#model_xml = os.environ['HOME'] + "/" + model_xml
+#model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)
 
 #STEP-3
@@ -230,8 +230,10 @@ for f in files:
         sec = time()-start
         objects = ParseYOLOV2Output(
             result,
-            model_w,
-            model_h,
+        #    model_w,
+        #    model_h,
+            original_im_h,
+            original_im_w,
             original_im_h,
             original_im_w,
             thresh_conf
