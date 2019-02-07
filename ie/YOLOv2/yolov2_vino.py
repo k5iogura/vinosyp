@@ -196,12 +196,12 @@ for f in files:
     original_im_h, original_im_w = frame.shape[:2]
 
     frame =frame/255.0
-    if args.prefix is not None:
-        save_as_txt(frame.transpose(2,0,1),args.prefix+"_im_"+args.device+".txt")
+    #if args.prefix is not None:
+        #save_as_txt(frame.transpose(2,0,1),args.prefix+"_im_"+args.device+".txt")
 
     frame =letterbox_image(frame, model_w, model_h)
     flat_ = frame.transpose(2,0,1).reshape(-1)
-    if args.prefix is not None:save_as_txt(flat_,args.prefix+"_sized_"+args.device+".txt")
+    #if args.prefix is not None:save_as_txt(flat_,args.prefix+"_sized_"+args.device+".txt")
 
     #STEP-6
     in_frame = cv2.resize(frame, (model_w, model_h))
