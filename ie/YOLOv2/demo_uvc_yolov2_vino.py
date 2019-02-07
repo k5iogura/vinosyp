@@ -291,6 +291,7 @@ while True:
             for outkey in res.keys():pass
             result = res[outkey][0]
         sec = time()-start
+        FPS = 1.0/sec
 
         # Apply softmax instead of Region layer
         if args.softmax:
@@ -315,10 +316,10 @@ while True:
         # Pull objects from result
         objects = ParseYOLOV2Output(
             result,
-            original_im_h,
-            original_im_w,
-            original_im_h,
-            original_im_w,
+            480,
+            640,
+            480,
+            640,
             thresh_conf
         )
         condidates = len(objects)
@@ -330,21 +331,23 @@ while True:
                 if j<=i:continue
                 if IntersectionOverUnion(obj1, obj2) >= thresh_iou:
                     objects[i].confidence = 0.0
-        # Draw
-        overlay_objects(frame_org, objects)
+        # Draw result image and FPS
+        frame_res = keep_aspect(frame_org,480,640)
+        overlay_objects(frame_res, objects)
+        cv2.imshow('YOLOv2_demo', frame_res)
+        key=cv2.waitKey(1)
+        if key!=-1:
+            if key==27: exit_code=True
+            break
+        sys.stdout.write('\b'*10)
+        sys.stdout.write("%.3fFPS"%(FPS))
+        sys.stdout.flush()
     else:
-        print("error")
+        print("error in inference engine")
         sys.exit(-1)
 
-    #show result image
-    #cv2.imshow('YOLOv2_demo',keep_aspect(frame_org,actual_frame_width,actual_frame_height))
-    cv2.imshow('YOLOv2_demo',keep_aspect(frame_org,480,640))
-    key=cv2.waitKey(1)
-    if key!=-1:
-        if key==27: exit_code=True
-        break
-
 #STEP-10
+print("\nfinalizing")
 del exec_net
 del plugin
 
