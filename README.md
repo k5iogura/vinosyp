@@ -310,7 +310,7 @@ My morning coffee!
 Famous object detection DNN model called "YOLO" works on Darknet Framework.  
 Darknet code is based on pure C language and has very simple function.  
 Some github supports conversion darknet weights and cfg to the other frameworks such as caffe, tensorflow, chainer.  
-To impliment YOLO onto OpenVINO Framework, we can refer these convertion methods.  
+To impliment YOLO onto OpenVINO Framework, we can refer these conversion methods.  
 Refer [Using the Model Optimizer to Convert TensorFlow Models]
 (https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#yolov1-v2-to-tf)
 
