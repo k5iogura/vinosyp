@@ -314,7 +314,7 @@ To impliment YOLO onto other Framework, we can use these convert tools.
 Refer [Using the Model Optimizer to Convert TensorFlow* Models]
 (https://software.intel.com/en-us/articles/OpenVINO-Using-TensorFlow#yolov1-v2-to-tf)
 
-### convertion flow
+### convertion flow with darkflow
 **Recommended workflow** to implement Yolo on OpenVINO is bellow,  
 - convert **.cfg and .weights** files to tensorflow **.pb** file **via darkflow tool called "flow"**
 - convert .pb file to OpenVINO **.bin and .xml** files for NCS **via model_optimizer called "mo_tf.py"**
@@ -395,6 +395,8 @@ Successfully installed darkflow-1.0.0
 //check by showing help
 $ cd
 $ flow --h
+
+$ cd ..  // Go to dakrnet directory
 ```
 
 **Patch ~/.local/lib/python2.7/site-packages/darkflow/net/build.py line 171.**
@@ -604,10 +606,15 @@ cmake .. && make
 # make install
 // needs bellow,
 sudo apt install libomp-dev  @ YOLO-OpenVINO
+
+cd ..  // Go to darknet directory
 ```
 
 ### Execute script to check
 
+As of Now you will be on darknet/ directory, **copy *this_repo_directory*/ie/YOLOv2/yolov2_vino.py** to darknet directory.  Darknet directory should include FP16/ and FP32/ subdirectories including several .bin and .xml OpenVINO IRmodel files.    
+
+To run yolov2 demo,
 ```
 $ python3 yolov2_vino.py -d MYRIAD sample_image/dog.jpg
 ```
