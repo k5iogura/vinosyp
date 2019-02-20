@@ -10,7 +10,7 @@ import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 
-coco = False
+coco=False
 if coco:
     class_names = [
         "person", "bicycle", "car", "motorbike", "aeroplane",
@@ -51,6 +51,16 @@ else:
         9.47112, 4.84053,
         11.2364, 10.0071
     ]
+
+num    = 5
+coords = 4
+classes=len(class_names)
+downsampling_rate = 32
+
+thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
+thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+#thresh_conf=0.50
+thresh_iou =0.45
 
 def save_as_txt(data,outfile):
     a1 = data.reshape(-1)
@@ -131,7 +141,7 @@ def EntryIndex(side_w, side_h, lcoords, lclasses, location, entry):
     loc = int(location % (side_w * side_h))
     return n * side_w * side_h * (lcoords + lclasses + 1) + entry * side_w * side_h + loc
 
-def ParseYOLOV2Output(
+def parse_result(
     output_blob,
     resized_im_h,
     resized_im_w,
@@ -139,12 +149,6 @@ def ParseYOLOV2Output(
     original_im_w,
     threshold
 ):
-    num = 5
-    coords = 4
-    classes=20
-    side_h = 13
-    side_w = 13
-
     #side = side_h
     side_square = side_h * side_w;
     output_blob = output_blob.astype(dtype=np.float32)
@@ -173,8 +177,8 @@ def ParseYOLOV2Output(
                 prob = scale * output_blob[class_index]
                 if prob < threshold: continue;
                 obj  = DetectionObject(x, y, height, width, j, prob,
-                        float(original_im_h) / float(resized_im_h),
-                        float(original_im_w) / float(resized_im_w)
+                        float(resized_im_h) / float(original_im_h),
+                        float(resized_im_w) / float(original_im_w)
                 )
                 objects.append(obj);
     return objects
@@ -200,7 +204,8 @@ def keep_aspect(image, new_h, new_w):
     return cv2.resize(image,(w,h))
 
 args = argparse.ArgumentParser()
-args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="Default MYRIAD or CPU")
+args.add_argument("images", nargs='*', type=str)
+args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
 args.add_argument("-p", "--prefix", type=str, help="debug file prefix")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
 args.add_argument("-a", "--async",  action="store_true", help="aplly async IEngine")
@@ -241,31 +246,18 @@ print("input_blob : out_blob =[",input_blob,":",out_blob,"] ",net.outputs[out_bl
 del net
 
 #STEP-5
-# VOC YOLOv2 region layer memory layout
-# res.shape = (1, 21125)
-# 21125     = 13*13*5*5 + 13*13*5*20
-# 13*13*5*5 = 13*13 *  5(=xywhc) * 5(=num)   5:region-layer.num in cfg
-# 13*13*5*20= 13*13 * 20(=class) * 5(=num)  20:region-layer.classes in cfg
-# 13        = 416(=input_image_size) / 32  32:down-sampling ratio
-# threshold = 0.6                         0.6:region-layer.thresh in cfg
-
-thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
-thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-#thresh_conf=0.50 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-thresh_iou =0.45
+side_h = int(model_h//downsampling_rate)
+side_w = int(model_w//downsampling_rate)
 
 cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("UVC Camera not found in /dev system")
-    sys.exit(1)
-actual_frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-actual_frame_height= int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-print ('actual video resolution:'+str(actual_frame_width)+' x '+str(actual_frame_height))
+if not cap.isOpened():sys.exit(-1)
+cap.set(cv2.CAP_PROP_FPS,30)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
 
-exit_code=False
 while True:
-    ret,frame = cap.read()   # HWC
-    frame_org = frame.copy()
+    ret,frame= cap.read()   # HWC
+    draw_img = keep_aspect(frame, model_h, model_w)
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
     original_im_h, original_im_w = frame.shape[:2]
     frame =frame/255.0
@@ -286,20 +278,17 @@ while True:
         # result of inferrence have different formats btn async and sync execution
         if args.async:
             res = exec_net.requests[0].outputs[out_blob]
+        #    print("ASYNCRONOUS Inference: res.shape",res.shape)
             result = res.reshape(-1)
         else:
             for outkey in res.keys():pass
+        #        print("outkey=",outkey)
+        #        print("SYNCRONOUS Inference: res.shape",res[outkey].shape)
             result = res[outkey][0]
         sec = time()-start
-        FPS = 1.0/sec
 
         # Apply softmax instead of Region layer
         if args.softmax:
-            num = 5
-            coords = 4
-            classes=20
-            side_h = 13
-            side_w = 13
             index = EntryIndex(side_h, side_w, 4, 0, 0, coords + 1)
             softmax_cpu(
                 result[index:],
@@ -314,12 +303,12 @@ while True:
             )
 
         # Pull objects from result
-        objects = ParseYOLOV2Output(
+        objects = parse_result(
             result,
-            480,
-            640,
-            480,
-            640,
+            model_h,
+            model_w,
+            original_im_h,
+            original_im_w,
             thresh_conf
         )
         condidates = len(objects)
@@ -331,23 +320,24 @@ while True:
                 if j<=i:continue
                 if IntersectionOverUnion(obj1, obj2) >= thresh_iou:
                     objects[i].confidence = 0.0
-        # Draw result image and FPS
-        frame_res = keep_aspect(frame_org,480,640)
-        overlay_objects(frame_res, objects)
-        cv2.imshow('YOLOv2_demo', frame_res)
-        key=cv2.waitKey(1)
-        if key!=-1:
-            if key==27: exit_code=True
-            break
-        sys.stdout.write('\b'*10)
-        sys.stdout.write("%.3fFPS"%(FPS))
-        sys.stdout.flush()
+        # Draw
+        overlay_objects(draw_img , objects)
+
+        high_probs = 0
+        for obj in objects:
+            if obj.confidence <= 0:continue
+            high_probs += 1
     else:
-        print("error in inference engine")
-        sys.exit(-1)
+        print("error")
+
+    #show result image
+    cv2.imshow('YOLOv2_demo',draw_img)
+    key=cv2.waitKey(1)
+    if key!=-1:
+        if key==27: break
 
 #STEP-10
-print("\nfinalizing")
+cv2.destroyAllWindows()
 del exec_net
 del plugin
 
