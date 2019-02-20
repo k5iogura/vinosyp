@@ -329,6 +329,10 @@ $ python3 demo_img_yolov2_vino.py -d MYRIAD sample_image/dog.jpg
 - confidence
 - classification
 
+![](files/dog_result_IE.jpg)
+
+person is wrong answer;->
+
 ### About difference btn darkflow and OpenVINO
 
 Notice implementation differences of two framework, see bellow,
