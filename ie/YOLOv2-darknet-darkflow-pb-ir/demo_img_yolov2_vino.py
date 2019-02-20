@@ -57,6 +57,8 @@ coords = 4
 classes=len(class_names)
 downsampling_rate = 32
 
+print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
+
 thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
 thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
 #thresh_conf=0.50
