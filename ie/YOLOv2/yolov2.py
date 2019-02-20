@@ -76,7 +76,6 @@ for f in files:
     #STEP-7
     #exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
     res = exec_net.infer(inputs={input_blob: in_frame})
-    set_trace()
     print("res",res.keys())
     break
 
