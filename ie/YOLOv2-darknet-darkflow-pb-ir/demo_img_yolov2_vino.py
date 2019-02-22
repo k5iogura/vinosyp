@@ -224,6 +224,7 @@ args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/
 args.add_argument("-c", "--classes",   type=str, default='voc', help="middlefix voc/2c/1c/coco")
 args.add_argument("-p", "--prefix",    type=str, help="debug file prefix")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
+args.add_argument("-b", "--batch",  action="store_true", help="batch run")
 args.add_argument("-a", "--async",  action="store_true", help="aplly async IEngine")
 args = args.parse_args()
 
@@ -370,14 +371,21 @@ for f in args.images:
             confidence = obj.confidence
             if obj.confidence <= 0.0: continue  # skip object rejected by NMS
             label = obj.class_id
-            fbox.write("%9.7f %9.7f %9.7f %9.7f\n"%(obj.xmin/draw_w,obj.ymin/draw_h,obj.xmax/draw_w,obj.ymax/draw_h))
+            fbox.write(
+                "%5.3f %9.7f %9.7f %9.7f %9.7f\n"%(
+                    confidence,obj.xmin/draw_w,obj.ymin/draw_h,obj.xmax/draw_w,obj.ymax/draw_h
+                )
+            )
 
     #show result image
     cv2.imshow('YOLOv2_demo',draw_img)
-    key=cv2.waitKey(0)
-    if key!=-1:
-        if key==27: exit_code=True
-    if exit_code:break
+    if args.batch:
+        key=cv2.waitKey(1)
+    else:
+        key=cv2.waitKey(0)
+        if key!=-1:
+            if key==27: exit_code=True
+        if exit_code:break
 
 #STEP-10
 cv2.destroyAllWindows()
