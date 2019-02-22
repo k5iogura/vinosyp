@@ -10,59 +10,58 @@ import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 
-coco=False
-if coco:
-    class_names = [
-        "person", "bicycle", "car", "motorbike", "aeroplane",
-        "bus", "train", "truck", "boat", "traffic light",
-        "fire hydrant", "stop sign", "parking meter", "bench", "bird",
-        "cat", "dog", "horse", "sheep", "cow",
-        "elephant", "bear", "zebra", "giraffe", "backpack",
-        "umbrella", "handbag", "tie", "suitcase", "frisbee",
-        "skis", "snowboard", "sports ball", "kite", "baseball bat",
-        "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
-        "wine glass", "cup", "fork", "knife", "spoon",
-        "bowl", "banana", "apple", "sandwich", "orange",
-        "broccoli", "carrot", "hot dog", "pizza", "donut",
-        "cake", "chair", "sofa", "pottedplant", "bed",
-        "diningtable", "toilet", "tvmonitor", "laptop", "mouse",
-        "remote", "keyboard", "cell phone", "microwave", "oven",
-        "toaster", "sink", "refrigerator", "book", "clock",
-        "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
-    ]
-    anchors = [ 
-        0.572730, 0.677385, 
-        1.874460, 2.062530, 
-        3.338430, 5.474340,
-        7.882820, 3.527780,
-        9.770520, 9.168280,
-    ]
-else:
-    class_names = [
-        "aeroplane", "bicycle", "bird", "boat", "bottle",
-        "bus", "car", "cat", "chair", "cow", "diningtable",
-        "dog", "horse", "motorbike", "person", "pottedplant",
-        "sheep", "sofa", "train", "tvmonitor"
-    ]
-    anchors = [ 
-        1.3221, 1.73145,
-        3.19275, 4.00944,
-        5.05587, 8.09892,
-        9.47112, 4.84053,
-        11.2364, 10.0071
-    ]
-
 num = 5
 coords = 4
-classes=len(class_names)
 downsampling_rate = 32
 
-print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
-
-thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
-thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-#thresh_conf=0.50
-thresh_iou =0.45
+coco_class_names = [
+    "person", "bicycle", "car", "motorbike", "aeroplane",
+    "bus", "train", "truck", "boat", "traffic light",
+    "fire hydrant", "stop sign", "parking meter", "bench", "bird",
+    "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack",
+    "umbrella", "handbag", "tie", "suitcase", "frisbee",
+    "skis", "snowboard", "sports ball", "kite", "baseball bat",
+    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
+    "wine glass", "cup", "fork", "knife", "spoon",
+    "bowl", "banana", "apple", "sandwich", "orange",
+    "broccoli", "carrot", "hot dog", "pizza", "donut",
+    "cake", "chair", "sofa", "pottedplant", "bed",
+    "diningtable", "toilet", "tvmonitor", "laptop", "mouse",
+    "remote", "keyboard", "cell phone", "microwave", "oven",
+    "toaster", "sink", "refrigerator", "book", "clock",
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
+]
+coco_anchors = [ 
+    0.572730, 0.677385, 
+    1.874460, 2.062530, 
+    3.338430, 5.474340,
+    7.882820, 3.527780,
+    9.770520, 9.168280,
+]
+c2_class_names = [
+    "chair", "person",
+]
+c2_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
+voc_class_names = [
+    "aeroplane", "bicycle", "bird", "boat", "bottle",
+    "bus", "car", "cat", "chair", "cow", "diningtable",
+    "dog", "horse", "motorbike", "person", "pottedplant",
+    "sheep", "sofa", "train", "tvmonitor"
+]
+voc_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
 
 def save_as_txt(data,outfile):
     a1 = data.reshape(-1)
@@ -205,10 +204,25 @@ def keep_aspect(image, new_h, new_w):
         h = int(new_h * org_w/org_w)
     return cv2.resize(image,(w,h))
 
+def check_classes(classes_set):
+    classes_mode = 20
+    if classes_set != 'voc':
+        model_bin=data_type+'/yolov2-'+classes_set+'.bin'
+        model_xml=data_type+'/yolov2-'+classes_set+'.xml'
+        if not os.path.exists(model_bin) or not os.path.exists(model_xml):
+            print("not found model", os.path.splitext(model_bin)[0])
+            sys.exit(-1)
+        if classes_set == 'coco': classes_mode=80
+        if classes_set == '2c'  : classes_mode=2
+        if classes_set == '1c'  : classes_mode=1
+        return True, model_bin, model_xml, classes_mode
+    return False, '', '', classes_mode
+
 args = argparse.ArgumentParser()
 args.add_argument("images", nargs='*', type=str)
 args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
-args.add_argument("-p", "--prefix", type=str, help="debug file prefix")
+args.add_argument("-c", "--classes",   type=str, default='voc', help="middlefix voc/2c/1c/coco")
+args.add_argument("-p", "--prefix",    type=str, help="debug file prefix")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
 args.add_argument("-a", "--async",  action="store_true", help="aplly async IEngine")
 args = args.parse_args()
@@ -219,11 +233,28 @@ data_type="FP16"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml=data_type+'/yolov2-voc.xml'
-model_bin=data_type+'/yolov2-voc.bin'
-#model_xml = os.environ['HOME'] + "/" + model_xml
-#model_bin = os.environ['HOME'] + "/" + model_bin
+model_xml=data_type+'/yolov2.xml'
+model_bin=data_type+'/yolov2.bin'
+ret, _bin, _xml, classes_mode = check_classes(args.classes)
+if ret: model_xml, model_bin = _xml, _bin
+if classes_mode == 80:class_names = coco_class_names
+if classes_mode == 20:class_names = voc_class_names
+if classes_mode ==  2:class_names = c2_class_names
+if classes_mode ==  1:class_names = c1_voc_class_names
+if classes_mode == 80:anchors     = coco_anchors
+if classes_mode == 20:anchors     = voc_anchors
+if classes_mode ==  2:anchors     = c2_anchors
+if classes_mode ==  1:anchors     = c1_anchors
 net = IENetwork(model=model_xml, weights=model_bin)
+
+classes=len(class_names)
+
+print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
+
+thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
+thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+#thresh_conf=0.50
+thresh_iou =0.45
 
 #STEP-3
 print(model_bin, "on", args.device)
@@ -324,12 +355,22 @@ for f in args.images:
         # Draw
         overlay_objects(draw_img , objects)
 
-        high_probs = 0
-        for obj in objects:
-            if obj.confidence <= 0:continue
-            high_probs += 1
     else:
         print("error")
+
+    f_dir = os.path.dirname(f)
+    os.makedirs(f_dir+'/out/', exist_ok=True)
+    f_img = f_dir+'/out/'+os.path.splitext(os.path.basename(f))[0]+'.jpg'
+    f_box = f_dir+'/out/'+os.path.splitext(os.path.basename(f))[0]+'.txt'
+    print("saving result in file",f_img, f_box)
+    cv2.imwrite(f_img, draw_img)
+    draw_h, draw_w = draw_img.shape[:2]
+    with open(f_box,'w') as fbox:
+        for obj in objects:
+            confidence = obj.confidence
+            if obj.confidence <= 0.0: continue  # skip object rejected by NMS
+            label = obj.class_id
+            fbox.write("%9.7f %9.7f %9.7f %9.7f\n"%(obj.xmin/draw_w,obj.ymin/draw_h,obj.xmax/draw_w,obj.ymax/draw_h))
 
     #show result image
     cv2.imshow('YOLOv2_demo',draw_img)
