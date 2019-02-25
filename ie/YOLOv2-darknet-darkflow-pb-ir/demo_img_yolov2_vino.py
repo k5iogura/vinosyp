@@ -39,6 +39,16 @@ coco_anchors = [
     7.882820, 3.527780,
     9.770520, 9.168280,
 ]
+c1_class_names = [
+    "person",
+]
+c1_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
 c2_class_names = [
     "chair", "person",
 ]
@@ -241,7 +251,7 @@ if ret: model_xml, model_bin = _xml, _bin
 if classes_mode == 80:class_names = coco_class_names
 if classes_mode == 20:class_names = voc_class_names
 if classes_mode ==  2:class_names = c2_class_names
-if classes_mode ==  1:class_names = c1_voc_class_names
+if classes_mode ==  1:class_names = c1_class_names
 if classes_mode == 80:anchors     = coco_anchors
 if classes_mode == 20:anchors     = voc_anchors
 if classes_mode ==  2:anchors     = c2_anchors
@@ -380,7 +390,7 @@ for f in args.images:
     #show result image
     cv2.imshow('YOLOv2_demo',draw_img)
     if args.batch:
-        key=cv2.waitKey(1)
+        key=cv2.waitKey(33)
     else:
         key=cv2.waitKey(0)
         if key!=-1:
