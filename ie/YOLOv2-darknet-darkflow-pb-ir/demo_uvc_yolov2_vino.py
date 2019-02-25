@@ -10,57 +10,68 @@ import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 
-coco=False
-if coco:
-    class_names = [
-        "person", "bicycle", "car", "motorbike", "aeroplane",
-        "bus", "train", "truck", "boat", "traffic light",
-        "fire hydrant", "stop sign", "parking meter", "bench", "bird",
-        "cat", "dog", "horse", "sheep", "cow",
-        "elephant", "bear", "zebra", "giraffe", "backpack",
-        "umbrella", "handbag", "tie", "suitcase", "frisbee",
-        "skis", "snowboard", "sports ball", "kite", "baseball bat",
-        "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
-        "wine glass", "cup", "fork", "knife", "spoon",
-        "bowl", "banana", "apple", "sandwich", "orange",
-        "broccoli", "carrot", "hot dog", "pizza", "donut",
-        "cake", "chair", "sofa", "pottedplant", "bed",
-        "diningtable", "toilet", "tvmonitor", "laptop", "mouse",
-        "remote", "keyboard", "cell phone", "microwave", "oven",
-        "toaster", "sink", "refrigerator", "book", "clock",
-        "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
-    ]
-    anchors = [ 
-        0.572730, 0.677385, 
-        1.874460, 2.062530, 
-        3.338430, 5.474340,
-        7.882820, 3.527780,
-        9.770520, 9.168280,
-    ]
-else:
-    class_names = [
-        "aeroplane", "bicycle", "bird", "boat", "bottle",
-        "bus", "car", "cat", "chair", "cow", "diningtable",
-        "dog", "horse", "motorbike", "person", "pottedplant",
-        "sheep", "sofa", "train", "tvmonitor"
-    ]
-    anchors = [ 
-        1.3221, 1.73145,
-        3.19275, 4.00944,
-        5.05587, 8.09892,
-        9.47112, 4.84053,
-        11.2364, 10.0071
-    ]
-
-num    = 5
+num = 5
 coords = 4
-classes=len(class_names)
 downsampling_rate = 32
 
-thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
-thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-#thresh_conf=0.50
-thresh_iou =0.45
+coco_class_names = [
+    "person", "bicycle", "car", "motorbike", "aeroplane",
+    "bus", "train", "truck", "boat", "traffic light",
+    "fire hydrant", "stop sign", "parking meter", "bench", "bird",
+    "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack",
+    "umbrella", "handbag", "tie", "suitcase", "frisbee",
+    "skis", "snowboard", "sports ball", "kite", "baseball bat",
+    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
+    "wine glass", "cup", "fork", "knife", "spoon",
+    "bowl", "banana", "apple", "sandwich", "orange",
+    "broccoli", "carrot", "hot dog", "pizza", "donut",
+    "cake", "chair", "sofa", "pottedplant", "bed",
+    "diningtable", "toilet", "tvmonitor", "laptop", "mouse",
+    "remote", "keyboard", "cell phone", "microwave", "oven",
+    "toaster", "sink", "refrigerator", "book", "clock",
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
+]
+coco_anchors = [ 
+    0.572730, 0.677385, 
+    1.874460, 2.062530, 
+    3.338430, 5.474340,
+    7.882820, 3.527780,
+    9.770520, 9.168280,
+]
+c1_class_names = [
+    "person",
+]
+c1_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
+c2_class_names = [
+    "chair", "person",
+]
+c2_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
+voc_class_names = [
+    "aeroplane", "bicycle", "bird", "boat", "bottle",
+    "bus", "car", "cat", "chair", "cow", "diningtable",
+    "dog", "horse", "motorbike", "person", "pottedplant",
+    "sheep", "sofa", "train", "tvmonitor"
+]
+voc_anchors = [ 
+    1.3221, 1.73145,
+    3.19275, 4.00944,
+    5.05587, 8.09892,
+    9.47112, 4.84053,
+    11.2364, 10.0071
+]
 
 def save_as_txt(data,outfile):
     a1 = data.reshape(-1)
@@ -203,10 +214,23 @@ def keep_aspect(image, new_h, new_w):
         h = int(new_h * org_w/org_w)
     return cv2.resize(image,(w,h))
 
+def check_classes(classes_set):
+    classes_mode = 20
+    if classes_set != 'voc':
+        model_bin=data_type+'/yolov2-'+classes_set+'.bin'
+        model_xml=data_type+'/yolov2-'+classes_set+'.xml'
+        if not os.path.exists(model_bin) or not os.path.exists(model_xml):
+            print("not found model", os.path.splitext(model_bin)[0])
+            sys.exit(-1)
+        if classes_set == 'coco': classes_mode=80
+        if classes_set == '2c'  : classes_mode=2
+        if classes_set == '1c'  : classes_mode=1
+        return True, model_bin, model_xml, classes_mode
+    return False, '', '', classes_mode
+
 args = argparse.ArgumentParser()
-args.add_argument("images", nargs='*', type=str)
 args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
-args.add_argument("-p", "--prefix", type=str, help="debug file prefix")
+args.add_argument("-c", "--classes",   type=str, default='1c', help="dataset voc/2c/1c/coco")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
 args.add_argument("-a", "--async",  action="store_true", help="aplly async IEngine")
 args = args.parse_args()
@@ -217,11 +241,28 @@ data_type="FP16"
 if args.device == "CPU": data_type="FP32"
 
 #STEP-2
-model_xml=data_type+'/yolov2-voc.xml'
-model_bin=data_type+'/yolov2-voc.bin'
-#model_xml = os.environ['HOME'] + "/" + model_xml
-#model_bin = os.environ['HOME'] + "/" + model_bin
+model_xml=data_type+'/yolov2.xml'
+model_bin=data_type+'/yolov2.bin'
+ret, _bin, _xml, classes_mode = check_classes(args.classes)
+if ret: model_xml, model_bin = _xml, _bin
+if classes_mode == 80:class_names = coco_class_names
+if classes_mode == 20:class_names = voc_class_names
+if classes_mode ==  2:class_names = c2_class_names
+if classes_mode ==  1:class_names = c1_class_names
+if classes_mode == 80:anchors     = coco_anchors
+if classes_mode == 20:anchors     = voc_anchors
+if classes_mode ==  2:anchors     = c2_anchors
+if classes_mode ==  1:anchors     = c1_anchors
 net = IENetwork(model=model_xml, weights=model_bin)
+
+classes=len(class_names)
+
+print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
+
+thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
+thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+#thresh_conf=0.50
+thresh_iou =0.45
 
 #STEP-3
 print(model_bin, "on", args.device)
@@ -248,15 +289,19 @@ del net
 #STEP-5
 side_h = int(model_h//downsampling_rate)
 side_w = int(model_w//downsampling_rate)
+files=[]
 
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():sys.exit(-1)
+print("Opened UVC-Camera via /dev/video0",model_w,model_h,"camera-in")
 cap.set(cv2.CAP_PROP_FPS,30)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,model_w)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,model_h)
 
+sec=count_img=0
+exit_code=False
 while True:
-    ret,frame= cap.read()   # HWC
+    ret, frame = cap.read() # HWC
     draw_img = keep_aspect(frame, model_h, model_w)
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
     original_im_h, original_im_w = frame.shape[:2]
@@ -278,14 +323,12 @@ while True:
         # result of inferrence have different formats btn async and sync execution
         if args.async:
             res = exec_net.requests[0].outputs[out_blob]
-        #    print("ASYNCRONOUS Inference: res.shape",res.shape)
             result = res.reshape(-1)
         else:
             for outkey in res.keys():pass
-        #        print("outkey=",outkey)
-        #        print("SYNCRONOUS Inference: res.shape",res[outkey].shape)
             result = res[outkey][0]
-        sec = time()-start
+        sec+=(time()-start)
+        count_img+=1
 
         # Apply softmax instead of Region layer
         if args.softmax:
@@ -323,20 +366,21 @@ while True:
         # Draw
         overlay_objects(draw_img , objects)
 
-        high_probs = 0
-        for obj in objects:
-            if obj.confidence <= 0:continue
-            high_probs += 1
     else:
         print("error")
+    sys.stdout.write('\b'*20)
+    sys.stdout.write('%7.3fFPS'%(count_img/sec))
+    sys.stdout.flush()
 
     #show result image
     cv2.imshow('YOLOv2_demo',draw_img)
-    key=cv2.waitKey(1)
+    key=cv2.waitKey(10)
     if key!=-1:
-        if key==27: break
+        if key==27: exit_code=True
+    if exit_code:break
 
 #STEP-10
+print("finalizing")
 cv2.destroyAllWindows()
 del exec_net
 del plugin
