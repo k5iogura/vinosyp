@@ -295,6 +295,7 @@ side_w = int(model_w//downsampling_rate)
 files=[]
 if len(args.images)>0:files = args.images
 
+sec=count_img=0
 exit_code=False
 for f in args.images:
     print("input image = %s"%f)
@@ -327,7 +328,8 @@ for f in args.images:
                 print("outkey=",outkey)
                 print("SYNCRONOUS Inference: res.shape",res[outkey].shape)
             result = res[outkey][0]
-        sec = time()-start
+        sec+=(time()-start)
+        count_img+=1
         if args.prefix is not None:save_as_txt(result,args.prefix+"_region_"+args.device+".txt")
 
         # Apply softmax instead of Region layer
@@ -369,6 +371,7 @@ for f in args.images:
     else:
         print("error")
 
+    print("%7.3fFPS"%(count_img/sec))
     f_dir = os.path.dirname(f)
     os.makedirs(f_dir+'/out/', exist_ok=True)
     f_img = f_dir+'/out/'+os.path.splitext(os.path.basename(f))[0]+'.jpg'
@@ -398,6 +401,7 @@ for f in args.images:
         if exit_code:break
 
 #STEP-10
+print("finalizing")
 cv2.destroyAllWindows()
 del exec_net
 del plugin
