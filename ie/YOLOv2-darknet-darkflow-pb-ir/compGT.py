@@ -135,7 +135,7 @@ def calc_precision_recall(TP,FP,FN):
     else:
         recall    = 0.0
     print(" # TP FP FN Precision Recall")
-    print(" %d %d %d %.4f %.4f"%(nTP,nFP,nFN,precision,recall))
+    print("   %d %d %d %.4f %.4f"%(nTP,nFP,nFN,precision,recall))
     print("")
     return precision, recall
 
@@ -149,6 +149,7 @@ if __name__ == '__main__':
     args.add_argument("-ec","--errC",type=float, default=0.01,help="HIKE Mode Error Confidence")
     args.add_argument("-el","--errL",type=float, default=2.0, help="HIKE Mode Error Location")
     args.add_argument("-er","--errR",type=float, default=0.05,help="HIKE Mode Error Region")
+    args.add_argument("-x","--both_pixelscale",  action='store_true', help="infiles are both pixel scale")
     args.add_argument("-v", "--verbose",action='store_true', help="Verbose for debug")
     args = args.parse_args()
     assert len(args.gt)==len(args.pr), 'mismatched number of files'
@@ -160,10 +161,13 @@ if __name__ == '__main__':
     TP=[]
     FP=[]
     FN=[]
+    scale_w = 640
+    scale_h = 480
     for gt_file,pr_file in zip(args.gt, args.pr):
         print(gt_file, pr_file)
+        if args.both_pixelscale:scale_w = scale_h = 1.0
         gt_bbox=read_box(gt_file,w=1.0,h=1.0)
-        pr_bbox=read_box(pr_file,w=640,h=480)
+        pr_bbox=read_box(pr_file,w=scale_w,h=scale_h)
 
         #args.errC = args.errL = args.errR =  100.  # For Debugging
         if args.ke:

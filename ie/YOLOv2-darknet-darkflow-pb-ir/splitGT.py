@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 import sys,os
 import numpy as np
-for filename in sys.argv[1:]:
+import argparse
+args = argparse.ArgumentParser('split Ground Truth etc.')
+args.add_argument("files", nargs='+', help="GT or Prediction Data")
+args.add_argument("-6", "--item6",action='store_true', help="specify 6 items")
+args = args.parse_args()
+
+for filename in args.files:
     f = open(filename)
     lines = f.readlines()
     f.close()
@@ -16,6 +22,8 @@ for filename in sys.argv[1:]:
         with open(newname,'w') as o:
             print('Created',newname, 'objects', objects)
             for i in coords:
-                line = "{} {} {} {} {}\n".format(i[0],i[1],i[2],i[3],i[4])
-                #o.write("{} {} {} {} {}\n".format(i[0],i[1],i[2],i[3],i[4]))
+                if not args.item6:
+                    line = "{} {} {} {} {}\n".format(i[0],i[1],i[2],i[3],i[4])
+                else:
+                    line = "{} {} {} {} {}\n".format(i[1],i[2],i[3],i[4],i[5])
                 o.write(line)
