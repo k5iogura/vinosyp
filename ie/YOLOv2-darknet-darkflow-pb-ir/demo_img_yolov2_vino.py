@@ -73,6 +73,12 @@ voc_anchors = [
     11.2364, 10.0071
 ]
 
+def statistics(ndarray, title="Stat"):
+    ndarray_ = ndarray.reshape(-1)
+    std,mean,fmax,fmin=np.std(ndarray_),np.mean(ndarray_),np.max(ndarray_),np.min(ndarray_)
+    print("%.11s: %11.7f %11.7f %11.7f %11.7f"%(title, std, mean, fmax, fmin))
+    return std, mean, fmax, fmin
+
 def save_as_txt(data,outfile):
     a1 = data.reshape(-1)
     with open(outfile,"w") as fp:
@@ -264,7 +270,7 @@ print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
 
 thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
 thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-#thresh_conf=0.50
+thresh_conf=0.50
 thresh_iou =0.45
 
 #STEP-3
@@ -331,6 +337,7 @@ for f in args.images:
         sec+=(time()-start)
         count_img+=1
         if args.prefix is not None:save_as_txt(result,args.prefix+"_region_"+args.device+".txt")
+        statistics(result,title=args.device)
 
         # Apply softmax instead of Region layer
         if args.softmax:
