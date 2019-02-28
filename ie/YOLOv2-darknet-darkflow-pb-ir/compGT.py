@@ -64,6 +64,35 @@ def compare_with_IOU(GT,pr,iou_thresh=0.5,verbose=False):
     FN = gt[gt>0.0].reshape(-1,5)
     return TP, FP, FN
 
+def compare_with_Pix(GT, pr, verbose=False):
+    assert type(GT) == np.ndarray,'arg gt must be numpy.array'
+    assert type(pr) == np.ndarray,'arg pr must be numpy.array'
+    gt = GT.copy()
+    if verbose:print("GroundTrush:%d Predicted:%d"%(gt.shape[0], pr.shape[0]))
+    TP = []
+    FP = []
+    FN = []
+    if verbose:print("# TP GT and iou")
+    for pi in range(pr.shape[0]):
+        predict_bbox = pr[pi][1:]
+        matched=False
+        for gi in range(gt.shape[0]):
+            ground_bbox = gt[gi][1:]
+            iou = diff_location_region(predict_bbox, ground_bbox)
+            iou = int(10000.*iou)/10000.
+            if iou > iou_thresh:
+                if verbose:print(predict_bbox, ground_bbox,iou)
+                TP.append(predict_bbox)
+                matched=True
+                gt[gi]=np.zeros((5),dtype=np.float32)
+                break
+        if not matched:
+            FP.append(predict_bbox)
+    TP = np.asarray(TP)
+    FP = np.asarray(FP)
+    FN = gt[gt>0.0].reshape(-1,5)
+    return TP, FP, FN
+
 def calc_precision_recall(TP,FP,FN):
     assert type(TP) == np.ndarray or type(TP) == list, "needs ndarray or list"
     assert type(FP) == np.ndarray or type(FP) == list, "needs ndarray or list"
