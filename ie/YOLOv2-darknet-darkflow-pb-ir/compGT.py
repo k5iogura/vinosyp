@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import math
 import numpy as np
 import sys,os
 import argparse
@@ -52,7 +53,7 @@ def compare_with_IOU(GT,pr,iou_thresh=0.5,verbose=False):
             iou = IntersectionOverUnion(predict_bbox, ground_bbox)
             iou = int(10000.*iou)/10000.
             if iou > iou_thresh:
-                if verbose:print(predict_bbox, ground_bbox,iou)
+                if verbose:print(predict_bbox.astype(np.int),ground_bbox.astype(np.int),iou)
                 TP.append(predict_bbox)
                 matched=True
                 gt[gi]=np.zeros((5),dtype=np.float32)
@@ -64,24 +65,49 @@ def compare_with_IOU(GT,pr,iou_thresh=0.5,verbose=False):
     FN = gt[gt>0.0].reshape(-1,5)
     return TP, FP, FN
 
-def compare_with_Pix(GT, pr, verbose=False):
+def diff_location_region(pred, grnd, scale_er):
+    xmin=1
+    ymin=2
+    xmax=3
+    ymax=4
+    assert type(pred) == np.ndarray,'arg pred must be numpy.array'
+    assert type(grnd) == np.ndarray,'arg grnd must be numpy.array'
+    diff_confidence = abs(pred[0] - grnd[0])
+    diff_location = np.abs(pred[1:] - grnd[1:])
+    w_1 = pred[xmax] - pred[xmin]
+    h_1 = pred[ymax] - pred[ymin]
+    w_2 = grnd[xmax] - grnd[xmin]
+    h_2 = grnd[ymax] - grnd[ymin]
+    thresh_reg  = max(w_2*scale_er, h_2*scale_er)
+    diff_region = np.asarray([ w_1 - w_2, h_1 - h_2 ],dtype=np.float32)
+    diff_region = np.abs(diff_region)
+    return diff_confidence, diff_location, diff_region, thresh_reg
+
+def compare_with_hike(GT, pr, errorSpec, verbose=False):
     assert type(GT) == np.ndarray,'arg gt must be numpy.array'
     assert type(pr) == np.ndarray,'arg pr must be numpy.array'
     gt = GT.copy()
+    thresh_conf = errorSpec['conf']
+    thresh_con  = errorSpec['ec']
+    thresh_loc  = errorSpec['el']
+    thresh_reg  = errorSpec['er']
+    if not thresh_conf:thresh_con = 1000.0
     if verbose:print("GroundTrush:%d Predicted:%d"%(gt.shape[0], pr.shape[0]))
     TP = []
     FP = []
     FN = []
-    if verbose:print("# TP GT and iou")
+    if verbose:print("# DIFF BTN PR VS GT :LOCATION REGION and maxes")
     for pi in range(pr.shape[0]):
-        predict_bbox = pr[pi][1:]
+        predict_bbox = pr[pi][0:]
         matched=False
         for gi in range(gt.shape[0]):
-            ground_bbox = gt[gi][1:]
-            iou = diff_location_region(predict_bbox, ground_bbox)
-            iou = int(10000.*iou)/10000.
-            if iou > iou_thresh:
-                if verbose:print(predict_bbox, ground_bbox,iou)
+            ground_bbox = gt[gi][0:]
+            conf, loc, reg, reg_er = diff_location_region(predict_bbox,ground_bbox,thresh_reg)
+            loc_max = np.max(loc)
+            reg_max = np.max(reg)
+    #        if verbose:print(loc.astype(np.int), reg.astype(np.int), loc_max, reg_max)
+            if conf <= thresh_con and loc_max <= thresh_loc and reg_max <= reg_er:
+                if verbose:print(predict_bbox.astype(np.int), ground_bbox.astype(np.int))
                 TP.append(predict_bbox)
                 matched=True
                 gt[gi]=np.zeros((5),dtype=np.float32)
@@ -118,11 +144,18 @@ if __name__ == '__main__':
     args.add_argument("-g", "--gt", type=str, nargs='+', help="Ground Truth files")
     args.add_argument("-p", "--pr", type=str, nargs='+', help="Prediction result files")
     args.add_argument("-i", "--iou",type=float, default=0.5, help="IOU Threshold")
+    args.add_argument("-k", "--ke",     action='store_true', help="HIKE Criteria")
+    args.add_argument("-c", "--conf",   action='store_true', help="HIKE Criteria with confidence")
+    args.add_argument("-ec","--errC",type=float, default=0.01,help="HIKE Mode Error Confidence")
+    args.add_argument("-el","--errL",type=float, default=2.0, help="HIKE Mode Error Location")
+    args.add_argument("-er","--errR",type=float, default=0.05,help="HIKE Mode Error Region")
     args.add_argument("-v", "--verbose",action='store_true', help="Verbose for debug")
     args = args.parse_args()
     assert len(args.gt)==len(args.pr), 'mismatched number of files'
 
     iou_thresh = args.iou
+    thresh_conf= 0.01
+    if args.ke:print("KE-Mode")
 
     TP=[]
     FP=[]
@@ -132,7 +165,22 @@ if __name__ == '__main__':
         gt_bbox=read_box(gt_file,w=1.0,h=1.0)
         pr_bbox=read_box(pr_file,w=640,h=480)
 
-        tp, fp, fn = compare_with_IOU(gt_bbox,pr_bbox,iou_thresh,args.verbose)
+        #args.errC = args.errL = args.errR =  100.  # For Debugging
+        if args.ke:
+            errorSpec={
+                'conf':args.conf,
+                'ec':args.errC,
+                'el':args.errL,
+                'er':args.errR,
+            }
+            tp, fp, fn = compare_with_hike(
+                gt_bbox,
+                pr_bbox,
+                errorSpec=errorSpec,
+                verbose=args.verbose
+            )
+        else:
+            tp, fp, fn = compare_with_IOU(gt_bbox,pr_bbox,iou_thresh,args.verbose)
         calc_precision_recall(tp,fp,fn)
         TP.extend(tp)
         FP.extend(fp)
