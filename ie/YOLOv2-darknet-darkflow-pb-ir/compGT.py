@@ -35,13 +35,14 @@ def read_box(filename,w=1.0,h=1.0):
     ary = ary.reshape(-1,5)
     return ary
 
-def compare_with_IOU(gt,pr,iou_thresh=0.5,verbose=False):
-    assert type(gt) == np.ndarray,'arg gt must be numpy.array'
+def compare_with_IOU(GT,pr,iou_thresh=0.5,verbose=False):
+    assert type(GT) == np.ndarray,'arg gt must be numpy.array'
     assert type(pr) == np.ndarray,'arg pr must be numpy.array'
+    gt = GT.copy()
     if verbose:print("GroundTrush:%d Predicted:%d"%(gt.shape[0], pr.shape[0]))
     TP = []
     FP = []
-    TN = []
+    FN = []
     if verbose:print("# TP GT and iou")
     for pi in range(pr.shape[0]):
         predict_bbox = pr[pi][1:]
@@ -60,20 +61,27 @@ def compare_with_IOU(gt,pr,iou_thresh=0.5,verbose=False):
             FP.append(predict_bbox)
     TP = np.asarray(TP)
     FP = np.asarray(FP)
-    TN = gt[gt>0.0].reshape(-1,5)
-    return TP, FP, TN
+    FN = gt[gt>0.0].reshape(-1,5)
+    return TP, FP, FN
 
-def calc_precision_recall(TP,FP,TN):
+def calc_precision_recall(TP,FP,FN):
     assert type(TP) == np.ndarray or type(TP) == list, "needs ndarray or list"
     assert type(FP) == np.ndarray or type(FP) == list, "needs ndarray or list"
-    assert type(TN) == np.ndarray or type(TN) == list, "needs ndarray or list"
+    assert type(FN) == np.ndarray or type(FN) == list, "needs ndarray or list"
     nTP=len(TP)
     nFP=len(FP)
-    nTN=len(TN)
-    precision = nTP/(nTP+nFP)
-    recall    = nTP/(nTP+nTN)
-    print("# TP FP TN Precision Recall")
-    print("%d %d %d %.4f %.4f"%(nTP,nFP,nTN,precision,recall))
+    nFN=len(FN)
+    if (nTP+nFP)!=0:
+        precision = nTP/(nTP+nFP)
+    else:
+        precision = 0.0
+    if (nTP+nFN)!=0:
+        recall    = nTP/(nTP+nFN)
+    else:
+        recall    = 0.0
+    print(" # TP FP FN Precision Recall")
+    print(" %d %d %d %.4f %.4f"%(nTP,nFP,nFN,precision,recall))
+    print("")
     return precision, recall
 
 if __name__ == '__main__':
@@ -87,10 +95,24 @@ if __name__ == '__main__':
 
     iou_thresh = args.iou
 
+    TP=[]
+    FP=[]
+    FN=[]
     for gt_file,pr_file in zip(args.gt, args.pr):
+        print(gt_file, pr_file)
         gt_bbox=read_box(gt_file,w=1.0,h=1.0)
         pr_bbox=read_box(pr_file,w=640,h=480)
 
-        tp, fp, tn = compare_with_IOU(gt_bbox,pr_bbox,iou_thresh,args.verbose)
-        calc_precision_recall(tp,fp,tn)
+        tp, fp, fn = compare_with_IOU(gt_bbox,pr_bbox,iou_thresh,args.verbose)
+        calc_precision_recall(tp,fp,fn)
+        TP.extend(tp)
+        FP.extend(fp)
+        FN.extend(fn)
+    TP=np.asarray(TP,dtype=np.float32)
+    FP=np.asarray(FP,dtype=np.float32)
+    FN=np.asarray(FN,dtype=np.float32)
+    print('*'*28)
+    print("** Total Precision/Recall **")
+    print('*'*38)
+    calc_precision_recall(TP,FP,FN)
 
