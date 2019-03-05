@@ -59,8 +59,8 @@ def overlay_on_image(display_image, object_info):
 input_image_size=(300,300)
 
 #STEP-2
-model_xml='openvino_fs/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
-model_bin='openvino_fs/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
+model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
+model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)	#R5
@@ -123,5 +123,6 @@ while True:
 
 print("\nfinalizing")
 #STEP-10
+cv2.destroyAllWindows()
 del exec_net
 del plugin
