@@ -237,7 +237,7 @@ def check_classes(classes_set):
 args = argparse.ArgumentParser()
 args.add_argument("images", nargs='*', type=str)
 args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
-args.add_argument("-c", "--classes",   type=str, default='voc', help="middlefix voc/2c/1c/coco")
+args.add_argument("-c", "--classes",   type=str, default='1c', help="middlefix voc/2c/1c/coco")
 args.add_argument("-p", "--prefix",    type=str, help="debug file prefix")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
 args.add_argument("-b", "--batch",  action="store_true", help="batch run")
