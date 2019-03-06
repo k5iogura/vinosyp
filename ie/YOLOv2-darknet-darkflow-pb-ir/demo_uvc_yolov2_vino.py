@@ -2,6 +2,7 @@
 #STEP-1
 from pdb import *
 import sys,os
+assert sys.version_info.major >= 3,'Use python3'
 import numpy as np
 from time import time
 import cv2
@@ -9,6 +10,7 @@ import argparse
 import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
+
 
 num = 5
 coords = 4
@@ -306,7 +308,7 @@ while True:
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
     original_im_h, original_im_w = frame.shape[:2]
     frame =frame/255.0
-    frame =letterbox_image(frame, model_w, model_h)
+    #frame =letterbox_image(frame, model_w, model_h) # Too slow
 
     #STEP-6
     in_frame = frame[np.newaxis,:,:,:]        # Add new axis as a batch dimension HWC NHWC
@@ -380,7 +382,7 @@ while True:
     if exit_code:break
 
 #STEP-10
-print("finalizing")
+print("\nfinalizing")
 cv2.destroyAllWindows()
 del exec_net
 del plugin
