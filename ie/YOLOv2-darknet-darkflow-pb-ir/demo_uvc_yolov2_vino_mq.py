@@ -234,7 +234,8 @@ args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/
 args.add_argument("-c", "--classes",   type=str, default='1c', help="dataset voc/2c/1c/coco")
 args.add_argument("-r", "--requests",  type=int, default=2, help="using device num")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
-args.add_argument("-a", "--async",  action="store_true", help="aplly async IEngine")
+args.add_argument("-nv","--noview", action="store_true", help="no prayback")
+args.add_argument("-ni","--noinfer",action="store_true", help="no inference proc")
 args = args.parse_args()
 
 if args.softmax:print("Aplly softmax")
@@ -310,7 +311,7 @@ for i in range(buffsize):
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
     original_im_h, original_im_w = frame.shape[:2]
     frame =frame/255.0
-    frame =letterbox_image(frame, model_w, model_h)
+    # frame =letterbox_image(frame, model_w, model_h)
     in_frame = frame[np.newaxis,:,:,:]        # Add new axis as a batch dimension HWC NHWC
     in_frame = in_frame.transpose((0, 3, 1, 2))  # Change data layout from NHWC to NCHW
 
@@ -338,16 +339,19 @@ while True:
         #start[bq] = time()
         #STEP-7
 
-        if exec_net.requests[bq].wait(-1) == 0:
-        #if True:
-            # result of inferrence have different formats btn async and sync execution
-            res = exec_net.requests[bq].outputs[out_blob]
-            exec_net.start_async(request_id=bq, inputs={input_blob: in_frame})
-            #res    = np.zeros((1,9000),dtype=np.float32)
+        if args.noinfer or exec_net.requests[bq].wait(-1) == 0:
+            if not args.noinfer:
+                # result of inferrence have different formats btn async and sync execution
+                res = exec_net.requests[bq].outputs[out_blob]
+                exec_net.start_async(request_id=bq, inputs={input_blob: in_frame})
+            else:
+                res    = np.zeros((1,9000),dtype=np.float32)
             result = res.reshape(-1)
 
             sec =(time()-start)
             count_img+=1
+
+            if args.noview:continue
 
             # Apply softmax instead of Region layer
             if args.softmax:
