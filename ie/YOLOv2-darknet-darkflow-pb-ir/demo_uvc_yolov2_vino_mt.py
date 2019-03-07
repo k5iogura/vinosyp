@@ -11,6 +11,9 @@ import itertools as itt
 #from postscript import *
 from openvino.inference_engine import IENetwork, IEPlugin
 import multiprocessing as mp
+import queue
+import threading
+import heapq
 
 num = 5
 coords = 4
@@ -235,8 +238,6 @@ args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/
 args.add_argument("-c", "--classes",   type=str, default='1c', help="dataset voc/2c/1c/coco")
 args.add_argument("-r", "--requests",  type=int, default=2, help="using device num")
 args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
-args.add_argument("-nv","--noview", action="store_true", help="no prayback")
-args.add_argument("-ni","--noinfer",action="store_true", help="no inference proc")
 args = args.parse_args()
 
 if args.softmax:print("Aplly softmax")
@@ -260,38 +261,66 @@ if classes_mode ==  1:anchors     = c1_anchors
 
 class Myriad():
 
-    def __init__(self, model_xml, model_bin, device, requests):
+    def __init__(self, model_xml, model_bin, device, requests, in_frameQ, resultQ):
         self.bq = 0
-        self.model_xml  =model_xml
-        self.model_bin  =model_bin
-        self.requests   =requests
-        self.device     =device
+        self.model_xml  = model_xml
+        self.model_bin  = model_bin
+        self.requests   = requests
+        self.device     = device
+        self.in_frameQ  = in_frameQ
+        self.resultQ    = resultQ  
         self.net        = IENetwork(model=model_xml, weights=model_bin)
         print(model_bin, "on", device)
+        self.requests   = requests
         self.plugin     = IEPlugin(device=device, plugin_dirs=None)
-        self.exec_net   = self.plugin.load(network=self.net, num_requests=self.requests)
+        self.exec_net   = self.plugin.load(network=self.net, num_requests=3)
         self.input_blob = next(iter(self.net.inputs))  #input_blob = 'data'
         self.out_blob   = next(iter(self.net.outputs)) #out_blob   = 'detection_out'
         self.model_form = self.net.inputs[self.input_blob].shape # NCHW
+        self.reqlist    = [0]*3
+        self.reqhistory = []
 
-    def predict(self,in_frameQ,resultQ):
-    #    print("predi-start")
-        in_frame=in_frameQ.get()
-        self.exec_net.start_async(request_id=self.bq, inputs={self.input_blob: in_frame})
-        for i in range(10):
-            if self.exec_net.requests[self.bq].wait(-1) == 0:
-                res = self.exec_net.requests[self.bq].outputs[self.out_blob]
-        result = res.reshape(-1)
-        resultQ.put(result)
-    #    print("predi-put done")
+    def predict(self):
+        if self.in_frameQ.empty():return
+        in_frame  = self.in_frameQ.get()
+        try:
+            empty_idx = self.reqlist.index(0)
+        except:
+            empty_idx = -1
+        if empty_idx != -1:
+            #print("empty_idx",empty_idx)
+            self.exec_net.start_async(request_id=empty_idx, inputs={self.input_blob: in_frame})
+            self.reqlist[empty_idx] = 1
+            heapq.heappush(self.reqhistory,(int(1000*time()),empty_idx))
+
+        (t, idx)= heapq.heappop(self.reqhistory)
+        if self.exec_net.requests[idx].wait(0) == 0:
+            self.exec_net.requests[idx].wait(-1)
+            res = self.exec_net.requests[idx].outputs[self.out_blob]
+            result = res.reshape(-1)
+            self.resultQ.put(result)
+            self.reqlist[idx] = 0
+        else:
+            heapq.heappush(self.reqhistory,(t,idx))
+
     def close(self):
         del self.exec_net
         del self.plugin
 
-def infer(model_xml, model_bin, requests, in_frameQ, resultQ):
-    myriad = Myriad(model_xml,model_bin,"MYRIAD",requests)
+def infer_thread(myriad):
     while True:
-        myriad.predict(in_frameQ,resultQ)
+        myriad.predict()
+
+def infer(model_xml, model_bin, requests, in_frameQ, resultQ):
+    infer_threads=[]
+    for i in range(1):
+        myriad   = Myriad(model_xml,model_bin,"MYRIAD",requests,in_frameQ,resultQ)
+        infer_th = threading.Thread(target=infer_thread,args=(myriad,))
+        infer_th.start()
+        infer_threads.append(infer_th)
+
+    for th in infer_threads:
+        th.join()
 
 in_frameQ = mp.Queue(10)
 resultQ   = mp.Queue(10)
@@ -310,7 +339,7 @@ thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
 thresh_iou =0.45
 
 #STEP-3
-print(model_bin, "on", args.device)
+#print(model_bin, "on", args.device)
 #plugin = IEPlugin(device=args.device, plugin_dirs=None)
 #if args.device == "CPU":
 #    HOME = os.environ['HOME']
@@ -358,10 +387,16 @@ frameQ = mp.Queue(10)
 camproc= mp.Process(target=camera,args=(10,frameQ),daemon=True) 
 camproc.start()
 
+<<<<<<< HEAD
+sec=count_cam=count_inf=1
+exit_code=False
+start = time()
+=======
 sec=count_img=1
 exit_code=False
 start = time()
 bq = 0
+>>>>>>> 75d65e899931c40e6d521945de5dd10d675d423d
 latest_result = np.zeros((9000),dtype=np.float32)
 while True:
     frame = frameQ.get() # HWC
@@ -377,69 +412,54 @@ while True:
     if in_frameQ.full():in_frameQ.get()
     in_frameQ.put(in_frame.copy())
 
-    #start[bq] = time()
     #STEP-7
 
-    if True or exec_net.requests[bq].wait(-1) == 0:
-        if False:
-            # result of inferrence have different formats btn async and sync execution
-            res = exec_net.requests[bq].outputs[out_blob]
-            exec_net.start_async(request_id=bq, inputs={input_blob: in_frame})
- #       else:
- #           res    = np.zeros((1,9000),dtype=np.float32)
- #       result = res.reshape(-1)
-        try:
-            result = resultQ.get_nowait()
-            latest_result = result
- #           print("queue return")
- #           break
-        except :
- #           print("no return")
-            result = latest_result
+    try:
+        result = resultQ.get_nowait()
+        latest_result = result
+        count_inf+=1
+    except queue.Empty:
+        result = latest_result
 
-        sec =(time()-start)
-        count_img+=1
+    sec =(time()-start)
+    count_cam+=1
 
-        if args.noview:continue
-
-        # Apply softmax instead of Region layer
-        if args.softmax:
-            index = EntryIndex(side_h, side_w, 4, 0, 0, coords + 1)
-            softmax_cpu(
-                result[index:],
-                classes,
-                num,
-                int((side_h*side_w*num*(coords+1)+side_h*side_w*num*classes)/num),
-                side_w*side_h,
-                1,
-                side_w*side_h,
-                1,
-                result[index:]
-            )
-
-        # Pull objects from result
-        objects = parse_result(
-            result,
-            model_h,
-            model_w,
-            original_im_h,
-            original_im_w,
-            thresh_conf
+    # Apply softmax instead of Region layer
+    if args.softmax:
+        index = EntryIndex(side_h, side_w, 4, 0, 0, coords + 1)
+        softmax_cpu(
+            result[index:],
+            classes,
+            num,
+            int((side_h*side_w*num*(coords+1)+side_h*side_w*num*classes)/num),
+            side_w*side_h,
+            1,
+            side_w*side_h,
+            1,
+            result[index:]
         )
-        condidates = len(objects)
 
-        # NMS
-        for i, obj1 in enumerate(objects):
-            if obj1.confidence <= 0: continue
-            for j, obj2 in enumerate(objects):
-                if j<=i:continue
-                if IntersectionOverUnion(obj1, obj2) >= thresh_iou:
-                    objects[i].confidence = 0.0
-        # Draw
-        overlay_objects(draw_img , objects)
+    # Pull objects from result
+    objects = parse_result(
+        result,
+        model_h,
+        model_w,
+        original_im_h,
+        original_im_w,
+        thresh_conf
+    )
+    condidates = len(objects)
 
-    else:
-        print("error")
+    # NMS
+    for i, obj1 in enumerate(objects):
+        if obj1.confidence <= 0: continue
+        for j, obj2 in enumerate(objects):
+            if j<=i:continue
+            if IntersectionOverUnion(obj1, obj2) >= thresh_iou:
+                objects[i].confidence = 0.0
+    # Draw
+    overlay_objects(draw_img , objects)
+
     #show result image
     cv2.imshow('YOLOv2_demo',draw_img)
     key=cv2.waitKey(1)
@@ -447,8 +467,8 @@ while True:
         if key==27: exit_code=True
     if exit_code:break
 
-    sys.stdout.write('\b'*20)
-    sys.stdout.write('%9.5fFPS'%(count_img/sec))
+    sys.stdout.write('\b'*40)
+    sys.stdout.write('%9.5fFPS(%9.5f Playback)'%(count_inf/sec,count_cam/sec))
     sys.stdout.flush()
 
 #STEP-10
