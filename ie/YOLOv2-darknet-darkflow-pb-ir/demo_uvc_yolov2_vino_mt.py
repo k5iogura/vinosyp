@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#STEP-1
 from pdb import *
 import sys,os
 assert sys.version_info.major >= 3,'Use python3'
@@ -14,6 +13,7 @@ import multiprocessing as mp
 import queue
 import threading
 import heapq
+import signal
 
 num = 5
 coords = 4
@@ -233,51 +233,25 @@ def check_classes(classes_set):
         return True, model_bin, model_xml, classes_mode
     return False, '', '', classes_mode
 
-args = argparse.ArgumentParser()
-args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
-args.add_argument("-c", "--classes",   type=str, default='1c', help="dataset voc/2c/1c/coco")
-args.add_argument("-r", "--requests",  type=int, default=2, help="using device num")
-args.add_argument("-s", "--softmax",action="store_true", help="aplly softmax")
-args = args.parse_args()
-
-if args.softmax:print("Aplly softmax")
-
-data_type="FP16"
-if args.device == "CPU": data_type="FP32"
-
-#STEP-2
-model_xml=data_type+'/yolov2.xml'
-model_bin=data_type+'/yolov2.bin'
-ret, _bin, _xml, classes_mode = check_classes(args.classes)
-if ret: model_xml, model_bin = _xml, _bin
-if classes_mode == 80:class_names = coco_class_names
-if classes_mode == 20:class_names = voc_class_names
-if classes_mode ==  2:class_names = c2_class_names
-if classes_mode ==  1:class_names = c1_class_names
-if classes_mode == 80:anchors     = coco_anchors
-if classes_mode == 20:anchors     = voc_anchors
-if classes_mode ==  2:anchors     = c2_anchors
-if classes_mode ==  1:anchors     = c1_anchors
-
 class Myriad():
 
     def __init__(self, model_xml, model_bin, device, requests, in_frameQ, resultQ):
+        print(model_bin,"on",device,"acceptable requests",requests)
         self.bq = 0
         self.model_xml  = model_xml
         self.model_bin  = model_bin
         self.requests   = requests
         self.device     = device
         self.in_frameQ  = in_frameQ
-        self.resultQ    = resultQ  
+        self.resultQ    = resultQ
         self.net        = IENetwork(model=model_xml, weights=model_bin)
-        print(model_bin, "on", device)
         self.requests   = requests
         self.plugin     = IEPlugin(device=device, plugin_dirs=None)
-        self.exec_net   = self.plugin.load(network=self.net, num_requests=3)
+        self.exec_net   = self.plugin.load(network=self.net, num_requests=requests)
         self.input_blob = next(iter(self.net.inputs))  #input_blob = 'data'
         self.out_blob   = next(iter(self.net.outputs)) #out_blob   = 'detection_out'
         self.model_form = self.net.inputs[self.input_blob].shape # NCHW
-        self.reqlist    = [0]*3
+        self.reqlist    = [0]*requests
         self.reqhistory = []
 
     def predict(self):
@@ -311,65 +285,16 @@ def infer_thread(myriad):
     while True:
         myriad.predict()
 
-def infer(model_xml, model_bin, requests, in_frameQ, resultQ):
+def infer(model_xml, model_bin, ncs_devices, requests, in_frameQ, resultQ):
     infer_threads=[]
-    for i in range(1):
+    for i in range(ncs_devices):
         myriad   = Myriad(model_xml,model_bin,"MYRIAD",requests,in_frameQ,resultQ)
         infer_th = threading.Thread(target=infer_thread,args=(myriad,))
         infer_th.start()
         infer_threads.append(infer_th)
+    for thr in infer_threads: thr.join()
 
-    for th in infer_threads:
-        th.join()
-
-in_frameQ = mp.Queue(10)
-resultQ   = mp.Queue(10)
-myrproc = mp.Process(target=infer, args=(model_xml, model_bin, 1, in_frameQ, resultQ),daemon=True)
-myrproc.start()
-
-# net = IENetwork(model=model_xml, weights=model_bin)
-
-classes=len(class_names)
-
-print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
-
-thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
-thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
-#thresh_conf=0.50
-thresh_iou =0.45
-
-#STEP-3
-#print(model_bin, "on", args.device)
-#plugin = IEPlugin(device=args.device, plugin_dirs=None)
-#if args.device == "CPU":
-#    HOME = os.environ['HOME']
-#    PATHLIBEXTENSION = os.getenv(
-#        "PATHLIBEXTENSION",
-#        HOME+"/inference_engine_samples_build/intel64/Release/lib/libcpu_extension.so"
-#    )
-#    plugin.add_cpu_extension(PATHLIBEXTENSION)
-
-buffsize=args.requests
-#exec_net = plugin.load(network=net, num_requests=buffsize)
-
-#STEP-4
-#input_blob = next(iter(net.inputs))  #input_blob = 'data'
-#out_blob   = next(iter(net.outputs)) #out_blob   = 'detection_out'
-#model_n, model_c, model_h, model_w = net.inputs[input_blob].shape #Tool kit R4
-
-model_n, model_c, model_h, model_w = (1, 3, 480, 640)
-
-#print("n/c/h/w (from xml)= %d %d %d %d"%(model_n, model_c, model_h, model_w))
-#print("input_blob : out_blob =[",input_blob,":",out_blob,"] ",net.outputs[out_blob].shape)
-
-#del net
-
-#STEP-5
-side_h = int(model_h//downsampling_rate)
-side_w = int(model_w//downsampling_rate)
-files=[]
-
-def camera(n,frameQ):
+def camera(frameQ):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():sys.exit(-1)
 #    print("Opened UVC-Camera via /dev/video0",model_w,model_h,"camera-in")
@@ -383,9 +308,93 @@ def camera(n,frameQ):
         frameQ.put(frame)
     cap.close()
 
+args = argparse.ArgumentParser()
+args.add_argument("-d", "--device"   , type=str, default="MYRIAD", help="MYRIAD/CPU")
+args.add_argument("-c", "--classes",   type=str, default='1c',     help="dataset voc/2c/1c/coco")
+args.add_argument("-n", "--ncs",       type=int, default=1,        help="using device num")
+args.add_argument("-r", "--req",       type=int, default=2,        help="using request num")
+args.add_argument("-s", "--softmax",   action="store_true",        help="aplly softmax")
+args = args.parse_args()
+
+if args.softmax:print("Aplly softmax")
+
+data_type="FP16"
+if args.device == "CPU": data_type="FP32"
+
+model_xml=data_type+'/yolov2.xml'
+model_bin=data_type+'/yolov2.bin'
+ret, _bin, _xml, classes_mode = check_classes(args.classes)
+if ret: model_xml, model_bin = _xml, _bin
+if classes_mode == 80:class_names = coco_class_names
+if classes_mode == 20:class_names = voc_class_names
+if classes_mode ==  2:class_names = c2_class_names
+if classes_mode ==  1:class_names = c1_class_names
+if classes_mode == 80:anchors     = coco_anchors
+if classes_mode == 20:anchors     = voc_anchors
+if classes_mode ==  2:anchors     = c2_anchors
+if classes_mode ==  1:anchors     = c1_anchors
+
+# net = IENetwork(model=model_xml, weights=model_bin)
+
+classes=len(class_names)
+
+print("num/coods/classes/downsampling",num,coords,classes,downsampling_rate)
+
+thresh_conf=0.69 # if 0.69 then can detect motorbike but 0.60 then detect person instead of motorbike
+thresh_conf=0.60 # But in YOLO-OpenVINO/YOLOv2/main.cpp thresh_conf is 0.5
+#thresh_conf=0.50
+thresh_iou =0.45
+
+#print(model_bin, "on", args.device)
+#plugin = IEPlugin(device=args.device, plugin_dirs=None)
+#if args.device == "CPU":
+#    HOME = os.environ['HOME']
+#    PATHLIBEXTENSION = os.getenv(
+#        "PATHLIBEXTENSION",
+#        HOME+"/inference_engine_samples_build/intel64/Release/lib/libcpu_extension.so"
+#    )
+#    plugin.add_cpu_extension(PATHLIBEXTENSION)
+
+#buffsize=args.requests
+#exec_net = plugin.load(network=net, num_requests=buffsize)
+
+#input_blob = next(iter(net.inputs))  #input_blob = 'data'
+#out_blob   = next(iter(net.outputs)) #out_blob   = 'detection_out'
+#model_n, model_c, model_h, model_w = net.inputs[input_blob].shape #Tool kit R4
+
+model_n, model_c, model_h, model_w = (1, 3, 480, 640)
+
+#print("n/c/h/w (from xml)= %d %d %d %d"%(model_n, model_c, model_h, model_w))
+#print("input_blob : out_blob =[",input_blob,":",out_blob,"] ",net.outputs[out_blob].shape)
+
+#del net
+
+side_h = int(model_h//downsampling_rate)
+side_w = int(model_w//downsampling_rate)
+files=[]
+
+# CAMERA Process
 frameQ = mp.Queue(10)
-camproc= mp.Process(target=camera,args=(10,frameQ),daemon=True) 
+camproc= mp.Process(
+    target=camera,
+    args=(
+        frameQ,
+    ),
+    daemon=True
+) 
 camproc.start()
+
+# DEVICEs Process
+in_frameQ = mp.Queue(10)
+resultQ   = mp.Queue(10)
+myrproc = mp.Process(
+    target=infer,
+    args=(
+        model_xml, model_bin, args.ncs, args.req, in_frameQ, resultQ
+    ),
+    daemon=True
+)
+myrproc.start()
 
 sec=count_cam=count_inf=1
 exit_code=False
@@ -398,14 +407,12 @@ while True:
     original_im_h, original_im_w = frame.shape[:2]
     frame =frame/255.0
 #    frame =letterbox_image(frame, model_w, model_h)    # Too slow
-    #STEP-6
+
     in_frame = frame[np.newaxis,:,:,:]        # Add new axis as a batch dimension HWC NHWC
     in_frame = in_frame.transpose((0, 3, 1, 2))  # Change data layout from NHWC to NCHW
 
     if in_frameQ.full():in_frameQ.get()
     in_frameQ.put(in_frame.copy())
-
-    #STEP-7
 
     try:
         result = resultQ.get_nowait()
@@ -464,11 +471,10 @@ while True:
     sys.stdout.write('%9.5fFPS(%9.5f Playback)'%(count_inf/sec,count_cam/sec))
     sys.stdout.flush()
 
-#STEP-10
 print("\nfinalizing")
+cv2.destroyAllWindows()
 camproc.terminate()
 myrproc.terminate()
-cv2.destroyAllWindows()
 #del exec_net
 #del plugin
 
