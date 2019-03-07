@@ -387,16 +387,9 @@ frameQ = mp.Queue(10)
 camproc= mp.Process(target=camera,args=(10,frameQ),daemon=True) 
 camproc.start()
 
-<<<<<<< HEAD
 sec=count_cam=count_inf=1
 exit_code=False
 start = time()
-=======
-sec=count_img=1
-exit_code=False
-start = time()
-bq = 0
->>>>>>> 75d65e899931c40e6d521945de5dd10d675d423d
 latest_result = np.zeros((9000),dtype=np.float32)
 while True:
     frame = frameQ.get() # HWC
