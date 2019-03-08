@@ -1,13 +1,10 @@
 # OpenVINO for Movidius NCS-1 and NCS-2(2nd generation stick)
 
-# Under Construction!
-
 ![](files/logo.png)
 
 [github for NCS(1st generation)](https://github.com/movidius/ncsdk) is completed. And NCS-2(2nd generation) is supported by OpenVINO. OpenVINO support not only NCS 1 and 2 but also CPU, GPU and FPGA(Altera Arria10 GX).  
 
-[OpenVINO do not support RaspnerryPi](https://ncsforum.movidius.com/discussion/1302/intel-neural-compute-stick-2-information#latest)  
-
+[For RaspberryPI OpenVINO](RaspberryPI/README.md)  
 This is story of estimation of combination btn movidius NCS and OpenVINO.  
 
 ## Requirement
