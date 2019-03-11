@@ -9,9 +9,21 @@ RaspberryPi Model B+
 MIPI Camera  
 
 ## First move for RaspberryPi
-- Install stretch
+**Before booting,**  
 
-- Change LCD upside down
+- Install RaspberryPi OS stretch image into SDCard.
+
+- Change LCD upside down  
+  To modify upside down of LCD, add line  
+  'lcd_rotate=2'  
+  in file boot/config.txt, and reboot!  
+
+- For ssh connection  
+  On Windows with USB adapter, insert SDCard of Raspi stretch image.  
+  touch boot/ssh  
+  boot/ssh file contains nothing or free words.  
+
+**After booting,**  
 
 - Change keyboard layout to Japanese
 
@@ -36,6 +48,13 @@ too deep!
 # reboot  
 ```
 
+- Expand filesystem
+
+```
+# raspi-config --expand-rootfs
+# reboot
+```
+
 - Upgrade  
 
 ```
@@ -44,9 +63,19 @@ too deep!
 
 - sshd  
 
+Generate ssh keys if needs on such as jessi,,  
+```
+# cd /etc/ssh
+# ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+# ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+# ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+# ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
+```
+
 ```
 # systemctl enable ssh
 # systemctl restart ssh
+# reboot
 ```
 
 - Install VBoxLinuxAdditions
@@ -97,7 +126,6 @@ $
 
 ```
 $ . inference_engine_vpu_arm/bin/setupvars.sh
-[setupvars.sh] 64 bitness for Python 3.5 is requred
 [setupvars.sh] OpenVINO environment initialized
 $ sudo usermod -a -G users "$(whoami)"
 $
@@ -117,7 +145,11 @@ Flush!! but don't warry,,
 - build sample
 
 ```
-# apt install -y cmake make
+# apt install -y cmake make docker docker.io
+# which docker
+/usr/bin/docker
+```
+```
 $ cd inference_engine_vpu_arm/deployment_tools/inference_engine/samples
 $ mkdir build && cd build
 $ 
