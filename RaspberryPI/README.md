@@ -1,8 +1,19 @@
 # OpenVINO on RaspberryPI stretch
-[OpenVINO R5 supports RaspberryPI stretch](https://software.intel.com/en-us/articles/OpenVINO-Install-RaspberryPI).
 
-## First move
-- Japanese keyboard layout
+Download OpenVINO according to [OpenVINO R5 supports RaspberryPI stretch](https://software.intel.com/en-us/articles/OpenVINO-Install-RaspberryPI).
+
+## ARM Single Board Computer
+
+RaspberryPi Model B+  
+7inch LCD  
+MIPI Camera  
+
+## First move for RaspberryPi
+- Install stretch
+
+- Change LCD upside down
+
+- Change keyboard layout to Japanese
 
 ```
 # raspi-config  
