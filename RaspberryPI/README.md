@@ -177,7 +177,7 @@ $ wget --no-check-certificate https://download.01.org/openvinotoolkit/2018_R4/op
 $ ls *bin *xml
   face-detection-adas-0001.bin  face-detection-adas-0001.xml
 ```
-Run sample,
+Run sample with NCS(Myriad-2),
 ```
 # apt install -y eog
 $ ./armv7l/Release/object_detection_sample_ssd -m face-detection-adas-0001.xml -d MYRIAD -i <path_to_image>
@@ -220,3 +220,28 @@ $ eog out_0.bmp
 
 ![](files/out_0.bmp)  
 Oowh~
+
+SSD_Mobilenet sample,
+```
+$ cd vinospy/ie/SSD_Mobilenet
+$ python3 demo_ssd_mobilenet.py images/pedestiran-bridge.jpg
+n/c/h/w (from xml)= 1 3 300 300
+input_blob : out_blob = data : detection_out
+input image = images/pedestiran-bridge.jpg
+in-frame (1, 3, 300, 300)
+fin (1, 1, 100, 7)
+top
+[  0.          15.           0.71582031   0.32128906   0.08862305
+   0.43945312   0.87402344]
+draw 15.0 71 person (71%)
+[  0.          15.           0.5390625    0.40869141   0.11035156
+   0.52197266   0.8515625 ]
+draw 15.0 53 person (53%)
+[  0.          15.           0.45532227   0.62207031   0.12280273
+   0.72167969   0.75      ]
+draw 15.0 45 person (45%)
+```
+
+![](files/pedestorian-bridge-result.png)
+
+Huuhmul
