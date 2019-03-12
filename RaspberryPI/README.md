@@ -11,16 +11,17 @@ MIPI Camera
 ## First move for RaspberryPi
 **Before booting,**  
 
-- Install RaspberryPi OS stretch image into SDCard.
+- Install RaspberryPi OS **stretch** image into SDCard.  
+  In jessie, install failed, use stretch raspbian OS.  
 
 - Change LCD upside down  
   To modify upside down of LCD, add line  
-  'lcd_rotate=2'  
-  in file boot/config.txt, and reboot!  
+  **'lcd_rotate=2'**  
+  in file **boot/config.txt**, and reboot!  
 
 - For ssh connection  
   On Windows with USB adapter, insert SDCard of Raspi stretch image.  
-  touch boot/ssh  
+  **touch boot/ssh**  
   boot/ssh file contains nothing or free words.  
 
 **After booting,**  
@@ -78,7 +79,7 @@ Generate ssh keys if needs on such as jessi,,
 # reboot
 ```
 
-- Install VBoxLinuxAdditions
+- Install VBoxLinuxAdditions if you are on VirtualBox
 
 mount cdrom from Pulldown Menu and bellow,
 ```
@@ -145,12 +146,77 @@ Flush!! but don't warry,,
 - build sample
 
 ```
-# apt install -y cmake make docker docker.io
-# which docker
-/usr/bin/docker
-```
-```
+# apt install -y cmake
 $ cd inference_engine_vpu_arm/deployment_tools/inference_engine/samples
 $ mkdir build && cd build
-$ 
+$ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=armv7-a"
+$ make -j2 object_detection_sample_ssd
+-- /etc/*-release distrib: Raspbian 9
+-- OMP Release lib: OMP_LIBRARIES_RELEASE-NOTFOUND
+-- OMP Debug lib: OMP_LIBRARIES_DEBUG-NOTFOUND
+
+...
+...
+
+make[3]: Warning: File '../object_detection_sample_ssd/main.cpp' has modification time 5627085 s in the future
+[ 96%] Building CXX object object_detection_sample_ssd/CMakeFiles/object_detection_sample_ssd.dir/main.cpp.o
+[100%] Linking CXX executable ../armv7l/Release/object_detection_sample_ssd
+make[3]: warning:  Clock skew detected.  Your build may be incomplete.
+[100%] Built target object_detection_sample_ssd
+$
 ```
+
+- Download pre-trained models of samples,
+
+Face Detection sample,
+
+```
+$ wget --no-check-certificate https://download.01.org/openvinotoolkit/2018_R4/open_model_zoo/face-detection-adas-0001/FP16/face-detection-adas-0001.bin
+$ wget --no-check-certificate https://download.01.org/openvinotoolkit/2018_R4/open_model_zoo/face-detection-adas-0001/FP16/face-detection-adas-0001.xml
+
+$ ls *bin *xml
+  face-detection-adas-0001.bin  face-detection-adas-0001.xml
+```
+Run sample,
+```
+# apt install -y eog
+$ ./armv7l/Release/object_detection_sample_ssd -m face-detection-adas-0001.xml -d MYRIAD -i <path_to_image>
+[ INFO ] InferenceEngine: 
+        API version ............ 1.4
+        Build .................. 19154
+Parsing input parameters
+[ INFO ] Files were added: 1
+[ INFO ]     /home/pi/Downloads/p2.jpg
+[ INFO ] Loading plugin
+
+        API version ............ 1.5
+        Build .................. 19154
+        Description ....... myriadPlugin
+[ INFO ] Loading network files:
+        face-detection-adas-0001.xml
+        face-detection-adas-0001.bin
+[ INFO ] Preparing input blobs
+[ INFO ] Batch size is 1
+[ INFO ] Preparing output blobs
+[ INFO ] Loading model to the plugin
+[ WARNING ] Image is resized from (500, 422) to (672, 384)
+[ INFO ] Batch size is 1
+[ INFO ] Start inference (1 iterations)
+[ INFO ] Processing output blobs
+[0,1] element, prob = 1    (112.61,49.3243)-(153.564,103.13) batch id : 0 WILL BE PRINTED!
+[1,1] element, prob = 1    (328.613,51.9773)-(373.535,112.918) batch id : 0 WILL BE PRINTED!
+
+...
+...
+
+[ INFO ] Image out_0.bmp created!
+total inference time: 161.869
+Average running time of one iteration: 161.869 ms
+Throughput: 6.17785 FPS
+[ INFO ] Execution successful
+
+$ eog out_0.bmp
+```
+
+![](files/out_0.bmp)  
+Oowh~
