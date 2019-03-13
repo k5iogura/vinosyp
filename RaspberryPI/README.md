@@ -273,12 +273,12 @@ Look at vinosyp/ie/SSD_Mobilenet/autostart_demo_ssd.sh
 ```
 $ cat ~/autostart_demo_ssd.sh
 source /home/pi/Downloads/inference_engine_vpu_arm/bin/setupvars.sh
+for i in `seq 1000`;do sleep 5;sudo sh -c "echo 0 > /sys/class/graphics/fb0/blank";done&
 sudo sh -c "echo 0 > /sys/class/graphics/fb0/blank"
 export DISPLAY=:0
 xhost +
 cd /home/pi/vinosyp/ie/SSD_Mobilenet
 xterm -geometry +10+10 -e "python3 demo_csi_ssd_mobilenet.py -r 3 -crw 640 -crh 400 -demo"
-for i in `seq 1000`;do sleep 5;sudo sh -c "echo 0 > /sys/class/graphics/fb0/blank";done&
 ```
 
 - lxsession file
