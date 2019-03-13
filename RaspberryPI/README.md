@@ -260,7 +260,7 @@ $ python3 demo_csi_ssd_mobilenet.py
 ```
 Wooh, **so fast**! 11FPS for prediction.  
 - How to measure FPS  
-  FPS = (done frames) / ((drawing time) + (waiting time of IE inference engine))
+  Prediction FPS = (done frames) / ((drawing time) + (waiting time of IE inference engine))
   
 - Reason why fast speed is bellow,  
   CSI Camera Framerate is specified as 120 (it's over limittation?).  
