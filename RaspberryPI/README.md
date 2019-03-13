@@ -263,4 +263,34 @@ Wooh, **so fast**! 140FPS for prediction.
   CSI Camera resolution is 320x240 it's a little.  
   CSI Camera Framerate is 120 (it's over limittation?).  
   Inference requests for NCS is 3.  
+  
+## How to start immediately after starting X-Window session
 
+- Shell script to start python3 demo  
+
+Look at vinosyp/ie/SSD_Mobilenet/autostart_demo_ssd.sh
+
+```
+$ cat ~/autostart_demo_ssd.sh
+source /home/pi/Downloads/inference_engine_vpu_arm/bin/setupvars.sh
+sudo sh -c "echo 0 > /sys/class/graphics/fb0/blank"
+export DISPLAY=:0
+xhost +
+cd /home/pi/vinosyp/ie/SSD_Mobilenet
+xterm -geometry +10+10 -e "python3 demo_csi_ssd_mobilenet.py -r 3 -crw 640 -crh 400 -demo"
+for i in `seq 1000`;do sleep 5;sudo sh -c "echo 0 > /sys/class/graphics/fb0/blank";done&
+```
+
+- lxsession file
+
+```
+cat ~/.config/lxsession/LXDE-pi/autostart
+@lxpanel --profile LXDE-pi
+@pcmanfm --desktop --profile LXDE-pi
+@xscreensaver -no-splash
+@point-rpi
+@/home/pi/autostart_demo_ssd.sh
+```
+Last line denotes starting demo.  
+
+***Last update March.13,2019***  
