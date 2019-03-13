@@ -256,12 +256,14 @@ Huuhmul
 ```
 $ cd vinosyp/ie/SSD_Mobilenet
 $ python3 demo_csi_ssd_mobilenet.py
-   Playback 10.86FPS (Prediction 141.87 FPS)
+   Playback 11.86FPS (Prediction 11.85 FPS)
 ```
-Wooh, **so fast**! 140FPS for prediction.  
+Wooh, **so fast**! 11FPS for prediction.  
+- How to measure FPS  
+  FPS = done_predictions / (now - start - drawing_elapsed_time)  
+  
 - Reason why fast speed is bellow,  
-  CSI Camera resolution is 320x240 it's a little.  
-  CSI Camera Framerate is 120 (it's over limittation?).  
+  CSI Camera Framerate is specified as 120 (it's over limittation?).  
   Inference requests for NCS is 3.  
   
 ## How to start immediately after starting X-Window session
