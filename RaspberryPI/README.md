@@ -180,7 +180,8 @@ $ ls *bin *xml
 Run sample with NCS(Myriad-2),
 ```
 # apt install -y eog
-$ ./armv7l/Release/object_detection_sample_ssd -m face-detection-adas-0001.xml -d MYRIAD -i <path_to_image>
+$ wget https://raw.githubusercontent.com/ildoonet/tf-pose-estimation/master/images/p2.jpg
+$ ./armv7l/Release/object_detection_sample_ssd -m face-detection-adas-0001.xml -d MYRIAD -i p2.jpg
 [ INFO ] InferenceEngine: 
         API version ............ 1.4
         Build .................. 19154
