@@ -177,9 +177,14 @@ $ wget --no-check-certificate https://download.01.org/openvinotoolkit/2018_R4/op
 $ ls *bin *xml
   face-detection-adas-0001.bin  face-detection-adas-0001.xml
 ```
-Run sample with NCS(Myriad-2),
+Install opencv depedencies for stretch-lite,  
+``
+# apt install -y ffmpeg python3-pip python-numpy
+$ pip3 install numpy
+``
+Run sample with NCS(Myriad-2),  
 ```
-# apt install -y eog
+# apt install -y eog  # caming with libgtk-3-0*
 $ wget https://raw.githubusercontent.com/ildoonet/tf-pose-estimation/master/images/p2.jpg
 $ ./armv7l/Release/object_detection_sample_ssd -m face-detection-adas-0001.xml -d MYRIAD -i p2.jpg
 [ INFO ] InferenceEngine: 
