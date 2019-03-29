@@ -178,10 +178,10 @@ $ ls *bin *xml
   face-detection-adas-0001.bin  face-detection-adas-0001.xml
 ```
 Install opencv depedencies for stretch-lite,  
-``
+```
 # apt install -y ffmpeg python3-pip python-numpy
 $ pip3 install numpy
-``
+```
 Run sample with NCS(Myriad-2),  
 ```
 # apt install -y eog  # caming with libgtk-3-0*
