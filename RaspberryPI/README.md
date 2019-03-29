@@ -11,7 +11,7 @@ MIPI Camera
 ## First move for RaspberryPi
 **Before booting,**  
 
-- Install RaspberryPi OS **stretch** image into SDCard.  
+- Install RaspberryPi OS [**stretch** or **stretch-lite**](https://www.raspberrypi.org/downloads/raspbian/) image into SDCard.  
   In jessie, install failed, use stretch raspbian OS.  
 
 - Change LCD upside down  
