@@ -1,4 +1,4 @@
-# OpenVINO on RaspberryPI stretch
+# OpenVINO on RaspberryPI stretch ( or stretch-lite )
 
 Download OpenVINO according to [OpenVINO R5 supports RaspberryPI stretch](https://software.intel.com/en-us/articles/OpenVINO-Install-RaspberryPI).
 
