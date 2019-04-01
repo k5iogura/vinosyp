@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#STEP-1
+import argparse
 from pdb import *
 import sys,os
 import cv2
@@ -56,20 +56,32 @@ def overlay_on_image(display_image, object_info):
     # label text above the box
     cv2.putText(display_image, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 1)
 
+args = argparse.ArgumentParser()
+args.add_argument("-d","--device", type=str, default='MYRIAD',help='on Device')
+args = args.parse_args()
+
 input_image_size=(300,300)
 
-#STEP-2
-model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
-model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
+model_xml='vinosyp/models/SSD_Mobilenet/FP32/MobileNetSSD_deploy.xml'
+model_bin='vinosyp/models/SSD_Mobilenet/FP32/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)	#R5
 
-#STEP-3
-plugin = IEPlugin(device='MYRIAD', plugin_dirs=None)
+plugin = IEPlugin(device=args.device, plugin_dirs=None)
+if args.device=='CPU':
+    HOME=os.environ['HOME']
+    LIBCPU_EXTENSION = HOME+"/inference_engine_samples/intel64/Release/lib/libcpu_extension.so"
+    if not os.path.exists(LIBCPU_EXTENSION):
+        print('run sample such as demo_squeezenet_download_convert_run.sh')
+        sys.exit(-1)
+    PATHLIBEXTENSION = os.getenv(
+        "PATHLIBEXTENSION",
+        LIBCPU_EXTENSION
+    )
+    plugin.add_cpu_extension(PATHLIBEXTENSION)
 exec_net = plugin.load(network=net, num_requests=1)
 
-#STEP-4
 input_blob = next(iter(net.inputs))  #input_blob = 'data'
 out_blob   = next(iter(net.outputs)) #out_blob   = 'detection_out'
 model_n, model_c, model_h, model_w = net.inputs[input_blob].shape #Tool kit R4
@@ -88,7 +100,6 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
 start = time()
 done_frame=0
-#STEP-5
 while True:
     ret, frame_org = cap.read()
     if not ret:break
@@ -96,12 +107,10 @@ while True:
     frame-= 127.5       # means
     frame*= 0.007853    # scale
 
-    #STEP-6
     in_frame = cv2.resize(frame, (model_w, model_h))
     in_frame = in_frame.transpose((2, 0, 1))  # Change data layout from HWC to CHW
     in_frame = in_frame.reshape((model_n, model_c, model_h, model_w))
 
-    #STEP-7
     exec_net.start_async(request_id=0, inputs={input_blob: in_frame})
 
     if exec_net.requests[0].wait(-1) == 0:
@@ -122,7 +131,6 @@ while True:
     sys.stdout.flush()
 
 print("\nfinalizing")
-#STEP-10
 cv2.destroyAllWindows()
 del exec_net
 del plugin
