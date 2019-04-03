@@ -62,8 +62,10 @@ args = args.parse_args()
 
 input_image_size=(300,300)
 
-model_xml='vinosyp/models/SSD_Mobilenet/FP32/MobileNetSSD_deploy.xml'
-model_bin='vinosyp/models/SSD_Mobilenet/FP32/MobileNetSSD_deploy.bin'
+precision='FP32'
+if args.device=='MYRIAD':precision='FP16'
+model_xml='vinosyp/models/SSD_Mobilenet/'+precision+'/MobileNetSSD_deploy.xml'
+model_bin='vinosyp/models/SSD_Mobilenet/'+precision+'/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork(model=model_xml, weights=model_bin)	#R5
