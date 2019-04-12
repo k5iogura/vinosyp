@@ -78,7 +78,7 @@ Place [97-myriad-usbboot.rules](./etc/udev/rules.d/97-myriad-usbboot.rules) on /
 
 ```
 # usermod -a -G users "$(whoami)"
-# cp 97-usbboot.rules /etc/udev/rules.d/
+# cp 97-myriad-usbboot.rules /etc/udev/rules.d/
 # udevadm control --reload-rules
 # udevadm trigger
 # ldconfig
