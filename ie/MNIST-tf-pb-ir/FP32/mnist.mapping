@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<mapping>
+	<map>
+		<framework name="input" out_port_id="0"/>
+		<IR id="0" name="input" out_port_id="0"/>
+	</map>
+	<map>
+		<framework name="add" out_port_id="0"/>
+		<IR id="1" name="MatMul" out_port_id="3"/>
+	</map>
+	<map>
+		<framework name="output" out_port_id="0"/>
+		<IR id="2" name="output" out_port_id="1"/>
+	</map>
+</mapping>
