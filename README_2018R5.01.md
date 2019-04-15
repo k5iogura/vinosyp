@@ -5,15 +5,14 @@
 [github for NCS(1st generation)](https://github.com/movidius/ncsdk) is completed. And NCS-2(2nd generation) is supported by OpenVINO. OpenVINO support not only NCS 1 and 2 but also CPU, GPU and FPGA(Altera Arria10 GX).  
 
 [For RaspberryPI OpenVINO](RaspberryPI/README.md)  
-[For OpenVINO_2018R5.01](README_2018R5.01.md)  
 This is story of estimation of combination btn movidius NCS and OpenVINO.  
 
 ## Requirement
 
 - Ubuntu16.04 on intelPC
 - Nueral Compute Stick(1st generation), maybe ok with NCS-2(2nd generation)
-- **OpenVINO 2019.1.094(releases_openvino-2019-r1)**  
-
+- **OpenVINO 2018.5.445(releases_openvino-2018-r5)**  
+  If you work with OpenVINO-R4 see this repo. **branch "OpenVINOR4"**.
 ## Download and installation
 
 After registration we can get OpenVINO from [here](https://software.intel.com/en-us/openvino-toolkit).  
@@ -24,13 +23,13 @@ According to [here(Install the Intel® Distribution of OpenVINO™ toolkit for L
 ```
 $ tar xzf l_openvino_toolkit_p_<version>.tgz
 $ cd l_openvino_toolkit_p_<version>
-# ./install_openvino_dependencies.sh
+# ./install_cv_sdk_dependencies.sh
 # ./install_GUI.sh
-$ . /opt/intel/openvino/bin/setupvars.sh ## add your .bashrc
+$ . /opt/intel/computer_vision_sdk/bin/setupvars.sh ## add your .bashrc
 ```
 **Setup Caffe and Tensorflow Model Optimizer**  
 ```
-$ cd /opt/intel/openvino/deployment_tools/model_optimizer/install_prerequistes
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/install_prerequistes
 $ ./install_prerequisites_caffe.sh
 $ ./install_prerequisites_tf.sh
 ```
@@ -44,9 +43,9 @@ install_prerequisites_<FW>.sh, FW is such as mxnet, onnx, kaldi.
 **Notice!:** Demo sample script create directory ~/openvino and download .prototxt and .caffemodel in it. So notice permission of directory.  
 
 ```
-$ cd /opt/intel/openvino/deployment_tools/model_optimizer/install_prerequisites/
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/install_prerequisites/
 # ./install_prerequisites.sh
-$ cd /opt/intel/openvino/deployment_tools/demo
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh
 ```
 
@@ -61,7 +60,7 @@ In my first impression, download and installation of OpenVINO is very easy!, gre
 3pipe : recognize charactors on licence plate  
 
 ```
-$ cd ~/intel/openvino/deployment_tools/demo
+$ cd ~/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_security_barrier_camera.sh
 ```
 
@@ -78,10 +77,8 @@ Setup udev rules for MYRIAD.
 Place [97-myriad-usbboot.rules](./etc/udev/rules.d/97-myriad-usbboot.rules) on /etc/udev/rules.d/
 
 ```
-$ cd; git clone https://github.com/k5iogura/vinosyp
-$ cd vinosyp/etc/udev/rules.d/
 # usermod -a -G users "$(whoami)"
-# cp 97-myriad-usbboot.rules /etc/udev/rules.d/
+# cp 97-usbboot.rules /etc/udev/rules.d/
 # udevadm control --reload-rules
 # udevadm trigger
 # ldconfig
@@ -93,7 +90,7 @@ After Rebooting plugin NCS-1 on USB port.
 On the our way to install, we selected option for Movidius NCS-1 and NCS-2 support, so that we are ready to run NCS via OpenVINO as inference engin(called IE) **by adding -d MYRIAD** with sample script.  
 
 ```
-$ cd /opt/intel/openvino/deployment_tools/demo
+$ cd /opt/intel/computer_vision_sdk/deployment_tools/demo
 $ ./demo_squeezenet_download_convert_run.sh -d MYRIAD
 $ ./demo_security_barrier_camera.sh -d MYRIAD
 ```
@@ -111,7 +108,7 @@ For OpenVINO generate intermidiate representation as .bin and .xml.
 Here .bin file includes weights of model and .xml file includes network structure.  
 OpenVINO Model Optimizer help is bellow,  
 ```
-$ /opt/intel/openvino/deployment_tools/model_optimizer/mo_caffe.py --help
+$ /opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/mo_caffe.py --help
 usage: mo_caffe.py [-h] [--input_model INPUT_MODEL] [--model_name MODEL_NAME]
                    [--output_dir OUTPUT_DIR] [--input_shape INPUT_SHAPE]
                    [--scale SCALE] [--reverse_input_channels]
@@ -134,7 +131,7 @@ usage: mo_caffe.py [-h] [--input_model INPUT_MODEL] [--model_name MODEL_NAME]
 For Movidius use data_type with FP16 only.  
 command line may be bellow,
 ```
-$ export MO=/opt/intel/openvino/deployment_tools/model_optimizer/
+$ export MO=/opt/intel/computer_vision_sdk/deployment_tools/model_optimizer/
 $ cd ~/openvino_fs/models/SSD_Mobilenet/caffe
 $ python $MO/mo_caffe.py --input_model MobileNetSSD_deploy.caffemodel --output_dir ../FP16/ --data_type FP16
 Model Optimizer arguments:
@@ -223,7 +220,7 @@ Analyze above structure and use result of inference with your custom way.
 Simple script named "ssd_mobilenet.py" infer 3 images and output results as text.  
 
 ```
-$ cd ~/vinosyp/ie/SSD_Mobilenet/
+$ cd ~/openvino_fs/ie/SSD_Mobilenet/
 $ ls
 images/  ssd_mobilenet.py demo_ssd_mobilenet.py demo_uvc_ssd_mobilenet.py
 
