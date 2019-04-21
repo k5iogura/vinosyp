@@ -1,5 +1,3 @@
-# Under construction :smile:
-
 # TinyYOLOv2 in Tensorflow made easier
 
 [original readme here](./README_original.md)  
