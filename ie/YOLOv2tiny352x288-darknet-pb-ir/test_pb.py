@@ -1,11 +1,12 @@
 import tensorflow as tf
-import os
+import os,sys
 import numpy as np
 import net
 import weights_loader
 import cv2
 import warnings
 warnings.filterwarnings('ignore')
+from pdb import *
 
 
 def sigmoid(x):
@@ -48,6 +49,7 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
   nms_predictions = []
 
   # Add the best B-Box because it will never be deleted
+  if len(thresholded_predictions)<=0: return nms_predictions
   nms_predictions.append(thresholded_predictions[0])
 
   # For each B-Box (starting from the 2nd) check its iou with the higher score B-Boxes
@@ -130,11 +132,11 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,inpu
   # From now on the predictions are ORDERED and can be extracted in a simple way!
   # We have 13x13 grid cells, each cell has 5 B-Boxes, each B-Box have 25 channels with 4 coords, 1 Obj score , 20 Class scores
   # E.g. predictions[row, col, b, :4] will return the 4 coords of the "b" B-Box which is in the [row,col] grid cell
-  predictions = np.reshape(predictions,(13,13,5,25))
+  predictions = np.reshape(predictions,(9,11,5,25))
 
   # IMPORTANT: Compute the coordinates and score of the B-Boxes by considering the parametrization of YOLOv2
-  for row in range(n_grid_cells):
-    for col in range(n_grid_cells):
+  for row in range(9):
+    for col in range(11):
       for b in range(n_b_boxes):
 
         tx, ty, tw, th, tc = predictions[row, col, b, :5]
@@ -210,16 +212,16 @@ def inference(sess,preprocessed_image):
 def main(_):
 
 	# Definition of the paths
-    weights_path = './yolov2-tiny-voc.weights'
-    input_img_path = './horses.jpg'
+    weights_path      = './yolov2-tiny-voc_352_288_final.weights'
+    input_img_path    = './horses.jpg'
     output_image_path = './output.jpg'
 
     # If you do not have the checkpoint yet keep it like this! When you will run test.py for the first time it will be created automatically
     ckpt_folder_path = './ckpt/'
 
     # Definition of the parameters
-    input_height = 416
-    input_width = 416
+    input_height = 352
+    input_width = 288
     score_threshold = 0.3
     iou_threshold = 0.3
 

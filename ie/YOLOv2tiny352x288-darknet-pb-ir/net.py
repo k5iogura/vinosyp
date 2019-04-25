@@ -130,6 +130,7 @@ h9 = tf.nn.conv2d(o8, w9, strides=[1, 1, 1, 1], padding='SAME') + b9
 # Linear output!
 o9 = h9
 n_params = n_params + 1*1*1024*125 + 125 # There is not batch norm, so n_params is: kernel_size + n_biases
+tf.identity(o9,name='xoutput')
 
 print('Total number of params = {}'.format(n_params))
 
