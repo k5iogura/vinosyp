@@ -11,8 +11,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
   Use pip3 for installation of tensorflow
   
 - Prepare data  
-  ![yolov2-tiny-voc_352_288_final.weights]
-  (https://github.com/k5iogura/darknet_a10/tree/master/model)  
+  ![yolov2-tiny-voc_352_288_final.weights](https://github.com/k5iogura/darknet_a10/tree/master/model)  
   
 ```
   $ cat yolov2-tiny-voc_352_288_final.weights.* > yolov2-tiny-voc_352_288_final.weights
