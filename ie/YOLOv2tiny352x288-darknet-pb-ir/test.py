@@ -77,12 +77,15 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
 
 
 
-def preprocessing(input_img_path,input_height,input_width):
+def preprocessing(input_img_path,ph_height,ph_width,img_form='HW'):
 
-  input_image = cv2.imread(input_img_path)
+  input_image = cv2.imread(input_img_path)      # HWC BGR
 
   # Resize the image and convert to array of float32
-  resized_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  resized_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
+  print(resized_image.shape)
+
+  input_image = input_image.transpose((1,0,2))  # WHC BGR
   image_data = np.array(resized_image, dtype='f')
 
   # Normalization [0,255] -> [0,1]
@@ -93,17 +96,17 @@ def preprocessing(input_img_path,input_height,input_width):
   #image_data[:,:,2] = copied_image[:,:,0]
   #image_data[:,:,0] = copied_image[:,:,2]
 
-  # Add the dimension relative to the batch size needed for the input placeholder "x"
-  image_array = np.expand_dims(image_data, 0)  # Add batch dimension
+  # Add the dimension relative to the batch size needed for the input ph "x"
+  image_array = np.expand_dims(image_data, 0)  # NWHC
 
   return image_array
 
 
 
-def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,input_height,input_width):
+def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_height,ph_width,img_form='HW'):
 
-  input_image = cv2.imread(input_img_path)
-  input_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  input_image = cv2.imread(input_img_path)  # HWC
+  input_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
 
   n_classes = 20
   n_grid_cells = 13
@@ -224,8 +227,8 @@ def main(_):
     ckpt_folder_path = './ckpt/'
 
     # Definition of the parameters
-    input_height = 352
-    input_width = 288
+    ph_height = 288 # placeholder height
+    ph_width  = 352 # placeholder width
     score_threshold = 0.3
     iou_threshold = 0.3
 
@@ -240,7 +243,7 @@ def main(_):
 
     # Preprocess the input image
     print('Preprocessing...')
-    preprocessed_image = preprocessing(input_img_path,input_height,input_width)
+    preprocessed_image = preprocessing(input_img_path,ph_height,ph_width)
     print("preprocessing",preprocessed_image.shape)
 
     # Compute the predictions on the input image
@@ -250,7 +253,7 @@ def main(_):
 
     # Postprocess the predictions and save the output image
     print('Postprocessing...')
-    output_image = postprocessing(predictions,input_img_path,score_threshold,iou_threshold,input_height,input_width)
+    output_image = postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_height,ph_width)
     cv2.imwrite(output_image_path,output_image)
 
 if __name__ == '__main__':
