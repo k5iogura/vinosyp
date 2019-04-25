@@ -36,8 +36,10 @@ Just to be clear, this implementation is called "tiny-yolo-voc" on pjreddie's si
 - Download the binary file (~60MB) from pjreddie's site: https://pjreddie.com/media/files/yolov2-tiny-voc.weights and place it into the folder where the scripts are
 - Launch test.py or test_webcam.py. Change the input_img_path and the weights_path in the main if you want, now the network has "dog.jpg" as input_img. The code is now configured to run with weights and input image in the same folder as the script.
 
-```python
-python3 test.py
+```
+  $ cd ie/si23tinyyolov2
+  $ wget https://pjreddie.com/media/files/yolov2-tiny-voc.weights -O tiny-yolo-voc.weights
+  $ python3 test.py
 ```
 
 - If you are launching them for the first time, the weights will be extracted from the binary file and a ckpt will be created. Next time only the ckpt will be used!
@@ -50,9 +52,9 @@ python3 test.py
 - Launch test_pb.py. Change the input_img_path and the weights_path in the main if you want, now the network has "dog.jpg" as input_img. The code is now configured to run with weights and input image in the same folder as the script.
 
 ```python
-python3 test_pb.py
-ls *.pb
-  y.pb
+  $ python3 test_pb.py
+  $ ls *.pb
+    y.pb
 ```
 
 - Convert tensorflow protobuf to OpenVINO IR  
