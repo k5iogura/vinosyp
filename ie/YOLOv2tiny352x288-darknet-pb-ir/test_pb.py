@@ -76,12 +76,15 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
 
 
 
-def preprocessing(input_img_path,input_height,input_width):
+def preprocessing(input_img_path,input_height,input_width,img_form='WH'):
 
   input_image = cv2.imread(input_img_path)
 
   # Resize the image and convert to array of float32
-  resized_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  if img_form == 'WH':
+    resized_image = cv2.resize(input_image,(input_width, input_height), interpolation = cv2.INTER_CUBIC)
+  elif img_form == 'HW':
+    resized_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
   image_data = np.array(resized_image, dtype='f')
 
   # Normalization [0,255] -> [0,1]
@@ -99,10 +102,13 @@ def preprocessing(input_img_path,input_height,input_width):
 
 
 
-def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,input_height,input_width):
+def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,input_height,input_width,img_form='WH'):
 
   input_image = cv2.imread(input_img_path)
-  input_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  if img_form == 'WH':
+    input_image = cv2.resize(input_image,(input_width, input_height), interpolation = cv2.INTER_CUBIC)
+  elif img_form == 'HW':
+    input_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
 
   n_classes = 20
   n_grid_cells = 13
@@ -220,8 +226,8 @@ def main(_):
     ckpt_folder_path = './ckpt/'
 
     # Definition of the parameters
-    input_height = 352
-    input_width = 288
+    input_height = 288
+    input_width = 352
     score_threshold = 0.3
     iou_threshold = 0.3
 
