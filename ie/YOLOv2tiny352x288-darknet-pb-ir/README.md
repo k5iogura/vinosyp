@@ -9,6 +9,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
   Tensorflow, tfdebugger, OpenVINO  
   ![Reference about OpenVINO installation](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
   Use pip3 for installation of tensorflow
+  Use apt for eog or feh  
   
 - Prepare data  
   ![yolov2-tiny-voc_352_288_final.weights](https://github.com/k5iogura/darknet_a10/tree/master/model)  
