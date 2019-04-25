@@ -38,7 +38,8 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
 - Run Demo with FP32 or FP16  
 
 ```
-  $ python3 tinyyolov2_predict.py person.jpg
+  $ python3 tinyyolov2_predict.py person.jpg -d CPU
+  $ python3 tinyyolov2_predict.py person.jog -d MYRIAD
 ```
 
 - Check result  
