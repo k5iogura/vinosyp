@@ -6,7 +6,9 @@
 
 - Install required packages  
   Tensorflow, tfdebugger, OpenVINO  
-
+  ![Reference about OpenVINO installation](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
+  Use pip3 for installation of tensorflow
+  
 - Prepare data  
   yolov2-tiny-voc_352_288_final.weights  
   
