@@ -23,6 +23,7 @@ model_xml='./'+data_type+'/y.xml'
 model_bin='./'+data_type+'/y.bin'
 plugin = IEPlugin(device=args.device, plugin_dirs=None)
 extension = "/inference_engine_samples/intel64/Release/lib/libcpu_extension.so"
+extension = "/inference_engine_samples_build/intel64/Release/lib/libcpu_extension.so" # since 2019R1
 extension = os.environ['HOME']+extension
 if args.device == "CPU":plugin.add_cpu_extension(extension)
 net = IENetwork(model=model_xml, weights=model_bin)	# R5
@@ -45,7 +46,7 @@ done_image = 0
 for input_img_path in args.images:
     print(input_img_path)
     outfile = os.path.splitext(os.path.basename(input_img_path))[0]+"_result.png"
-    in_frame = preprocessing(input_img_path,model_h,model_w)
+    in_frame = preprocessing(input_img_path,model_h,model_w,ph_form='WHC')
     in_frame = in_frame.transpose((0,3,1,2))
 
     start = time()
