@@ -24,7 +24,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
   $ python3 test.py
 ```
 
-- Optimize y.pb for OpenVINO by test.pb  
+- Optimize y.pb for OpenVINO FP32 and FP16  
 
 ```
   $ export mo=/opt/intel/openvino/deployment_tools/model_optimizer/
