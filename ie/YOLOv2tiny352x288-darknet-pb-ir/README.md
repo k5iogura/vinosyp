@@ -43,3 +43,4 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
 ```
 
 ![](person_result.png)
+Why two dogs!  
