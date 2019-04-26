@@ -118,10 +118,10 @@ Use bellow shell script to autostart on RaspberrypPi Demo at X-Window start.
   $ autostart_demo_352x288.sh
 ```
 
-Append bellow line in tail of ~/.config/lxsession/LXDE-pi/autostart  
+Place autostart_demo_352x288.sh script on /home/pi and append bellow line in tail of ~/.config/lxsession/LXDE-pi/autostart.  
 
 ```
-@autostart_demo_352x288.sh
+@/home/pi/autostart_demo_352x288.sh
 ```
 
 **Apr.26 2019**
