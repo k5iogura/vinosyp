@@ -1,13 +1,14 @@
 import tensorflow as tf
-import os
+from tensorflow.python import debug as tf_debug
+import os,sys
+from time import time
 import numpy as np
 import net
 import weights_loader
 import cv2
 import warnings
-import sys
-import time
 warnings.filterwarnings('ignore')
+from pdb import *
 
 
 def sigmoid(x):
@@ -48,9 +49,13 @@ def iou(boxA,boxB):
 def non_maximal_suppression(thresholded_predictions,iou_threshold):
 
   nms_predictions = []
-  nms_predictions.append(thresholded_predictions[0])
-  # thresholded_predictions[0] = [x1,y1,x2,y2]
 
+  # Add the best B-Box because it will never be deleted
+  if len(thresholded_predictions)<=0: return nms_predictions
+  nms_predictions.append(thresholded_predictions[0])
+
+  # For each B-Box (starting from the 2nd) check its iou with the higher score B-Boxes
+  # thresholded_predictions[i][0] = [x1,y1,x2,y2]
   i = 1
   while i < len(thresholded_predictions):
     n_boxes_to_check = len(nms_predictions)
@@ -73,9 +78,17 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
 
 
 
-def preprocessing(input_image,input_height,input_width):
+def preprocessing(input_image,ph_height,ph_width,ph_form='WHC'):
 
-  resized_image = cv2.resize(input_image,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  #input_image                                   # HWC BGR
+
+  # Resize the image and convert to array of float32
+  resized_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
+  #print(resized_image.shape)
+
+  if ph_form == 'WHC':
+    input_image = input_image.transpose((1,0,2))  # WHC BGR
+  else: pass                                      # HWC BGR
   image_data = np.array(resized_image, dtype='f')
 
   # Normalization [0,255] -> [0,1]
@@ -86,15 +99,17 @@ def preprocessing(input_image,input_height,input_width):
   #image_data[:,:,2] = copied_image[:,:,0]
   #image_data[:,:,0] = copied_image[:,:,2]
 
-  image_array = np.expand_dims(image_data, 0)  # Add batch dimension
+  # Add the dimension relative to the batch size needed for the input placeholder "x"
+  image_array = np.expand_dims(image_data, 0)  # NWHC
 
   return image_array
 
 
 
-def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_height,input_width):
+def postprocessing(predictions,input_image,score_threshold,iou_threshold,ph_height,ph_width):
 
-  input_image = cv2.resize(input_img,(input_height, input_width), interpolation = cv2.INTER_CUBIC)
+  # input_image                              # HWC
+  input_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
 
   n_classes = 20
   n_grid_cells = 13
@@ -103,16 +118,16 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
 
   # Names and colors for each class
   classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
-  colors = [(254.0, 254.0, 254), (239.88888888888889, 211.66666666666669, 127), 
-              (225.77777777777777, 169.33333333333334, 0), (211.66666666666669, 127.0, 254),
-              (197.55555555555557, 84.66666666666667, 127), (183.44444444444443, 42.33333333333332, 0),
-              (169.33333333333334, 0.0, 254), (155.22222222222223, -42.33333333333335, 127),
-              (141.11111111111111, -84.66666666666664, 0), (127.0, 254.0, 254), 
-              (112.88888888888889, 211.66666666666669, 127), (98.77777777777777, 169.33333333333334, 0),
-              (84.66666666666667, 127.0, 254), (70.55555555555556, 84.66666666666667, 127),
-              (56.44444444444444, 42.33333333333332, 0), (42.33333333333332, 0.0, 254), 
-              (28.222222222222236, -42.33333333333335, 127), (14.111111111111118, -84.66666666666664, 0),
-              (0.0, 254.0, 254), (-14.111111111111118, 211.66666666666669, 127)]
+  colors = [(254.0, 254.0, 254), (239.8, 211.6, 127), 
+              (225.7, 169.3, 0), (211.6, 127.0, 254),
+              (197.5, 84.6, 127), (183.4, 42.3, 0),
+              (169.3, 0.0, 254), (155.2, -42.3, 127),
+              (141.1, -84.6, 0), (127.0, 254.0, 254), 
+              (112.8, 211.6, 127), (98.7, 169.3, 0),
+              (84.6, 127.0, 254), (70.5, 84.6, 127),
+              (56.4, 42.3, 0), (42.3, 0.0, 254), 
+              (28.2, -42.3, 127), (14.1, -84.6, 0),
+              (0.0, 254.0, 254), (-14.1, 211.6, 127)]
 
   # Pre-computed YOLOv2 shapes of the k=5 B-Boxes
   anchors = [1.08,1.19,  3.42,4.41,  6.63,11.38,  9.42,5.11,  16.62,10.52]
@@ -121,11 +136,14 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
   #print('Thresholding on (Objectness score)*(Best class score) with threshold = {}'.format(score_threshold))
 
   # IMPORTANT: reshape to have shape = [ 13 x 13 x (5 B-Boxes) x (4 Coords + 1 Obj score + 20 Class scores ) ]
-  predictions = np.reshape(predictions,(13,13,5,25))
+  # From now on the predictions are ORDERED and can be extracted in a simple way!
+  # We have 13x13 grid cells, each cell has 5 B-Boxes, each B-Box have 25 channels with 4 coords, 1 Obj score , 20 Class scores
+  # E.g. predictions[row, col, b, :4] will return the 4 coords of the "b" B-Box which is in the [row,col] grid cell
+  predictions = np.reshape(predictions,(9,11,5,25))
 
   # IMPORTANT: Compute the coordinates and score of the B-Boxes by considering the parametrization of YOLOv2
-  for row in range(n_grid_cells):
-    for col in range(n_grid_cells):
+  for row in range(9):
+    for col in range(11):
       for b in range(n_b_boxes):
 
         tx, ty, tw, th, tc = predictions[row, col, b, :5]
@@ -149,7 +167,7 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
         best_class = class_predictions.index(max(class_predictions))
         best_class_score = class_predictions[best_class]
 
-        # Flip the coordinates on both axes
+        # Compute the final coordinates on both axes
         left   = int(center_x - (roi_w/2.))
         right  = int(center_x + (roi_w/2.))
         top    = int(center_y - (roi_h/2.))
@@ -161,20 +179,8 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
   # Sort the B-boxes by their final score
   thresholded_predictions.sort(key=lambda tup: tup[1],reverse=True)
 
-  #print('Printing {} B-boxes survived after score thresholding:'.format(len(thresholded_predictions)))
-  #for i in range(len(thresholded_predictions)):
-    #print('B-Box {} : {}'.format(i+1,thresholded_predictions[i]))
-
   # Non maximal suppression
-  #print('Non maximal suppression with iou threshold = {}'.format(iou_threshold))
-  nms_predictions = []
-  if(len(thresholded_predictions)>0):
-    nms_predictions = non_maximal_suppression(thresholded_predictions,iou_threshold)
-
-  # Print survived b-boxes
-  #print('Printing the {} B-Boxes survived after non maximal suppression:'.format(len(nms_predictions)))
-  #for i in range(len(nms_predictions)):
-    #print('B-Box {} : {}'.format(i+1,nms_predictions[i]))
+  nms_predictions = non_maximal_suppression(thresholded_predictions,iou_threshold)
 
   # Draw final B-Boxes and label on input image
   for i in range(len(nms_predictions)):
@@ -190,9 +196,12 @@ def postprocessing(predictions,input_img,score_threshold,iou_threshold,input_hei
 
 
 
-def inference(sess,preprocessed_image):
+def inference(sess,preprocessed_image, tfdbg=False):
 
   # Forward pass of the preprocessed image into the network defined in the net.py file
+  if tfdbg:
+      sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+      sess.add_tensor_filter('has_inf_or_nan', tf_debug.has_inf_or_nan)
   predictions = sess.run(net.o9,feed_dict={net.x:preprocessed_image})
 
   return predictions
@@ -203,16 +212,18 @@ def inference(sess,preprocessed_image):
 def main(_):
 
 	# Definition of the paths
-    weights_path = './tiny-yolo-voc.weights'
+    weights_path      = './yolov2-tiny-voc_352_288_final.weights'
+    #input_img_path    = './horses.jpg'
     output_image_path = './output.jpg'
+
+    # If you do not have the checkpoint yet keep it like this! When you will run test.py for the first time it will be created automatically
     ckpt_folder_path = './ckpt/'
 
     # Definition of the parameters
-    input_height = 416
-    input_width = 416
+    ph_height = 288 # placeholder height
+    ph_width  = 352 # placeholder width
     score_threshold = 0.3
     iou_threshold = 0.3
-
 
     # Definition of the session
     sess = tf.InteractiveSession()
@@ -223,54 +234,35 @@ def main(_):
     saver = tf.train.Saver()
     _ = weights_loader.load(sess,weights_path,ckpt_folder_path,saver)
 
-    video_capture = cv2.VideoCapture(0)
-    n_frames = 0
-    seconds = 0.0
-    fps = 0.0
+    cam = cv2.VideoCapture(0)
+    assert cam is not None
 
+    start = time()
+    img_count = 0
     while True:
+        r,input_image = cam.read()
+        assert r is True
+        # Preprocess the input image
+        preprocessed_image = preprocessing(input_image,ph_height,ph_width)
 
-      # Start time
-      start = time.time()
+        # Compute the predictions on the input image
+        predictions = inference(sess,preprocessed_image)
 
-      # Capture frame-by-frame
-      _, frame = video_capture.read()
-      n_frames = n_frames + 1
+        # Postprocess the predictions and save the output image
+        output_image = postprocessing(predictions,input_image,score_threshold,iou_threshold,ph_height,ph_width)
 
-      # Preprocess the input image
-      #print('Preprocessing...')
-      preprocessed_image = preprocessing(frame,input_height,input_width)
+        cv2.imshow('yolov2-tiny_352x288',output_image)
+        key=cv2.waitKey(1)
+        if key!=-1:break
+        elapsed=(time()-start)
+        img_count+=1
+        sys.stdout.write('\b'*20)
+        sys.stdout.write("%.2fFPS"%(img_count/elapsed))
+        sys.stdout.flush()
 
-      # Compute the predictions on the input image
-      #print('Computing predictions...')
-      predictions = []
-      predictions = inference(sess,preprocessed_image)
-
-      # Postprocess the predictions and save the output image
-      #print('Postprocessing...')
-      output_image = postprocessing(predictions,frame,score_threshold,iou_threshold,input_height,input_width)
-
-      # End time
-      end = time.time()
-
-      # Time elapsed
-      seconds = (end - start)
-      # Calculate frames per second
-      fps  = ( fps + (1/seconds) ) / 2
-
-      # Display the resulting frame with fps
-      cv2.putText(output_image,str(fps),(10,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),3)
-      cv2.imshow('Video', output_image)
-
-      # Press Q to stop!
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-    # When everything is done, release the capture
-    video_capture.release()
+    print("\nfinalize")
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
      tf.app.run(main=main) 
 
-#######################################################################################################################
