@@ -73,6 +73,8 @@ Why two dogs!:smile:
 
 - Using CSI Camera on RaspberryPi  
 
+![Installation of OpenVINO for RaspberryPi](https://github.com/k5iogura/vinosyp/blob/master/RaspberryPI/README.md)  
+
 ```
   $ python3 tinyyolov2_demo_csi.py -d CPU
   $ python3 tinyyolov2_demo_csi.py -d MYRIAD
