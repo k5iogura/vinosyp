@@ -77,6 +77,17 @@ Install OpenVINO on RaspberryPi according to bellow,
 ![Installation of OpenVINO(2019R1) for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
 
 ```
+ $  sudo mkdir -p /opt/intel/openvino
+ $  sudo tar xzf l_openvino_toolkit_raspbi_p_2019.1.094.tgz --strip 1 -C /opt/intel/openvino/
+ $  sudo sed -i "s|<INSTALLDIR>|/opt/intel/openvino|" /opt/intel/openvino/bin/setupvars.sh
+ $  . /opt/intel/openvino/bin/setupvars.sh
+ $  sudo apt install -y cmake
+ $  sudo usermod -a -G users "$(whoami)"
+ $  sh /opt/intel/openvino/install_dependencies/install_NCS_udev_rules.sh
+```
+
+Run Demo script,  
+```
   $ python3 tinyyolov2_demo_csi.py -d CPU
   $ python3 tinyyolov2_demo_csi.py -d MYRIAD
 ```
