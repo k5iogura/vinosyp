@@ -4,18 +4,18 @@ Can run yolov2-tiny with HW = 288x352 featuremap on some device such
  as CPU, Myriad2.  
 yolov2-tiny-352x288 model is faster than 416x416 model.  
 
-![bases on github](https://github.com/simo23/tinyYOLOv2)  
+[bases on github](https://github.com/simo23/tinyYOLOv2)  
 
 ## On CPU with Tensorflow  
 
 - Install required packages  
   Tensorflow, tfdebugger, OpenVINO  
-  ![Installation of OpenVINO for iCPU](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
+  [Installation of OpenVINO for iCPU](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
   Use pip3 for installation of tensorflow  
   Use apt for eog or feh  
   
 - Prepare data  
-  ![yolov2-tiny-voc_352_288_final.weights](https://github.com/k5iogura/darknet_a10/tree/master/model)  
+  [yolov2-tiny-voc_352_288_final.weights](https://github.com/k5iogura/darknet_a10/tree/master/model)  
   
 ```
   $ cat yolov2-tiny-voc_352_288_final.weights.* > yolov2-tiny-voc_352_288_final.weights
@@ -75,7 +75,7 @@ Why two dogs!:smile:
 
 Install OpenVINO on RaspberryPi according to bellow,  
 Download l_openvino_toolkit_raspbi_p_2019.1.094.tgz from intel site and read  
-![Installation of OpenVINO(2019R1) for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
+[Installation of OpenVINO(2019R1) for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
 
 ```
  $  sudo mkdir -p /opt/intel/openvino
