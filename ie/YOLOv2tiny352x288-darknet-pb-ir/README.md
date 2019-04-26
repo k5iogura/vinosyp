@@ -3,6 +3,8 @@
 Can run yolov2-tiny with HW = 288x352 featuremap on some device suchas CPU, Myriad2.  
 yolov2-tiny-352x288 model is faster than 416x416 model.  
 
+![bases on github](https://github.com/simo23/tinyYOLOv2)  
+
 ## flow  
 
 - Install required packages  
