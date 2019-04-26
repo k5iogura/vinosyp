@@ -308,6 +308,7 @@ My morning coffee!
 
 ### [YOLOv1/v2/v3 to OpenVINO](./ie/YOLOv2-darknet-darkflow-pb-ir/README.md)  
 ### [With MNIST Tensorflow training and OpenVINO Prediction](./ie/MNIST-tf-pb-ir/README.md)  
+### [YOLOv2-tiny 352x288 via tensorflow](https://github.com/k5iogura/vinosyp/blob/master/ie/YOLOv2tiny352x288-darknet-pb-ir/README.md)  
 
 ## Also refer below web site,  
 [YOLOv2のリアルタイム物体検出をTensorFlowとPythonで実装する方法](http://ai-coordinator.jp/yolov2-tensorflow-python)  
