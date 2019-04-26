@@ -26,6 +26,12 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
   $ python3 test.py
 ```
 
+- Using UVC Camera  
+Connect UVC Camera via USB port.  
+```
+  $ python3 test_webcam.py
+```
+
 - Optimize y.pb for OpenVINO FP32 and FP16  
 
 ```
@@ -53,9 +59,3 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
 ![](person_result.png)
 Why two dogs!:smile:  
 
-- Using UVC Camera  
-Connect UVC Camera via USB port.  
-```
-  $ python3 test_webcam.py -d CPU
-  $ python3 test_webcam.py -d MYRIAD
-```
