@@ -110,7 +110,6 @@ On RaspberryPi with CSI Camera run Demo script
 Copy FP16/* on RaspberryPi and,  
 
 ```
-  $ python3 tinyyolov2_demo_csi.py -d CPU
   $ python3 tinyyolov2_demo_csi.py -d MYRIAD
 ```
 
