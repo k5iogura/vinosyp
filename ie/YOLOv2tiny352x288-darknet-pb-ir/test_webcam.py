@@ -236,6 +236,10 @@ def main(_):
 
     cam = cv2.VideoCapture(0)
     assert cam is not None
+    print("Opened UVC-Camera via /dev/video0")
+    cam.set(cv2.CAP_PROP_FPS,30)
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH,320)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
     start = time()
     img_count = 0
