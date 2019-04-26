@@ -99,6 +99,11 @@ Check OpenVINO with NCS
  $  eog out_0.bmp 
 ```
 
+For Python3.5 add openvino package path in PYTHONPATH enviromental variable,  
+```
+export PYTHONPATH=$PYTHONPATH:/opt/intel/openvino/python/python3.5/armv7l/
+```
+
 Run Demo script,  
 ```
   $ python3 tinyyolov2_demo_csi.py -d CPU
