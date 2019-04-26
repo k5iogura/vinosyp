@@ -87,6 +87,7 @@ Download l_openvino_toolkit_raspbi_p_2019.1.094.tgz from intel site and read
  $  sh /opt/intel/openvino/install_dependencies/install_NCS_udev_rules.sh
 ```
 Check OpenVINO with NCS  
+Attatch NCS via RaspberryPi USB port.  
 
 ```
  $  cd Downloads/
@@ -104,7 +105,8 @@ For Python3.5 add openvino package path in PYTHONPATH enviromental variable,
 export PYTHONPATH=$PYTHONPATH:/opt/intel/openvino/python/python3.5/armv7l/
 ```
 
-Run Demo script,  
+On RaspberryPi with CSI Camera run Demo script
+
 ```
   $ python3 tinyyolov2_demo_csi.py -d CPU
   $ python3 tinyyolov2_demo_csi.py -d MYRIAD
