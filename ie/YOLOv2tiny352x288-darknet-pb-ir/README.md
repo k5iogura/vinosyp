@@ -73,7 +73,8 @@ Why two dogs!:smile:
 
 - Using CSI Camera on RaspberryPi  
 
-![Installation of OpenVINO for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
+Install OpenVINO on RaspberryPi according to bellow,  
+![Installation of OpenVINO(2019R1) for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
 
 ```
   $ python3 tinyyolov2_demo_csi.py -d CPU
