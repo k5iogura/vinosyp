@@ -33,7 +33,7 @@ Connect UVC Camera via USB port.
   $ python3 test_webcam.py
 ```
 
-## On CPU with OpenVINO  
+## On CPU or MYRIAD with OpenVINO  
 
 - Optimize y.pb for OpenVINO FP32 and FP16  
 
