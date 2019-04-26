@@ -74,6 +74,7 @@ Why two dogs!:smile:
 - Using CSI Camera on RaspberryPi  
 
 Install OpenVINO on RaspberryPi according to bellow,  
+Download l_openvino_toolkit_raspbi_p_2019.1.094.tgz from intel site and read  
 ![Installation of OpenVINO(2019R1) for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
 
 ```
