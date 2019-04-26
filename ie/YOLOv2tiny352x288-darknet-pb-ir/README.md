@@ -6,7 +6,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
 
 ![bases on github](https://github.com/simo23/tinyYOLOv2)  
 
-## flow  
+## On CPU with Tensorflow  
 
 - Install required packages  
   Tensorflow, tfdebugger, OpenVINO  
@@ -33,6 +33,8 @@ Connect UVC Camera via USB port.
   $ python3 test_webcam.py
 ```
 
+## On CPU with OpenVINO  
+
 - Optimize y.pb for OpenVINO FP32 and FP16  
 
 ```
@@ -55,8 +57,25 @@ Connect UVC Camera via USB port.
 
 ```
   $ eog person_result.png
+  or
+  $ feh person_result.png
 ```
 
 ![](person_result.png)
 Why two dogs!:smile:  
 
+- Using UVC Camera  
+
+```
+  $ python3 tinyyolov2_demo_uvc.py -d CPU
+  $ python3 tinyyolov2_demo_uvc.py -d MYRIAD
+```
+
+- Using CSI Camera on RaspberryPi  
+
+```
+  $ python3 tinyyolov2_demo_csi.py -d CPU
+  $ python3 tinyyolov2_demo_csi.py -d MYRIAD
+```
+
+**Apr.26 2019**
