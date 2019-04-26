@@ -10,7 +10,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
 
 - Install required packages  
   Tensorflow, tfdebugger, OpenVINO  
-  ![Reference about OpenVINO installation](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
+  ![Installation of OpenVINO for iCPU](https://github.com/k5iogura/vinosyp/blob/master/README.md)  
   Use pip3 for installation of tensorflow  
   Use apt for eog or feh  
   
@@ -73,7 +73,7 @@ Why two dogs!:smile:
 
 - Using CSI Camera on RaspberryPi  
 
-![Installation of OpenVINO for RaspberryPi](https://github.com/k5iogura/vinosyp/blob/master/RaspberryPI/README.md)  
+![Installation of OpenVINO for RaspberryPi](https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_raspbian.html)  
 
 ```
   $ python3 tinyyolov2_demo_csi.py -d CPU
