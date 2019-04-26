@@ -113,4 +113,14 @@ Copy FP16/* on RaspberryPi and,
   $ python3 tinyyolov2_demo_csi.py -d MYRIAD
 ```
 
+Use bellow shell script to autostart on RaspberrypPi Demo at X-Window start.  
+```
+  $ autostart_demo_352x288.sh
+```
+Append bellow line in ~/.config/lxsession/LXDE-pi/autostart  
+
+```
+@/home/pi/autostart_demo_352x288.sh
+```
+
 **Apr.26 2019**
