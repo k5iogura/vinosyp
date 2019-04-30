@@ -5,8 +5,8 @@ import cv2
 from openvino.inference_engine import IENetwork, IEPlugin
 
 #STEP-2
-model_xml='openvino_models/ir/OpenPose/graph_freeze.xml'
-model_bin='openvino_models/ir/OpenPose/graph_freeze.bin'
+model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
+model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
 net = IENetwork.from_ir(model=model_xml, weights=model_bin)
