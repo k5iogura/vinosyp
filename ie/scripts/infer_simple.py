@@ -9,7 +9,7 @@ model_xml='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.xml'
 model_bin='vinosyp/models/SSD_Mobilenet/FP16/MobileNetSSD_deploy.bin'
 model_xml = os.environ['HOME'] + "/" + model_xml
 model_bin = os.environ['HOME'] + "/" + model_bin
-net = IENetwork.from_ir(model=model_xml, weights=model_bin)
+net = IENetwork(model=model_xml, weights=model_bin)
 
 #STEP-3
 plugin = IEPlugin(device='MYRIAD', plugin_dirs=None)
