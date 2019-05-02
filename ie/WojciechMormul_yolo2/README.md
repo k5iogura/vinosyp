@@ -1,5 +1,7 @@
 # You Only Look Once
 
+[original site](https://github.com/WojciechMormul/yolo2)  
+
 1.Train YOLOv2 object detector from scratch with Tensorflow.
 
 ## Usage
@@ -9,7 +11,7 @@ data.csv (three columns: filenames, rois, classes - each row contains image file
 
 How to make data.csv  
 ```
-  $ wget {where}/VOCtest_06-Nov-2007.tar
+  $ wget {somewhere}/VOCtest_06-Nov-2007.tar
   $ tar xf VOCtest_06-Nov-2007.tar
   $ python voc_labels.py
   $ python find.py > data.csv
