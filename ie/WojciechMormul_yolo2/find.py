@@ -33,7 +33,7 @@ for f in files:
 
     sys.stdout.write(",\"[")
     for no,i in enumerate(labels):
-        sys.stdout.write("[%d]"%(i))
+        sys.stdout.write("%d"%(i))
         if no != len(coords)-1:
             sys.stdout.write(',')
         if no == len(coords)-1:
