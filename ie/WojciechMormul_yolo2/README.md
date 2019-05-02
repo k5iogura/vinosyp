@@ -35,7 +35,7 @@ filename,rois,classes
 ```
 python make_tfrecord.py
 python train.py
-python eval.py
+python test.py
 ```
 
 <img src="https://github.com/WojciechMormul/yolo2/blob/master/imgs/neta.png" width="400">
