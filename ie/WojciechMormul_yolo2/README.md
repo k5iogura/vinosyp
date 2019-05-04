@@ -2,7 +2,10 @@
 
 [original site](https://github.com/WojciechMormul/yolo2)  
 
-1.Train YOLOv2 object detector from scratch with Tensorflow.
+1.Train YOLOv2 object detector from scratch with Tensorflow.  
+3.Ubuntu 16.04 xenial xerus  
+2.python 2.7.12  
+3.tensoflow 1.5.0 no gpu  
 
 ## Usage
 Prepare two files: 
