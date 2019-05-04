@@ -90,6 +90,9 @@ Check GPU usage with nvidia-smi command.
 Predict yolov2 on GPU with UVC Camera.  
 ```
   $ pip install opencv-devel
+  $ vi Makefile
+    OPENCV = 1
+  $ make -j4
   $ ./darknet detector demo cfg/voc.data cfg/yolov2-voc.cfg yolov2-voc.weights
   FPS:23.7
 ```
