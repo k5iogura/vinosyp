@@ -78,6 +78,8 @@ Into graphical login mode.
   NEEDED               libc.so.6
 ```
 
+- Predict via yolov2 on GPU with JPEG image.  
+
 ```
   $ vi example/darknet
     cfg/voc.data
@@ -110,7 +112,8 @@ Check GPU usage with nvidia-smi command.
 
 ![](predictions.jpg)  
 
-Predict yolov2 on GPU with UVC Camera.  
+- Predict via yolov2 on GPU with UVC Camera.  
+
 ```
   $ pip install opencv-devel
   $ vi Makefile
@@ -118,6 +121,8 @@ Predict yolov2 on GPU with UVC Camera.
   $ make -j4
   $ ./darknet detector demo cfg/voc.data cfg/yolov2-voc.cfg yolov2-voc.weights
   FPS:23.7
+  Object:
+  ...
 ```
 
 **May.04, 2019**  
