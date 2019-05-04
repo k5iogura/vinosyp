@@ -86,6 +86,27 @@ Into graphical login mode.
   $ ./darknet detect cfg/yolov2-voc.cfg yolov2-voc.weights data/dog.jpg
 ```
 Check GPU usage with nvidia-smi command.
+```
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 410.48                 Driver Version: 410.48                    |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GeForce GTX 105...  Off  | 00000000:01:00.0  On |                  N/A |
+| 50%   58C    P0    N/A /  75W |   1271MiB /  4039MiB |     81%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID   Type   Process name                             Usage      |
+|=============================================================================|
+|    0      1534      C   ./darknet                                    977MiB |
+|    0      1653      G   /usr/bin/X                                   118MiB |
+|    0      2485      G   /usr/bin/gnome-shell                         116MiB |
+|    0     14812      G   ...equest-channel-token=555406408480941287    55MiB |
++-----------------------------------------------------------------------------+
+```
 
 ![](predictions.jpg)  
 
