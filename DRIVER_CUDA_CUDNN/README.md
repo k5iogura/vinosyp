@@ -5,6 +5,14 @@ Centos7.5
 cuda_10.0.130_410.48_linux.run  
 cudnn-10.0-linux-x64-v7.5.0.56.tgz  
 
+### Check NVIDIA GPU on machine.  
+```
+$ lspci | grep -i nvidia
+01:00.0 VGA compatible controller: NVIDIA Corporation GP107 [GeForce GTX 1050 Ti] (rev a1)
+01:00.1 Audio device: NVIDIA Corporation GP107GL High Definition Audio Controller (rev a1)
+```
+**GTX1050Ti** here!  
+
 ### Disable noubeau  
 
 On graphical mode,  
@@ -77,5 +85,13 @@ Into graphical login mode.
   $ wget https://pjreddie.com/media/files/yolov2-voc.weights
   $ ./darknet detect cfg/yolov2-voc.cfg yolov2-voc.weights data/dog.jpg
 ```
-Check GPU usage with nvidia-smi command.  
+Check GPU usage with nvidia-smi command.
 
+Predict yolov2 on GPU with UVC Camera.  
+```
+  $ pip install opencv-devel
+  $ ./darknet detector demo cfg/voc.data cfg/yolov2-voc.cfg yolov2-voc.weights
+  FPS:23.7
+```
+
+**May.04, 2019**  
