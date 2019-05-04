@@ -134,7 +134,7 @@ def draw(classes,rois, indxs, img, names, colors):
 				cv2.rectangle(img, (x, y), (x+w, y+h), colors[class_idx], 4)					
 				font = cv2.FONT_HERSHEY_SIMPLEX
 				text = names[class_idx] + ' %.2f'%class_prob
-				cv2.putText(img, text, (x, y-8), font, 0.7, colors[class_idx], 2, cv2.LINE_AA)
+				cv2.putText(img, text, (x, y-8), font, 0.7, colors[class_idx], 2)
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -146,15 +146,16 @@ def test():
 	anchors = read_anchors_file('anchors.txt')
 
 	sess = tf.Session() 
-	saver = tf.train.import_meta_graph('./model/yolo.meta')
-	saver.restore(sess,'./model/yolo')
+	saver = tf.train.import_meta_graph('./model/yolo-1000.meta')
+	saver.restore(sess,'./model/yolo-1000')
 
 	graph = tf.get_default_graph()
 	image = graph.get_tensor_by_name("image_placeholder:0")
 	train_flag = graph.get_tensor_by_name("flag_placeholder:0")
 	y = graph.get_tensor_by_name("net/y:0")
 
-	cap = cv2.VideoCapture('./video.MP4')
+	#cap = cv2.VideoCapture('./video.MP4')
+	cap = cv2.VideoCapture(0)
 
 	while(cap.isOpened()):
 
@@ -172,7 +173,7 @@ def test():
 
 		cv2.imshow('img', img)
 		cv2.moveWindow('img', 0, 0)
-		key = cv2.waitKey()
+		key = cv2.waitKey(1)
 		if key == 27: break
 		
 if __name__ == "__main__":

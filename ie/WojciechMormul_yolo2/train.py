@@ -16,6 +16,7 @@ LEARNING_RATE = 0.0001
 NUM_ITERS = 100000
 TFRECORD_PATH = './data.tfrecord'
 MODEL_PATH, SAVE_INTERVAL = './model', 10000
+MODEL_PATH, SAVE_INTERVAL = './model', 200
 
 # ---------------------------------------------------------------------------------
 # -------------------------------- tfrecord reader --------------------------------
@@ -202,6 +203,10 @@ def train():
 	sess.run(tf.global_variables_initializer())
 	coord = tf.train.Coordinator()
 	saver = tf.train.Saver()
+
+	#saver = tf.train.import_meta_graph('./model/yolo-240.meta')
+	#saver.restore(sess,'./model/yolo-240')
+
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 	for i in range(NUM_ITERS):

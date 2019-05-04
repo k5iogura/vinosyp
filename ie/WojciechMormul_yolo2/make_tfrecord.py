@@ -10,6 +10,7 @@ tfrecord_path = './data.tfrecord'
 net_scale = 32
 grid_w, grid_h = 18, 10
 n_classes = 6
+n_classes = 20
 iou_th = 0.7
 in_w, in_h = grid_w*net_scale, grid_h*net_scale
 
