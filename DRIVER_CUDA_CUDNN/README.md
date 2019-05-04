@@ -1,6 +1,13 @@
-# Installation of NVIDIA  
+# Installation of NVIDIA as GPGPU  
+
+### Prepare  
+Centos7.5  
+cuda_10.0.130_410.48_linux.run  
+cudnn-10.0-linux-x64-v7.5.0.56.tgz  
 
 ### Disable noubeau  
+
+On graphical mode,  
 ```
   # vi /etc/modprobe.d/blacklist-nouveau.conf
   # ln blacklist-nouveau.conf nouveau-blacklist.conf
@@ -13,16 +20,20 @@
   # systemctl set-default multi-user.target
   # reboot
 ```
-Into no graphical login mode.  
+Into CLI login mode.  
 
 ### Runfile Installer  
 ```
-  $ sudo sh cuda_<version>_linux.run --silent
+  # sh cuda_10.0.130_410.48_linux.run --silent
 ```
+After a few minites, return to prompting.  
 
 ### Setup xconfig
 ```
   # nvidia-xconfig
+  $ ls /etc/X11/
+    Xmodmap  Xresources  applnk  fontpath.d  xinit  xorg.conf  xorg.conf.backup  xorg.conf.d  xorg.conf.nvidia-xconfig-original
+
   # systemctl set-default graphical.target
   # reboot
 ```
@@ -33,9 +44,13 @@ Into graphical login mode.
 ```
   # cd /usr/local
   # tar xzf cudnn-10.0-linux-x64-v7.5.0.56.tgz
+  $ ls /usr/local/cuda/lib64/*cudnn*
+    /usr/local/cuda/lib64/libcudnn.so    /usr/local/cuda/lib64/libcudnn.so.7.5.0
+    /usr/local/cuda/lib64/libcudnn.so.7  /usr/local/cuda/lib64/libcudnn_static.a
+
 ```
 
-### Check CUDA and cuDNN with darknet
+### Check installations of CUDA and cuDNN using darknet
 ```
   $ git clone https://github.com/pjreddie/darknet
   $ cd darknet
@@ -54,3 +69,4 @@ Into graphical login mode.
   NEEDED               libpthread.so.0
   NEEDED               libc.so.6
 ```
+
