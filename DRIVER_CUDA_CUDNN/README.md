@@ -87,6 +87,8 @@ Into graphical login mode.
 ```
 Check GPU usage with nvidia-smi command.
 
+![](predictions.jpg)  
+
 Predict yolov2 on GPU with UVC Camera.  
 ```
   $ pip install opencv-devel
