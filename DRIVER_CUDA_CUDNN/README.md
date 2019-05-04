@@ -58,7 +58,7 @@ Into graphical login mode.
     GPU   = 1
     CUDNN = 1
   $ make -j4
-  $ objdump -p ~/darknet/darknet | grep lib
+  $ objdump -p darknet | grep lib
   NEEDED               libm.so.6
   NEEDED               libcuda.so.1
   NEEDED               libcudart.so.10.0
@@ -69,4 +69,13 @@ Into graphical login mode.
   NEEDED               libpthread.so.0
   NEEDED               libc.so.6
 ```
+
+```
+  $ vi example/darknet
+    cfg/voc.data
+  $ make -j4
+  $ wget https://pjreddie.com/media/files/yolov2-voc.weights
+  $ ./darknet detect cfg/yolov2-voc.cfg yolov2-voc.weights data/dog.jpg
+```
+Check GPU usage with nvidia-smi command.  
 
