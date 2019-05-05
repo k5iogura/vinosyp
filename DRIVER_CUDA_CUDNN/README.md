@@ -11,7 +11,7 @@ $ lspci | grep -i nvidia
 01:00.0 VGA compatible controller: NVIDIA Corporation GP107 [GeForce GTX 1050 Ti] (rev a1)
 01:00.1 Audio device: NVIDIA Corporation GP107GL High Definition Audio Controller (rev a1)
 ```
-**GTX1050Ti** here!  
+**GTX1050Ti** be found!  
 
 ### Disable noubeau  
 
