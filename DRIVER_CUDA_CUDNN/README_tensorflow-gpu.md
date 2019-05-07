@@ -42,9 +42,10 @@ $ python
 ```
 ### Why tensorflow-gpu version is 1.11.0 and why CUDA-9.0 and CuDNN-7.5 
 
-First of all, when i installed tensorflow-gpu, i got "not found libcublas.so.9" error message.  
-So that install CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
-If you want to use tensorflow-gpu=1.13.1, you have to install CUDA-10.0 and CuDNN corresponding to it.  
+**First of all,** when i installed tensorflow-gpu, i got error message like "not found libcublas.so.9".  
+So that i installed CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
+If you want to use tensorflow-gpu=1.13.1, you may have to install CUDA-10.0 and CuDNN corresponding to it.  
+**Last of all,** i pray your NVIDIA-Driver is correspoding to CUDA and CuDNN versions which selected by tensorflow-gpu wheel.  
 
 #### Check it  
 If you got bellow, this is it.  
@@ -60,5 +61,7 @@ totalMemory: 15.78GiB freeMemory: 116.62MiB
 2019-05-07 16:53:09.479317: I tensorflow/core/common_runtime/gpu/gpu_device.cc:990] 0:   N
 2019-05-07 16:53:09.479758: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1103] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 30 MB memory) -> physical GPU (device: 0, name: Tesla V100-PCIE-16GB, pci bus id: 0000:20:00.0, compute capability: 7.0)
 ```
+
+[reference](https://www.server-world.info/query?os=CentOS_7&p=tensorflow&f=2)  
 
 **07.May,2019**
