@@ -46,6 +46,7 @@ $ python
 So that i installed CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
 If you want to use tensorflow-gpu=1.13.1, you may have to install CUDA-10.0 and CuDNN corresponding to it.  
 **Last of all,** i pray your NVIDIA-Driver is correspoding to CUDA and CuDNN versions which selected by tensorflow-gpu wheel.  
+
 **Status Summary**
 
 |tensorflow gpu|HostOS   |CUDA                          |CuDNN                              |AVX etc.|
