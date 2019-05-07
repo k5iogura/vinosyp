@@ -42,9 +42,10 @@ filename,rois,classes
 ```
 
 ```
-python make_tfrecord.py
-python train.py
-python test.py
+# apt -y install python-opencv
+$ python make_tfrecord.py
+$ python train.py
+$ python test.py
 ```
 
 <img src="https://github.com/WojciechMormul/yolo2/blob/master/imgs/neta.png" width="400">
