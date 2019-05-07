@@ -16,7 +16,7 @@ LEARNING_RATE = 0.0001
 NUM_ITERS = 100000
 TFRECORD_PATH = './data.tfrecord'
 MODEL_PATH, SAVE_INTERVAL = './model', 10000
-MODEL_PATH, SAVE_INTERVAL = './model', 200
+#MODEL_PATH, SAVE_INTERVAL = './model', 200
 
 # ---------------------------------------------------------------------------------
 # -------------------------------- tfrecord reader --------------------------------
