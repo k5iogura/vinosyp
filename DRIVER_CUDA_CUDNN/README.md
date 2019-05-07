@@ -1,5 +1,7 @@
 # Installation of NVIDIA as GPGPU  
 
+[To use tensorflow-gpu](./README_tensorflow-gpu.md)  
+
 ### Prepare  
 Centos7.5  
 cuda_10.0.130_410.48_linux.run  
