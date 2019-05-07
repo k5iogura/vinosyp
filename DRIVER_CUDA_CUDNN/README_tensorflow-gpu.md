@@ -49,10 +49,10 @@ If you want to use tensorflow-gpu=1.13.1, you may have to install CUDA-10.0 and 
 
 **Status Summary**
 
-|tensorflow gpu|HostOS   |CUDA                          |CuDNN                              |AVX etc.|
+|tensorflow gpu|Host CPU |CUDA                          |CuDNN                              |AVX etc.|
 |-             |-        |-                             |-                                  |-       |
-|1.11.0        |CentOS7  |cuda_9.0.176_384.81_linux.run |cudnn-9.0-linux-x64-v7.5.0.56.tgz  |AVX     |
-|1.5.0         |CentOS7  |cuda_9.0.176_384.81_linux.run |cudnn-9.0-linux-x64-v7.tgz         |-       |
+|1.11.0        |Xeon     |cuda_9.0.176_384.81_linux.run |cudnn-9.0-linux-x64-v7.5.0.56.tgz  |AVX     |
+|1.5.0         |Celeron  |cuda_9.0.176_384.81_linux.run |cudnn-9.0-linux-x64-v7.tgz         |-       |
 
 #### Check it  
 If you got bellow, this is it.  
