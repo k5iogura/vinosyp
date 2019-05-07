@@ -40,7 +40,7 @@ $ python
   import tensorflow as tf
   sess=tf.Session()
 ```
-### Why tensorflow-gpu version is 1.11.0 and why CUDA-9.0 and CuDNN-7.5 
+### Why tensorflow-gpu version is 1.11.0 and why CUDA-9.0 and CuDNN-7.5 in above procedure 
 
 **First of all,** when i installed tensorflow-gpu, i got error message like "not found libcublas.so.9".  
 So that i installed CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
