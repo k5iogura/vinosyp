@@ -30,6 +30,7 @@ $ export PATH=~/local/cuda-9.0/bin:$PATH
 $ export LD_LIBRARY_PATH=~/local/cuda-9.0/lib64:$LD_LIBRARY_PATH
 ```
 As of this point, can use GPU as GPGPU.  
+**In other words, LD_LIBRARY_PATH and PATH decide which version of CUDA and CuDNN will be used**.  
 
 #### Install tensorflow
 ```
@@ -41,7 +42,7 @@ $ python
 ```
 ### Why tensorflow-gpu version is 1.11.0 and why CUDA-9.0 and CuDNN-7.5 
 
-First of all, when installed tensorflow-gpu, i got "not found libcublas.so.9" error message.  
+First of all, when i installed tensorflow-gpu, i got "not found libcublas.so.9" error message.  
 So that install CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
 If you want to use tensorflow-gpu=1.13.1, you have to install CUDA-10.0 and CuDNN corresponding to it.  
 
