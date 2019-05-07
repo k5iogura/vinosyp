@@ -16,8 +16,14 @@ How to make data.csv
 ```
   $ wget {somewhere}/VOCtest_06-Nov-2007.tar
   $ tar xf VOCtest_06-Nov-2007.tar
-  $ python voc_labels.py
-  $ python find.py > data.csv
+  
+  $ pushd VOCdevkit/VOC2007/JPEGImages/
+  $ /bin/ls *.jpg | sed 's/\.jpg//' > ../ImageSets/Main/train.txt
+  $ popd
+  
+  $ python ../voc_labels.py
+  $ python ../find.py > ../data.csv
+  $ cd ..
 ```
 
 data.csv_example  
