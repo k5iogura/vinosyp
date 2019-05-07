@@ -31,7 +31,7 @@ $ export LD_LIBRARY_PATH=~/local/cuda-9.0/lib64:$LD_LIBRARY_PATH
 ```
 As of this point, can use GPU as GPGPU.  
 
-#### Install tensorflow and check it
+#### Install tensorflow
 ```
 $ pip install tensorflow-gpu==1.11.0
 $ python -c "import tensorflow"
@@ -39,6 +39,13 @@ $ python
   import tensorflow as tf
   sess=tf.Session()
 ```
+### Why tensorflow-gpu version is 1.11.0 and why CUDA-9.0 and CuDNN-7.5 
+
+First of all, when installed tensorflow-gpu, i got "not found libcublas.so.9" error message.  
+So that install CUDA-9.0 and CuDNN corresponding to CUDA-9.0.  
+If you want to use tensorflow-gpu=1.13.1, you have to install CUDA-10.0 and CuDNN corresponding to it.  
+
+#### Check it  
 If you got bellow, this is it.  
 ```
 2019-05-07 16:53:07.936004: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
