@@ -140,14 +140,11 @@ def make_record():
             image_raw = img.tostring()
             label_raw = label.tostring()
 
-            example = tf.train.Example(
-                features=tf.train.Features(
-                    feature={
-                        'label': tf.train.Feature(bytes_list=tf.train.BytesList(value=[label_raw])),
-                        'image': tf.train.Feature(bytes_list=tf.train.BytesList(value=[image_raw]))
-                    }
-                )
-            )
+            feature_label = tf.train.Feature(bytes_list = tf.train.BytesList(value = [label_raw]))
+            feature_image = tf.train.Feature(bytes_list = tf.train.BytesList(value = [image_raw]))
+            feature_2item  = {'label' : feature_label, 'image' : feature_image}
+            features      = tf.train.Features(feature = feature_2item)
+            example       = tf.train.Example(features = features)
 
             writer.write(example.SerializeToString())
 
