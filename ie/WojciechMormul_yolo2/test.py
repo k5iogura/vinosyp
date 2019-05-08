@@ -192,9 +192,6 @@ def picture(pic_files):
     train_flag = graph.get_tensor_by_name("flag_placeholder:0")
     y = graph.get_tensor_by_name("net/y:0")
 
-    #cap = cv2.VideoCapture('./video.MP4')
-    #cap = cv2.VideoCapture(0)
-
     for pic_file in pic_files:
 
     	img = cv2.imread(pic_file)
@@ -202,31 +199,26 @@ def picture(pic_files):
 
     	img_for_net = cv2.resize(img,(input_w,input_h))
     	img_for_net = img_for_net/255.0
-    	print img_for_net.shape
+    	print "shape input:feed == {}:{}".format(img.shape, img_for_net.shape)
     	data = sess.run(y, feed_dict = {image: [img_for_net], train_flag: False})
 
     	classes,rois = preprocess_data(data, anchors, anchors_w, anchors_h, important_classes)
     	classes,indxs = non_max_supression(classes, rois)
     	draw(classes, rois, indxs, img, names, colors)
 
-    #	cv2.imshow('img', img)
-    #	cv2.moveWindow('img', 0, 0)
-    #	key = cv2.waitKey(0)
-    #	if key == 27: break
-    	
 if __name__ == "__main__":
     def chk(files):
-        for f in files:
-            print f
-            assert os.path.exists(f) is True
+        print files
+        for f in [files]:
+            assert os.path.exists(f) is True,f
         return files
     args = argparse.ArgumentParser()
-    args.add_argument("-m", "--mode"   ,type=str, default="uvc", choices=['uvc','jpg'], help="")
-    args.add_argument("-i", "--images" ,type=str, nargs='+', help="")
-    args.add_argument("-v", "--device" ,type=int, default=0, help="")
+    args.add_argument("-m", "--mode"   ,type=str, default="jpg", choices=['uvc','jpg'], help="Test using mode")
+    args.add_argument("-i", "--image"  ,type=str, help="Using images")
+    args.add_argument("-v", "--device" ,type=int, default=0, choices=range(0,10), help="Using uvc device No.")
     args = args.parse_args()
     if args.mode == 'jpg':
-        picture(args.images)
+        picture([args.image])
     else:
-        uvc(args.uvc)
+        uvc(args.device)
 
