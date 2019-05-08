@@ -149,8 +149,8 @@ def uvc(device):
     anchors = read_anchors_file('anchors.txt')
 
     sess = tf.Session() 
-    saver = tf.train.import_meta_graph('./model/yolo-1000.meta')
-    saver.restore(sess,'./model/yolo-1000')
+    saver = tf.train.import_meta_graph('./model/yolo-100000.meta')
+    saver.restore(sess,'./model/yolo-100000')
 
     graph = tf.get_default_graph()
     image = graph.get_tensor_by_name("image_placeholder:0")
@@ -159,6 +159,8 @@ def uvc(device):
 
     cap = cv2.VideoCapture(device)
 
+    cv2.namedWindow('img')
+    cv2.moveWindow('img', 0, 0)
     while(cap.isOpened()):
 
     	ret, img = cap.read()
@@ -174,9 +176,8 @@ def uvc(device):
     	draw(classes, rois, indxs, img, names, colors)
 
     	cv2.imshow('img', img)
-    	cv2.moveWindow('img', 0, 0)
     	key = cv2.waitKey(1)
-    	if key == 27: break
+    	if key != -1: break
     	
 def picture(pic_files):
 
