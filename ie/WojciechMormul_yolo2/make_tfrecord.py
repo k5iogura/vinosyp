@@ -20,7 +20,7 @@ def read_anchors_file(file_path):
     anchors = []
     with open(file_path, 'r') as file:
         for line in file.read().splitlines():
-            anchors.append(map(float,line.split()))
+            anchors.append(list(map(float,line.split())))
 
     return np.array(anchors)
 
