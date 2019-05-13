@@ -30,14 +30,16 @@ class yolo_v2(object):
         self.offset = tf.tile(self.offset, (self.batch_size, 1, 1, 1))
 
         self.images = tf.placeholder(tf.float32, [None, self.image_size, self.image_size, 3], name='images')
-        self.logits = self.build_networks(self.images)
+        #self.logits = self.build_networks(self.images)
+        self.logits1= self.build_networks1(self.images)
+        self.logits = self.build_networks(self.logits1)
 
         if isTraining:
             self.labels = tf.placeholder(tf.float32, [None, self.cell_size, self.cell_size, self.box_per_cell, self.num_class + 5], name = 'labels')
             self.total_loss = self.loss_layer(self.logits, self.labels)
             tf.summary.scalar('total_loss', self.total_loss)
 
-    def build_networks(self, inputs):
+    def build_networks1(self, inputs):
         net = self.conv_layer(inputs, [3, 3, 3, 32], name = '0_conv')
         net = self.pooling_layer(net, name = '1_pool')
 
@@ -76,13 +78,16 @@ class yolo_v2(object):
         net = tf.concat([net, net24], 3)
 
         net = self.conv_layer(net, [3, 3, int(net.get_shape()[3]), 1024], name = '29_conv')
-        net = self.conv_layer(net, [1, 1, 1024, self.box_per_cell * (self.num_class + 5)], batch_norm=False, name = '30_conv')
+        #net = self.conv_layer(net, [1, 1, 1024, self.box_per_cell * (self.num_class + 5)], batch_norm=False, name = '30_conv')
 
         return net
 
+    def build_networks(self,inputs):
+        net = self.conv_layer(inputs, [1, 1, 1024, self.box_per_cell * (self.num_class + 5)], batch_norm=False, name = '30_conv')
+        return net
 
     def conv_layer(self, inputs, shape, batch_norm = True, name = '0_conv'):
-        weight = tf.Variable(tf.truncated_normal(shape, stddev=0.1), name='weight')
+        weight = tf.Variable(tf.truncated_normal(shape, stddev=0.1,seed=22222), name='weight')
         biases = tf.Variable(tf.constant(0.1, shape=[shape[3]]), name='biases')
 
         conv = tf.nn.conv2d(inputs, weight, strides=[1, 1, 1, 1], padding='SAME', name=name)
@@ -120,8 +125,8 @@ class yolo_v2(object):
     def loss_layer(self, predict, label):
         predict = tf.reshape(predict, [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, self.num_class + 5])
         box_coordinate = tf.reshape(predict[:, :, :, :, :4], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, 4])
-        box_confidence = tf.reshape(predict[:, :, :, :, 4], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, 1])
-        box_classes = tf.reshape(predict[:, :, :, :, 5:], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, self.num_class])
+        box_confidence = tf.reshape(predict[:, :, :, :,  4], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, 1])
+        box_classes    = tf.reshape(predict[:, :, :, :, 5:], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, self.num_class])
 
         boxes1 = tf.stack([(1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + self.offset) / self.cell_size,
                            (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(self.offset, (0, 2, 1, 3))) / self.cell_size,

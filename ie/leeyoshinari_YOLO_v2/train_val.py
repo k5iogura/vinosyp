@@ -7,14 +7,16 @@ import numpy as np
 import argparse
 import datetime
 import time
-import os
+import os,sys
 import yolo.config as cfg
 
 from pascal_voc import Pascal_voc
 from six.moves import xrange
 from yolo.yolo_v2 import yolo_v2
+import random
 # from yolo.darknet19 import Darknet19
 
+from pdb import *
 class Train(object):
     def __init__(self, yolo, data):
         self.yolo = yolo
@@ -28,6 +30,8 @@ class Train(object):
         weight_file = os.path.join(self.output_dir, cfg.WEIGHTS_FILE)
 
         self.variable_to_restore = tf.global_variables()
+#        for i in self.variable_to_restore:
+#            print(i.name)
         self.saver = tf.train.Saver(self.variable_to_restore)
         self.summary_op = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.output_dir)
@@ -91,7 +95,7 @@ class Train(object):
                 self.sess.run(self.train_op, feed_dict = feed_dict)
 
             if step % self.saver_iter == 0:
-                self.saver.save(self.sess, self.output_dir + '/yolo_v2.ckpt', global_step = step)
+                self.saver.save(self.sess, self.output_dir + '/yolo_v2_FTune.ckpt', global_step = step)
 
     def remain(self, i, start):
         if i == 0:
@@ -107,11 +111,16 @@ def main():
     parser.add_argument('--gpu', default = '', type = str)  # which gpu to be selected
     args = parser.parse_args()
 
+    random.seed(cfg.RANDOM_SEED)
+    np.random.seed(cfg.RANDOM_SEED)
+    tf.set_random_seed(cfg.RANDOM_SEED)
+
     if args.gpu is not None:
         cfg.GPU = args.gpu
 
     if args.weights is not None:
         cfg.WEIGHTS_FILE = args.weights
+    print("resore weights file:",cfg.WEIGHTS_FILE)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.GPU
     yolo = yolo_v2()
