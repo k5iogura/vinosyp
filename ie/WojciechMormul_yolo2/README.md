@@ -1,4 +1,4 @@
-# Failure reproduction :rage:
+# Failure reproduction following original site :rage:
 # You Only Look Once
 
 [original site](https://github.com/WojciechMormul/yolo2)  
