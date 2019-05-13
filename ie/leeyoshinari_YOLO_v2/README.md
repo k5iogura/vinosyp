@@ -1,5 +1,10 @@
 # Pass reproduction of interence and training following original site :smile:
 
+**Notice!:**
+Storategy of training in original site is fine tuning own dataset with pre-trained weights.  
+Not shown how to make pre-trained weights anywhere in site.  
+If not use pre-trained weights then training procedure falls in NaN problem.  
+
 # YOLO_v2
 
 [Original Github](https://github.com/leeyoshinari/YOLO_v2)  
