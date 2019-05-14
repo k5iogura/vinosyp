@@ -79,6 +79,8 @@ class Train(object):
         self.saver.restore(self.sess, weight_file)
         self.writer.add_graph(self.sess.graph)
 
+        self.saver = tf.train.Saver(self.variable_to_restore)
+
     def train(self):
         labels_train = self.data.load_labels('train')
         labels_test = self.data.load_labels('test')
