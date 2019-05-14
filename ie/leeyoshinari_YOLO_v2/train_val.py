@@ -14,6 +14,7 @@ from pascal_voc import Pascal_voc
 from six.moves import xrange
 from yolo.yolo_v2 import yolo_v2
 import random
+# from tensorflow.python import debug as tf_debug # for tfdebugger
 # from yolo.darknet19 import Darknet19
 
 from pdb import *
@@ -31,8 +32,9 @@ class Train(object):
 
         self.variable_to_restore = tf.global_variables()
 #        for i in self.variable_to_restore:
-#            print(i.name)
-        self.saver = tf.train.Saver(self.variable_to_restore)
+#            print(i.name)      # Print out variable names
+        #self.saver = tf.train.Saver(self.variable_to_restore)  # for restore full
+        self.saver = tf.train.Saver(yolo.frontV)                # for restore part of yolo_v2()
         self.summary_op = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.output_dir)
 
@@ -40,15 +42,38 @@ class Train(object):
         self.learn_rate = tf.train.exponential_decay(self.initial_learn_rate, self.global_step, 20000, 0.1, name='learn_rate')
         # self.global_step = tf.Variable(0, trainable = False)
         # self.learn_rate = tf.train.piecewise_constant(self.global_step, [100, 190, 10000, 15500], [1e-3, 5e-3, 1e-2, 1e-3, 1e-4])
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step)
+        optimizer_no = 1
+        var4opt = None          # Optimize all variables
+        var4opt = yolo.backV    # Optimize a part of variable in Graph
+        if   optimizer_no == 1:
+            self.optimizer=tf.train.AdagradOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
+        elif optimizer_no == 2:
+            self.optimizer=tf.train.GradientDescentOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
+        elif optimizer_no == 3:
+            self.optimizer=tf.train.AdagradDAOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
+        else:
+            self.optimizer=tf.train.AdamOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
 
         self.average_op = tf.train.ExponentialMovingAverage(0.999).apply(tf.trainable_variables())
         with tf.control_dependencies([self.optimizer]):
             self.train_op = tf.group(self.average_op)
 
-        config = tf.ConfigProto(gpu_options=tf.GPUOptions())
+        config = tf.ConfigProto(gpu_options=tf.GPUOptions(
+            #allow_growth=True,
+            #per_process_gpu_memory_fraction=0.3    # cause segv
+        ))
         self.sess = tf.Session(config=config)
         self.sess.run(tf.global_variables_initializer())
+
+        #self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)    # tfdebugger
 
         print('Restore weights from:', weight_file)
         self.saver.restore(self.sess, weight_file)

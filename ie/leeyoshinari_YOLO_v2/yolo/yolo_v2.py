@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# Author:leeyoshinari
+# Author:K.O
 #-----------------------------------------------------------------------------------
-
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 import yolo.config as cfg
 
 class yolo_v2(object):
     def __init__(self, isTraining = True):
-        self.classes = cfg.CLASSES
+        self.classes   = cfg.CLASSES
         self.num_class = len(self.classes)
 
         self.box_per_cell = cfg.BOX_PRE_CELL
-        self.cell_size = cfg.CELL_SIZE
-        self.batch_size = cfg.BATCH_SIZE
-        self.image_size = cfg.IMAGE_SIZE
+        self.cell_size    = cfg.CELL_SIZE
+        self.batch_size   = cfg.BATCH_SIZE
+        self.image_size   = cfg.IMAGE_SIZE
         self.anchor = cfg.ANCHOR
-        self.alpha = cfg.ALPHA
+        self.alpha  = cfg.ALPHA
 
-        self.class_scale = 1.0
-        self.object_scale = 5.0
-        self.noobject_scale = 1.0
+        self.class_scale      = 1.0
+        self.object_scale     = 5.0
+        self.noobject_scale   = 1.0
         self.coordinate_scale = 1.0
         
         self.offset = np.transpose(np.reshape(np.array([np.arange(self.cell_size)] * self.cell_size * self.box_per_cell),
@@ -30,16 +30,18 @@ class yolo_v2(object):
         self.offset = tf.tile(self.offset, (self.batch_size, 1, 1, 1))
 
         self.images = tf.placeholder(tf.float32, [None, self.image_size, self.image_size, 3], name='images')
-        #self.logits = self.build_networks(self.images)
-        self.logits1= self.build_networks1(self.images)
-        self.logits = self.build_networks(self.logits1)
+        #self.logits = self.build_networks(self.images) # Original construction
+        self.innards= self.build_front_network(self.images)
+        self.frontV = tf.global_variables()
+        self.logits = self.build_back_network(self.innards)
+        self.backV  = list(set(tf.global_variables()) - set(self.frontV))
 
         if isTraining:
-            self.labels = tf.placeholder(tf.float32, [None, self.cell_size, self.cell_size, self.box_per_cell, self.num_class + 5], name = 'labels')
+            self.labels = tf.placeholder(tf.float32,[None,self.cell_size,self.cell_size,self.box_per_cell,self.num_class+5],name='labels')
             self.total_loss = self.loss_layer(self.logits, self.labels)
             tf.summary.scalar('total_loss', self.total_loss)
 
-    def build_networks1(self, inputs):
+    def build_front_network(self, inputs):
         net = self.conv_layer(inputs, [3, 3, 3, 32], name = '0_conv')
         net = self.pooling_layer(net, name = '1_pool')
 
@@ -82,7 +84,7 @@ class yolo_v2(object):
 
         return net
 
-    def build_networks(self,inputs):
+    def build_back_network(self,inputs):
         net = self.conv_layer(inputs, [1, 1, 1024, self.box_per_cell * (self.num_class + 5)], batch_norm=False, name = '30_conv')
         return net
 
@@ -93,11 +95,11 @@ class yolo_v2(object):
         conv = tf.nn.conv2d(inputs, weight, strides=[1, 1, 1, 1], padding='SAME', name=name)
 
         if batch_norm:
-            depth = shape[3]
-            scale = tf.Variable(tf.ones([depth, ], dtype='float32'), name='scale')
-            shift = tf.Variable(tf.zeros([depth, ], dtype='float32'), name='shift')
-            mean = tf.Variable(tf.ones([depth, ], dtype='float32'), name='rolling_mean')
-            variance = tf.Variable(tf.ones([depth, ], dtype='float32'), name='rolling_variance')
+            depth   = shape[3]
+            scale   = tf.Variable(tf.ones([depth,  ], dtype='float32'), name='scale')
+            shift   = tf.Variable(tf.zeros([depth, ], dtype='float32'), name='shift')
+            mean    = tf.Variable(tf.ones([depth,  ], dtype='float32'), name='rolling_mean')
+            variance= tf.Variable(tf.ones([depth,  ], dtype='float32'), name='rolling_variance')
 
             conv_bn = tf.nn.batch_normalization(conv, mean, variance, shift, scale, 1e-05)
             conv = tf.add(conv_bn, biases)
@@ -130,8 +132,8 @@ class yolo_v2(object):
 
         boxes1 = tf.stack([(1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + self.offset) / self.cell_size,
                            (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(self.offset, (0, 2, 1, 3))) / self.cell_size,
-                           tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(self.anchor[:5], [1, 1, 1, 5]) / self.cell_size),
-                           tf.sqrt(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(self.anchor[5:], [1, 1, 1, 5]) / self.cell_size)])
+                           tf.sqrt(tf.abs(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(self.anchor[:5], [1, 1, 1, 5]) / self.cell_size)+1e-20),
+                           tf.sqrt(tf.abs(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(self.anchor[5:], [1, 1, 1, 5]) / self.cell_size)+1e-20)])
         box_coor_trans = tf.transpose(boxes1, (1, 2, 3, 4, 0))
         box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
         box_classes = tf.nn.softmax(box_classes)
@@ -152,7 +154,12 @@ class yolo_v2(object):
         con_loss = conid * tf.square(box_confidence - confs)
         pro_loss = proid * tf.square(box_classes - classes)
 
-        loss = tf.concat([coo_loss, con_loss, pro_loss], axis = 4)
+        # Check initialization status
+        #tf.assert_variables_initialized(tf.global_variables())
+        tf.report_uninitialized_variables(tf.global_variables())
+        tf.report_uninitialized_variables(tf.local_variables())
+
+        loss = tf.concat([coo_loss,  con_loss, pro_loss], axis = 4)
         loss = tf.reduce_mean(tf.reduce_sum(loss, axis = [1, 2, 3, 4]), name = 'loss')
 
         return loss
