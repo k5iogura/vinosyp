@@ -8,6 +8,7 @@ import argparse
 import colorsys
 import cv2
 import os
+from glob import glob
 
 import yolo.config as cfg
 from yolo.yolo_v2 import yolo_v2
@@ -174,7 +175,15 @@ def main():
     args = parser.parse_args()
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu    # configure gpu
+    weights_dir  = os.path.join(args.data_dir, args.weight_dir)
     weights_file = os.path.join(args.data_dir, args.weight_dir, args.weights)
+    if os.path.exists(weights_dir):
+        ckpt_files = glob(weights_dir+'/*.ckpt*')
+        weights_file = max(ckpt_files,key=os.path.getctime) if len(ckpt_files) > 0 else weights_file
+        assert os.path.exists(weights_file) is True
+        path_splited = os.path.splitext(weights_file)
+        weights_file = weights_file if path_splited[1]=='.ckpt' else path_splited[0]
+    print("using weigts file:",weights_file)
     yolo = yolo_v2(False)    # 'False' mean 'test'
     # yolo = Darknet19(False)
 
