@@ -1,4 +1,4 @@
-# Pass reproduction of interence and training following original site :smile:
+# Passed reproduction of interence and training following original site :smile:
 
 **Notice!:**
 Storategy of training in original site is fine tuning own dataset with pre-trained weights.  
