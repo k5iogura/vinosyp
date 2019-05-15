@@ -34,8 +34,13 @@ class Train(object):
 #        for i in self.variable_to_restore:
 #            print(i.name)      # Print out variable names
         #self.saver = tf.train.Saver(self.variable_to_restore)  # for restore full
-        self.saver = tf.train.Saver(yolo.frontV)                # for restore part of yolo_v2()
         print("make saver with restored/all_variables=%d/%d"%(len(yolo.frontV),len(self.variable_to_restore)))
+        print("make saver with all variables",len(self.variable_to_restore))
+        self.loss_min_train = self.loss_min_test = 1e100
+        self.saver_front = tf.train.Saver(yolo.frontV)                # for restore part of yolo_v2()
+        self.saver_back  = tf.train.Saver(yolo.backV)                # for restore part of yolo_v2()
+        self.saver_full  = tf.train.Saver(self.variable_to_restore)
+
         self.summary_op = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.output_dir)
 
@@ -65,8 +70,7 @@ class Train(object):
             self.optimizer=tf.train.AdagradDAOptimizer(
                 learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
             )
-        print("Selected Optimizer:",optimizer_no)
-
+        print("Selected Optimizer:",optimizer_no,self.optimizer.name)
         self.average_op = tf.train.ExponentialMovingAverage(0.999).apply(tf.trainable_variables())
         with tf.control_dependencies([self.optimizer]):
             self.train_op = tf.group(self.average_op)
@@ -81,17 +85,15 @@ class Train(object):
         #self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)    # tfdebugger
 
         print('Restore weights from:', weight_file)
-        self.saver.restore(self.sess, weight_file)
+        self.saver_front.restore(self.sess, weight_file)
         self.writer.add_graph(self.sess.graph)
-
-        print("remake saver with all variables",len(self.variable_to_restore))
-        self.saver = tf.train.Saver(self.variable_to_restore)
 
     def train(self):
         labels_train = self.data.load_labels('train')
         labels_test = self.data.load_labels('test')
 
         num = 5
+        loss = loss_t = 1e100
         initial_time = time.time()
 
         for step in xrange(0, self.max_step + 1):
@@ -108,9 +110,10 @@ class Train(object):
                         feed_dict_t = {self.yolo.images: images_t, self.yolo.labels: labels_t}
                         loss_t = self.sess.run(self.yolo.total_loss, feed_dict=feed_dict_t)
                         sum_loss += loss_t
+                    loss_t = sum_loss/num
 
                     log_str = ('{} Epoch: {}, Step: {}, train_Loss: {:.4f}, test_Loss: {:.4f}, Remain: {}').format(
-                        datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self.data.epoch, int(step), loss, sum_loss/num, self.remain(step, initial_time))
+                        datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self.data.epoch, int(step), loss, loss_t, self.remain(step, initial_time))
                     print(log_str)
 
                     if loss < 1e4:
@@ -127,8 +130,11 @@ class Train(object):
             else:
                 self.sess.run(self.train_op, feed_dict = feed_dict)
 
-            if step % self.saver_iter == 0:
-                self.saver.save(self.sess, self.output_dir + '/yolo_v2_FTune.ckpt', global_step = step)
+            if step % self.saver_iter == 0 and loss == loss and loss_t == loss_t:
+                if self.loss_min_train > loss or self.loss_min_test > loss_t:
+                    self.saver_full.save(self.sess, self.output_dir + '/yolo_v2_FTune.ckpt', global_step = step)
+                if self.loss_min_train > loss:   self.loss_min_train = loss
+                if self.loss_min_test  > loss_t: self.loss_min_test  = loss_t
 
     def remain(self, i, start):
         if i == 0:
