@@ -61,7 +61,7 @@ result,
 |-      |-        |-:   |-     |-:        |-:       |
 |back   |1        |128  |20k   |27.8      |27.7     |
 |all    |1->2     | 28  |2.85k |1.0       |9.5      |
-|all    |2        | 33  |5.05k |0.5       |7.9      |
+|all    |2        | 72  |11.75k|0.92      |9.4      |
 
 ## Training on Your Own Dataset
 To train the model on your own dataset, you should need to modify:
