@@ -138,7 +138,7 @@ class Train(object):
                     sys.stdout.write(', saved')
                 if self.loss_min_train > loss:   self.loss_min_train = loss
                 if self.loss_min_test  > loss_t: self.loss_min_test  = loss_t
-            sys.stdout.write('\n')
+                sys.stdout.write('\n')
 
     def remain(self, i, start):
         if i == 0:
