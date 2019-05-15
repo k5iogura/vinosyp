@@ -115,15 +115,13 @@ class Train(object):
 
                     log_str = ('{} Epoch: {}, Step: {}, train_Loss: {:.4f}, test_Loss: {:.4f}, Remain: {}').format(
                         datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self.data.epoch, int(step), loss, loss_t, self.remain(step, initial_time))
-                    print(log_str)
+                    sys.stdout.write(log_str)
 
-                    if loss < 1e10:
-                        pass
-                    elif loss != loss:	# loss is NaN
+                    if loss != loss:	# loss is NaN
                         print('** loss is NaN')
                         break
-                    else:
-                        print('** loss > 1e10')
+                    elif loss > 1e4:
+                        print('** loss > 1e4')
                         break
 
                 else:
@@ -137,8 +135,10 @@ class Train(object):
             if step % self.saver_iter == 0 and loss == loss and loss_t == loss_t:
                 if self.loss_min_train > loss or self.loss_min_test > loss_t:
                     self.saver_full.save(self.sess, self.output_dir + '/yolo_v2_FTune.ckpt', global_step = step)
+                    sys.stdout.write(', saved')
                 if self.loss_min_train > loss:   self.loss_min_train = loss
                 if self.loss_min_test  > loss_t: self.loss_min_test  = loss_t
+            sys.stdout.write('\n')
 
     def remain(self, i, start):
         if i == 0:
