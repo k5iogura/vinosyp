@@ -43,8 +43,8 @@ class Train(object):
         # self.global_step = tf.Variable(0, trainable = False)
         # self.learn_rate = tf.train.piecewise_constant(self.global_step, [100, 190, 10000, 15500], [1e-3, 5e-3, 1e-2, 1e-3, 1e-4])
         optimizer_no = 1
-        var4opt = None          # Optimize all variables
         var4opt = yolo.backV    # Optimize a part of variable in Graph
+        var4opt = None          # Optimize all variables
         if   optimizer_no == 1:
             self.optimizer=tf.train.AdagradOptimizer(
                 learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
@@ -134,8 +134,9 @@ class Train(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', default = 'yolo_v2.ckpt', type = str)  # darknet-19.ckpt
-    parser.add_argument('--gpu', default = '', type = str)  # which gpu to be selected
+    groupW = parser.add_mutually_exclusive_group()
+    parser.add_argument('-w','--weights', default=None, type = str)  # darknet-19.ckpt
+    parser.add_argument('-g','--gpu'    , default = '', type = str)  # which gpu to be selected
     args = parser.parse_args()
 
     random.seed(cfg.RANDOM_SEED)
@@ -147,6 +148,11 @@ def main():
 
     if args.weights is not None:
         cfg.WEIGHTS_FILE = args.weights
+    else:
+        area   = (os.path.join(cfg.DATA_DIR,'output'))
+        latest = tf.train.latest_checkpoint(area)
+        if latest is not None and len(latest)>0: cfg.WEIGHTS_FILE = latest
+    assert os.path.exists(cfg.WEIGHTS_FILE), cfg.WEIGHTS_FILE
     print("resore weights file:",cfg.WEIGHTS_FILE)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.GPU
