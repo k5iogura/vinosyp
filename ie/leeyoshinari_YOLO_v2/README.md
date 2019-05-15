@@ -16,10 +16,10 @@ This is implementation of [YOLO v2](https://arxiv.org/pdf/1612.08242.pdf) with T
 
 ## Installation
 1. Clone YOLO_v2 repository
-	```Shell
-	$ git clone https://github.com/leeyoshinari/YOLO_v2.git
-    $ cd YOLO_v2
-	```
+```
+   $ git clone https://github.com/k5iogura/vinosyp.git
+   $ cd vinosyp/ie/leeyoshinari_YOLO_v2
+```
 
 2. Download Pascal VOC2007 dataset, and put the dataset into `data/Pascal_voc`.
 
@@ -32,20 +32,35 @@ This is implementation of [YOLO v2](https://arxiv.org/pdf/1612.08242.pdf) with T
 4. Modify configuration into `yolo/config.py`.
 
 5. Training
-	```Shell
-	$ python train_val.py
-	```
+```
+  $ python train_val.py
+```
 
 6. Test
-	```Shell
-	$ python test_val.py
-	```
+```
+  $ python test_val.py
+```
+
 7. For more information to [wiki](https://github.com/leeyoshinari/YOLO_v2/wiki/YOLO_v2). 
 
 ## Darknet-19
 Darknet-19 has 19 convolutional layers, it's faster than yolo_v2. If you use darknet-19, you need some modifications. It's easy to modify.
 
  Please download Darknet-19 weights file for VOC from [darknet-19](https://drive.google.com/open?id=1XWWecDpekQ1t2DjhizF-virWyQCTSUeF).
+
+## FineTune
+Uses VOC2007 dataset  
+Restores model from yolo_v2.ckpt without last convolutional layer  
+
+```
+  $ python train_val.py --weights yolo_v2.ckpt --optimizer 1 --var_set all
+```
+result,  
+
+|var_set|optimizer|Epoch|Step  |train loss|test loss|
+|-      |-        |-    |-     |-         |-        |
+|back   |1        |128  |20k   |27.8      |27.7     |
+|all    |1->2     |128  |2.85k |1.0       |9.5      |
 
 ## Training on Your Own Dataset
 To train the model on your own dataset, you should need to modify:
@@ -59,3 +74,5 @@ To train the model on your own dataset, you should need to modify:
 ## Requirements
 1. Tensorflow
 2. OpenCV
+
+**05.May,2019**
