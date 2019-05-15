@@ -4,7 +4,7 @@
 
 DATA_DIR = 'data'
 DATA_SET = 'data_set'
-WEIGHTS_FILE = 'yolo_weights.ckpt'
+WEIGHTS_FILE = 'yolo_v2.ckpt'
 RANDOM_SEED=22222
 
 CLASSES = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',

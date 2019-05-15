@@ -131,9 +131,9 @@ class yolo_v2(object):
         box_classes    = tf.reshape(predict[:, :, :, :, 5:], [self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, self.num_class])
 
         boxes1 = tf.stack([(1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 0])) + self.offset) / self.cell_size,
-                           (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(self.offset, (0, 2, 1, 3))) / self.cell_size,
-                           tf.sqrt(tf.abs(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(self.anchor[:5], [1, 1, 1, 5]) / self.cell_size)+1e-20),
-                           tf.sqrt(tf.abs(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(self.anchor[5:], [1, 1, 1, 5]) / self.cell_size)+1e-20)])
+            (1.0 / (1.0 + tf.exp(-1.0 * box_coordinate[:, :, :, :, 1])) + tf.transpose(self.offset, (0, 2, 1, 3))) / self.cell_size,
+            tf.sqrt(tf.clip_by_value(tf.exp(box_coordinate[:, :, :, :, 2]) * np.reshape(self.anchor[:5], [1, 1, 1, 5]) / self.cell_size,1e-20,1e20)),
+            tf.sqrt(tf.clip_by_value(tf.exp(box_coordinate[:, :, :, :, 3]) * np.reshape(self.anchor[5:], [1, 1, 1, 5]) / self.cell_size,1e-20,1e20))])
         box_coor_trans = tf.transpose(boxes1, (1, 2, 3, 4, 0))
         box_confidence = 1.0 / (1.0 + tf.exp(-1.0 * box_confidence))
         box_classes = tf.nn.softmax(box_classes)

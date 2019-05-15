@@ -19,7 +19,7 @@ import random
 
 from pdb import *
 class Train(object):
-    def __init__(self, yolo, data):
+    def __init__(self, yolo, data, optimizer_no=1, var_set='all'):
         self.yolo = yolo
         self.data = data
         self.num_class = len(cfg.CLASSES)
@@ -35,6 +35,7 @@ class Train(object):
 #            print(i.name)      # Print out variable names
         #self.saver = tf.train.Saver(self.variable_to_restore)  # for restore full
         self.saver = tf.train.Saver(yolo.frontV)                # for restore part of yolo_v2()
+        print("make saver with restored/all_variables=%d/%d"%(len(yolo.frontV),len(self.variable_to_restore)))
         self.summary_op = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(self.output_dir)
 
@@ -42,25 +43,29 @@ class Train(object):
         self.learn_rate = tf.train.exponential_decay(self.initial_learn_rate, self.global_step, 20000, 0.1, name='learn_rate')
         # self.global_step = tf.Variable(0, trainable = False)
         # self.learn_rate = tf.train.piecewise_constant(self.global_step, [100, 190, 10000, 15500], [1e-3, 5e-3, 1e-2, 1e-3, 1e-4])
-        optimizer_no = 1
-        var4opt = yolo.backV    # Optimize a part of variable in Graph
-        var4opt = None          # Optimize all variables
+        print("var_set for opt:", var_set)
+        if var_set == 'all':
+            var4opt = None          # Optimize all variables
+        else:
+            var4opt = yolo.backV    # Optimize a part of variable in Graph
+
         if   optimizer_no == 1:
             self.optimizer=tf.train.AdagradOptimizer(
                 learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
             )
         elif optimizer_no == 2:
-            self.optimizer=tf.train.GradientDescentOptimizer(
-                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
-            )
-        elif optimizer_no == 3:
-            self.optimizer=tf.train.AdagradDAOptimizer(
-                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
-            )
-        else:
             self.optimizer=tf.train.AdamOptimizer(
                 learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
             )
+        elif optimizer_no == 3:
+            self.optimizer=tf.train.GradientDescentOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
+        else:
+            self.optimizer=tf.train.AdagradDAOptimizer(
+                learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
+            )
+        print("Selected Optimizer:",optimizer_no)
 
         self.average_op = tf.train.ExponentialMovingAverage(0.999).apply(tf.trainable_variables())
         with tf.control_dependencies([self.optimizer]):
@@ -79,6 +84,7 @@ class Train(object):
         self.saver.restore(self.sess, weight_file)
         self.writer.add_graph(self.sess.graph)
 
+        print("remake saver with all variables",len(self.variable_to_restore))
         self.saver = tf.train.Saver(self.variable_to_restore)
 
     def train(self):
@@ -134,9 +140,12 @@ class Train(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    groupW = parser.add_mutually_exclusive_group()
-    parser.add_argument('-w','--weights', default=None, type = str)  # darknet-19.ckpt
-    parser.add_argument('-g','--gpu'    , default = '', type = str)  # which gpu to be selected
+    parser.add_argument('-w','--weights',  default=None, type = str)  # darknet-19.ckpt
+    parser.add_argument('--weight_dir',    default = 'output', type = str)
+    parser.add_argument('--data_dir',      default = 'data',   type = str)
+    parser.add_argument('-o','--optimizer',default = 1,        type = int)
+    parser.add_argument('-v','--var_set',  default = 'all',    type = str, choices=['all','back'])
+    parser.add_argument('-g','--gpu',      default = '',       type = str)  # which gpu to be selected
     args = parser.parse_args()
 
     random.seed(cfg.RANDOM_SEED)
@@ -149,10 +158,9 @@ def main():
     if args.weights is not None:
         cfg.WEIGHTS_FILE = args.weights
     else:
-        area   = (os.path.join(cfg.DATA_DIR,'output'))
-        latest = tf.train.latest_checkpoint(area)
+        w_dir  = (os.path.join(cfg.DATA_DIR,args.data_dir))
+        latest = tf.train.latest_checkpoint(w_dir)
         if latest is not None and len(latest)>0: cfg.WEIGHTS_FILE = latest
-    assert os.path.exists(cfg.WEIGHTS_FILE), cfg.WEIGHTS_FILE
     print("resore weights file:",cfg.WEIGHTS_FILE)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.GPU
@@ -160,7 +168,7 @@ def main():
     # yolo = Darknet19()
     pre_data = Pascal_voc()
 
-    train = Train(yolo, pre_data)
+    train = Train(yolo, pre_data, optimizer_no=args.optimizer, var_set=args.var_set)
 
     print('start training ...')
     train.train()

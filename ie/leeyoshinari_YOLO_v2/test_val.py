@@ -146,7 +146,7 @@ class Detector(object):
         result = self.detect(image)
         self.draw(image, result)
         cv2.imshow('Image', image)
-        cv2.waitKey(0)
+        return cv2.waitKey(0)
 
 
     def video_detect(self, cap):
@@ -168,21 +168,23 @@ class Detector(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', default = 'yolo_v2.ckpt', type = str)    # darknet-19.ckpt
+    parser.add_argument('-i','--images',nargs='+',          type = str, required=True)
+    parser.add_argument('--weights',    default = None,     type = str)    # darknet-19.ckpt
     parser.add_argument('--weight_dir', default = 'output', type = str)
-    parser.add_argument('--data_dir', default = 'data', type = str)
-    parser.add_argument('--gpu', default = '', type = str)    # which gpu to be selected
+    parser.add_argument('--data_dir',   default = 'data',   type = str)
+    parser.add_argument('--gpu',        default = '',       type = str)    # which gpu to be selected
     args = parser.parse_args()
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu    # configure gpu
+
     weights_dir  = os.path.join(args.data_dir, args.weight_dir)
-    weights_file = os.path.join(args.data_dir, args.weight_dir, args.weights)
-    if os.path.exists(weights_dir):
-        ckpt_files = glob(weights_dir+'/*.ckpt*')
-        weights_file = max(ckpt_files,key=os.path.getctime) if len(ckpt_files) > 0 else weights_file
-        assert os.path.exists(weights_file) is True
-        path_splited = os.path.splitext(weights_file)
-        weights_file = weights_file if path_splited[1]=='.ckpt' else path_splited[0]
+    if args.weights is not None:
+        cfg.WEIGHTS_FILE = args.weights
+    else:
+        latest = tf.train.latest_checkpoint(weights_dir)
+        if latest is not None and len(latest)>0: cfg.WEIGHTS_FILE = os.path.basename(latest)
+    weights_file = os.path.join(weights_dir,cfg.WEIGHTS_FILE)
+
     print("using weigts file:",weights_file)
     yolo = yolo_v2(False)    # 'False' mean 'test'
     # yolo = Darknet19(False)
@@ -195,8 +197,10 @@ def main():
     #detector.video_detect(cap)
 
     #detect the image
-    imagename = './test/01.jpg'
-    detector.image_detect(imagename)
+    for imagename in args.images:
+        key = detector.image_detect(imagename)
+        print('hitted key=',key)
+        if key == 27 or key==1048603:break  # means ESC via SSH
 
 if __name__ == '__main__':
     main()
