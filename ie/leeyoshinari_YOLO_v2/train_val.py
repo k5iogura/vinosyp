@@ -34,8 +34,8 @@ class Train(object):
 #        for i in self.variable_to_restore:
 #            print(i.name)      # Print out variable names
         #self.saver = tf.train.Saver(self.variable_to_restore)  # for restore full
-        print("make saver with restored/all_variables=%d/%d"%(len(yolo.frontV),len(self.variable_to_restore)))
-        print("make saver with all variables",len(self.variable_to_restore))
+        print("** make saver with restored/all_variables=%d/%d"%(len(yolo.frontV),len(self.variable_to_restore)))
+        print("** make saver with all variables",len(self.variable_to_restore))
         self.loss_min_train = self.loss_min_test = 1e100
         self.saver_front = tf.train.Saver(yolo.frontV)                # for restore part of yolo_v2()
         self.saver_back  = tf.train.Saver(yolo.backV)                # for restore part of yolo_v2()
@@ -48,7 +48,7 @@ class Train(object):
         self.learn_rate = tf.train.exponential_decay(self.initial_learn_rate, self.global_step, 20000, 0.1, name='learn_rate')
         # self.global_step = tf.Variable(0, trainable = False)
         # self.learn_rate = tf.train.piecewise_constant(self.global_step, [100, 190, 10000, 15500], [1e-3, 5e-3, 1e-2, 1e-3, 1e-4])
-        print("var_set for opt:", var_set)
+        print("** var_set for opt:", var_set)
         if var_set == 'all':
             var4opt = None          # Optimize all variables
         else:
@@ -70,21 +70,22 @@ class Train(object):
             self.optimizer=tf.train.AdagradDAOptimizer(
                 learning_rate=self.learn_rate).minimize(self.yolo.total_loss, global_step=self.global_step, var_list=var4opt
             )
-        print("Selected Optimizer:",optimizer_no,self.optimizer.name)
+        print("** Selected Optimizer:",optimizer_no,self.optimizer.name)
         self.average_op = tf.train.ExponentialMovingAverage(0.999).apply(tf.trainable_variables())
         with tf.control_dependencies([self.optimizer]):
             self.train_op = tf.group(self.average_op)
 
+        run_options = tf.RunOptions(report_tensor_allocations_upon_oom = True)
         config = tf.ConfigProto(gpu_options=tf.GPUOptions(
             #allow_growth=True,
             #per_process_gpu_memory_fraction=0.3    # cause segv
         ))
         self.sess = tf.Session(config=config)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.global_variables_initializer(),options=run_options)
 
         #self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)    # tfdebugger
 
-        print('Restore weights from:', weight_file)
+        print('** Restore weights from:', weight_file)
         self.saver_front.restore(self.sess, weight_file)
         self.writer.add_graph(self.sess.graph)
 
@@ -116,10 +117,13 @@ class Train(object):
                         datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self.data.epoch, int(step), loss, loss_t, self.remain(step, initial_time))
                     print(log_str)
 
-                    if loss < 1e4:
+                    if loss < 1e10:
                         pass
+                    elif loss != loss:	# loss is NaN
+                        print('** loss is NaN')
+                        break
                     else:
-                        print('loss > 1e04')
+                        print('** loss > 1e10')
                         break
 
                 else:
@@ -167,7 +171,7 @@ def main():
         w_dir  = (os.path.join(cfg.DATA_DIR,args.data_dir))
         latest = tf.train.latest_checkpoint(w_dir)
         if latest is not None and len(latest)>0: cfg.WEIGHTS_FILE = latest
-    print("resore weights file:",cfg.WEIGHTS_FILE)
+    print("** resore weights file:",cfg.WEIGHTS_FILE)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.GPU
     yolo = yolo_v2()
@@ -176,9 +180,9 @@ def main():
 
     train = Train(yolo, pre_data, optimizer_no=args.optimizer, var_set=args.var_set)
 
-    print('start training ...')
+    print('** start training ...')
     train.train()
-    print('successful training.')
+    print('** successful training.')
 
 
 if __name__ == '__main__':
