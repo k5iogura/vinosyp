@@ -1,0 +1,38 @@
+Å°Structure of FPGA Accelerator
+
+RAM-range : 0xe0000000 - 0xe000c15c
+
+1 entry := w x h word
+1 word  := float32
+
+          4 entries        1 entry        20 entries
+words |<- w x h x 4 ->|<- w x h x 1 ->|<- w x h x 20 ->|
+      _________________________________________________
+      |  xywh   ...   | obj-conf      | class          |
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       <-                                            ->              x 5(l.n)
+                      ^396            ^495             ^2,475        ..^12,375
+
+12,375 x 4Bytes = 0xC15C Bytes
+
+      | 4 entries    | 1 entry  |     20 entries               |
+      _________________________________________________________
+      | xywh .. xywh | cc .. cc | p0 - p19      ..     p0 - p19|
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                  p0  == w x h words
+                                      ..
+                                  p19 == w x h words
+
+Check confidence for dog.jpg
+________________________________________________________
+|num |start -   end | c > 0.0                   = index
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   0    396 -   495   0.063208192
+   1   2871 -  2970   0.170649394                         <= Close!
+   2   5346 -  5445
+   3   7821 -  7920   0.515303075 1.250489592 = 7870 7871 <= Hit as detection
+   4  10296 - 10395   0.053128477
+
+num := 0 ~ 4 == 0 ~ l.n
+start : index of result
+end   : index of result

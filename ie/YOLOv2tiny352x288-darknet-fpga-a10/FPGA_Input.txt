@@ -1,0 +1,36 @@
+
+■[FPGAデバッグで使用したイメージデータ]
+A10 FPGA演算器の入力をテキストダンプしたファイルは、
+image_DOG_BGR_3x288x352_resize.bin
+
+■[作り方]
+画像のバイトオーダー：
+OpenCVは、PythonもC++も、HWC/BGR
+Darknetの推論対象は、    CHW/RGB
+
+Darknetでdata/dog.jpgを推論する処理は、
+
+load_image_color
+    => load_image
+      => load_image_cv
+        => imread
+           # HWC/BGR 8bit uint
+        => mat_to_image
+          => ipl_to_image
+             # /255.
+             # HWC to CHW
+             # CHW/BGR 32bit float
+          => rgbgr_image
+             # RGB to BGR or RGB to BGR
+             # CHW/RGB 32bit float
+    => resize_image
+       # 288x352
+       # To darknet and FPGA
+    => dump_image_CHW(sized ,"image_DOG_BGR_3x288x352_resize.bin")
+
+288x352 32bit float CHW/RGB としてダンプしたもの
+
+■[FPGAメモリへの書込み処理]
+image_DOG_BGR_3x288x352_resize.binファイルを読み込み、mmapでFPGAメモリへ書き込む
+
+# ./a10cnt.py -b image_DOG_BGR_3x288x352_resize.bin
