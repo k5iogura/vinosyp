@@ -174,6 +174,7 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
         bottom = int(center_y + (roi_h/2.))
         
         if( (final_confidence * best_class_score) > score_threshold):
+        #if( ( final_confidence ) > score_threshold):
           thresholded_predictions.append([[left,top,right,bottom],final_confidence * best_class_score,classes[best_class]])
 
   # Sort the B-boxes by their final score
@@ -217,7 +218,7 @@ def inference(sess,preprocessed_image, tfdbg=False):
   return predictions
 
 
-def main(_):
+def main():
 
 	# Definition of the paths
 #    weights_path      = './yolov2-tiny-voc_352_288_final.weights'
@@ -249,10 +250,28 @@ def main(_):
 
     # Compute the predictions on the input image
     print('Computing predictions...')
-    predictions = inference(sess,preprocessed_image)
-    predictions = devmem(0xe0000000,0xc15c,np.float32)
+#    predictions = inference(sess,preprocessed_image)
+    v=True
+    v=False
+    mem = devmem(0xe0000000,0xc15c,v)
+    predictions = mem.read(np.float32)
+    mem.close()
     print("inference",predictions.shape)
-    set_trace()
+    boxes=[]
+    for i in range(5):
+        off  = 9*11*25*i
+        xywh = predictions[off:off+9*11*4].reshape(9,11,4)
+        off += 9*11*4
+        conf = predictions[off:off+9*11*1].reshape(9,11,1)
+        off += 9*11*1
+        clss = predictions[off:off+9*11*20].reshape(9,11,20)
+
+        box0 = np.concatenate([xywh, conf, clss],axis=2)
+        print("box0.shape",box0.shape)
+        boxes.append(box0)
+    result = np.stack(boxes,axis=2)
+    print("result.shape",result.shape)
+    predictions = result
     # Postprocess the predictions and save the output image
     print('Postprocessing...')
     output_image = postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_height,ph_width)
