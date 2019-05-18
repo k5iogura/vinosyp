@@ -1,6 +1,6 @@
 #import tensorflow as tf
 #from tensorflow.python import debug as tf_debug
-import os,sys
+import os,sys,re
 import numpy as np
 #import net
 #import weights_loader
@@ -251,12 +251,19 @@ def main():
     # Compute the predictions on the input image
     print('Computing predictions...')
 #    predictions = inference(sess,preprocessed_image)
-    v=True
-    v=False
-    mem = devmem(0xe0000000,0xc15c,v)
-    predictions = mem.read(np.float32)
-    mem.close()
-    print("inference",predictions.shape)
+    if False:
+        v=True
+        v=False
+        mem = devmem(0xe0000000,0xc15c,v)
+        predictions = mem.read(np.float32)
+        mem.close()
+        print("inference from FPGA",predictions.shape)
+    else:
+        filename = 'featuremap_8.txt'
+        with open(filename) as f:
+            txt_v       = f.read().strip().split()
+            predictions = np.asarray([np.float32(re.sub(',','',i)) for i in txt_v])
+        print("inference dummy",predictions.shape, filename)
     boxes=[]
     for i in range(5):
         off  = 9*11*25*i
