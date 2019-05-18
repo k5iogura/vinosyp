@@ -91,26 +91,21 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
 
 
 
-def preprocessing(input_img_path,ph_height,ph_width,ph_form='WHC'):
+def preprocessing(input_img_path,ph_height,ph_width):
 
-  input_image = cv2.imread(input_img_path)        # HWC BGR
+  input_image    = cv2.imread(input_img_path)        # HWC BGR
 
-  # Resize the image and convert to array of float32
-  resized_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
-  print(resized_image.shape)
+  resized_image  = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
 
-  if ph_form == 'WHC':
-    input_image = input_image.transpose((1,0,2))  # WHC BGR
-  else: pass                                      # HWC BGR
-  image_data = np.array(resized_image, dtype='f')
+  resized_image  = cv2.cvtColor(resized_image,cv2.COLOR_BGR2RGB)
 
-  # Normalization [0,255] -> [0,1]
-  image_data /= 255.
+  resized_chwRGB = resized_image.transpose((2,0,1))  # CHW RGB
 
-  # Add the dimension relative to the batch size needed for the input placeholder "x"
-  image_array = np.expand_dims(image_data, 0)  # NWHC
+  #resized_chwRGB /= 255.
 
-  return image_array
+  image_nchwRGB  = np.expand_dims(resized_chwRGB, 0) # NCHW BGR
+
+  return image_nchwRGB
 
 
 
@@ -232,9 +227,9 @@ def main():
 #    _ = weights_loader.load(sess,weights_path,ckpt_folder_path,saver)
 
     # Preprocess the input image
-#    print('Preprocessing...')
-#    preprocessed_image = preprocessing(input_img_path,ph_height,ph_width)
-#    print("preprocessing",preprocessed_image.shape)
+    print('Preprocessing...')
+    preprocessed_nchwRGB = preprocessing(input_img_path, ph_height, ph_width)
+    print("preprocessing to NCHW-RGB",preprocessed_nchwRGB.shape)
 
     # Compute the predictions on the input image
     print('Computing predictions...')
