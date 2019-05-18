@@ -95,7 +95,8 @@ def preprocessing(input_img_path,ph_height,ph_width):
 
   input_image    = cv2.imread(input_img_path)        # HWC BGR
 
-  resized_image  = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
+  #resized_image  = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
+  resized_image  = cv2.resize(input_image,(ph_width, ph_height))
 
   resized_image  = cv2.cvtColor(resized_image,cv2.COLOR_BGR2RGB)
 
@@ -105,6 +106,7 @@ def preprocessing(input_img_path,ph_height,ph_width):
 
   image_nchwRGB  = np.expand_dims(resized_chwRGB, 0) # NCHW BGR
 
+  #return input_image
   return image_nchwRGB
 
 
@@ -229,6 +231,9 @@ def main():
     # Preprocess the input image
     print('Preprocessing...')
     preprocessed_nchwRGB = preprocessing(input_img_path, ph_height, ph_width)
+    with open('preprocessed_nchwRGB.txt','w') as f:
+        for i in preprocessed_nchwRGB.reshape(-1):
+            f.write("%2x\n"%i)
     print("preprocessing to NCHW-RGB",preprocessed_nchwRGB.shape)
 
     # Compute the predictions on the input image
