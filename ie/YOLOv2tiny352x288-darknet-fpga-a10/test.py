@@ -189,7 +189,7 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
          int((nms_predictions[i][0][0]+nms_predictions[i][0][2])/2),
          int((nms_predictions[i][0][1]+nms_predictions[i][0][3])/2)
         ),
-        cv2.FONT_HERSHEY_SIMPLEX,1,color,3)
+        cv2.FONT_HERSHEY_SIMPLEX,1,color,2,cv.LINE_AA)
   
   return input_image
 
