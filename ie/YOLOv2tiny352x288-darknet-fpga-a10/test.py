@@ -174,7 +174,6 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
         bottom = int(center_y + (roi_h/2.))
         
         if( (final_confidence * best_class_score) > score_threshold):
-        #if( ( final_confidence ) > score_threshold):
           thresholded_predictions.append([[left,top,right,bottom],final_confidence * best_class_score,classes[best_class]])
 
   # Sort the B-boxes by their final score
@@ -262,21 +261,18 @@ def main():
         filename = 'featuremap_8.txt'
         with open(filename) as f:
             txt_v       = f.read().strip().split()
-            predictions = np.asarray([np.float32(re.sub(',','',i)) for i in txt_v])
+            predictions = np.asarray([np.float(re.sub(',','',i)) for i in txt_v])
         print("inference dummy",predictions.shape, filename)
-    boxes=[]
+    dets=[]
     for i in range(5):
+        entries=[]
         off  = 9*11*25*i
-        xywh = predictions[off:off+9*11*4].reshape(9,11,4)
-        off += 9*11*4
-        conf = predictions[off:off+9*11*1].reshape(9,11,1)
-        off += 9*11*1
-        clss = predictions[off:off+9*11*20].reshape(9,11,20)
-
-        box0 = np.concatenate([xywh, conf, clss],axis=2)
-        print("box0.shape",box0.shape)
-        boxes.append(box0)
-    result = np.stack(boxes,axis=2)
+        for j in range(25):
+            off2 = off+j*9*11*1
+            entry= predictions[off2:off2+9*11*1].reshape(9,11,1)
+            entries.append(entry)
+        dets.append(np.concatenate(entries,axis=2))
+    result = np.stack(dets,axis=2)
     print("result.shape",result.shape)
     predictions = result
     # Postprocess the predictions and save the output image
