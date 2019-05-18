@@ -2,7 +2,7 @@
 
 RAM-range : 0xe0000000 - 0xe000c15c
 
-1 entry := w x h word
+1 entry := w x h words
 1 word  := float32
 
           4 entries        1 entry        20 entries
@@ -17,7 +17,7 @@ words |<- w x h x 4 ->|<- w x h x 1 ->|<- w x h x 20 ->|
 
       | 4 entries    | 1 entry  |     20 entries               |
       _________________________________________________________
-      | xywh .. xywh | cc .. cc | p0 - p19      ..     p0 - p19|
+      | x..x y..y w..w h..h | cc .. cc | p0 - p19      ..     p0 - p19|
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                   p0  == w x h words
                                       ..
@@ -27,12 +27,37 @@ Check confidence for dog.jpg
 ________________________________________________________
 |num |start -   end | c > 0.0                   = index
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   0    396 -   495   0.063208192
-   1   2871 -  2970   0.170649394                         <= Close!
+   0    396 -   495   0.063208192 = 415
+   1   2871 -  2970   0.170649394  = 2930                       <= Close!
    2   5346 -  5445
    3   7821 -  7920   0.515303075 1.250489592 = 7870 7871 <= Hit as detection
-   4  10296 - 10395   0.053128477
+   4  10296 - 10395   0.053128477  = 10296
 
 num := 0 ~ 4 == 0 ~ l.n
 start : index of result
 end   : index of result
+
+¡data processing of forward_region_layer
+
+memcpy(l.output, net.input, l.outputs*l.batch*sizeof(float))
+x, y and conf are applied LOGISTIC function
+[test_detect condition]
+  l.softmax      == 1
+  l.softmax_tree == 0
+  l.background   == 0
+  net.train      == 0
+then
+  index = entry_index(l, b, n*l.w*l.h, 0)
+  activate_array(l.output + index, 2*l.w*l.h, LOGISTIC) // for x,y
+
+  index = entry_index(l, b, n*l.w*l.h, l.coords)
+  activate_array(l.output + index,   l.w*l.h, LOGISTIC) // for conf
+
+  index = entry_index(l, 0, 0, l.coords + !l.background)
+  softmax_cpu(net.input + index, l.classes + l.background, l.batch*l.n, l.inputs/l.n, l.w*l.h, 1, l.w*l.h, 1, l.output + index)
+
+  if(!net.train) return
+
+here,
+  activate_array(..) == float logistic_activate(float x){return 1./(1. + exp(-x));} // activate_array in case LOGISTIC
+

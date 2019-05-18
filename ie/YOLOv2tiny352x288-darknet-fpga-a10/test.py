@@ -1,32 +1,47 @@
-#import tensorflow as tf
-#from tensorflow.python import debug as tf_debug
 import os,sys,re
 import numpy as np
-#import net
-#import weights_loader
-from devmemX import devmem
+from   devmemX import devmem
 import cv2
-import warnings
-warnings.filterwarnings('ignore')
-from pdb import *
+from   pdb import *
 
+n_classes = 20
+grid_h    =  9
+grid_w    = 11
+box_coord =  4
+n_b_boxes =  5
+n_info_per_grid = box_coord + 1 + n_classes
+
+classes = [
+    "aeroplane", "bicycle", "bird", "boat", "bottle",
+    "bus", "car", "cat", "chair", "cow",
+    "diningtable", "dog", "horse", "motorbike", "person",
+    "pottedplant", "sheep", "sofa", "train", "tvmonitor"
+]
+colors = [(254.0, 254.0, 254), (239.8, 211.6, 127), 
+          (225.7, 169.3, 0), (211.6, 127.0, 254),
+          (197.5, 84.6, 127), (183.4, 42.3, 0),
+          (169.3, 0.0, 254), (155.2, -42.3, 127),
+          (141.1, -84.6, 0), (127.0, 254.0, 254), 
+          (112.8, 211.6, 127), (98.7, 169.3, 0),
+          (84.6, 127.0, 254), (70.5, 84.6, 127),
+          (56.4, 42.3, 0), (42.3, 0.0, 254), 
+          (28.2, -42.3, 127), (14.1, -84.6, 0),
+          (0.0, 254.0, 254), (-14.1, 211.6, 127)]
+
+# YOLOv2 anchor of Bounding-Boxes
+anchors = [1.08,1.19,  3.42,4.41,  6.63,11.38,  9.42,5.11,  16.62,10.52]
 
 def sigmoid(x):
   return 1. / (1. + np.exp(-x))
-
-
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     out = e_x / e_x.sum()
     return out
 
-
-
 def iou(boxA,boxB):
   # boxA = boxB = [x1,y1,x2,y2]
 
-  # Determine the coordinates of the intersection rectangle
   xA = max(boxA[0], boxB[0])
   yA = max(boxA[1], boxB[1])
   xB = min(boxA[2], boxB[2])
@@ -59,7 +74,6 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
   i = 1
   while i < len(thresholded_predictions):
     n_boxes_to_check = len(nms_predictions)
-    #print('N boxes to check = {}'.format(n_boxes_to_check))
     to_delete = False
 
     j = 0
@@ -67,7 +81,6 @@ def non_maximal_suppression(thresholded_predictions,iou_threshold):
         curr_iou = iou(thresholded_predictions[i][0],nms_predictions[j][0])
         if(curr_iou > iou_threshold ):
             to_delete = True
-        #print('Checking box {} vs {}: IOU = {} , To delete = {}'.format(thresholded_predictions[i][0],nms_predictions[j][0],curr_iou,to_delete))
         j = j+1
 
     if to_delete == False:
@@ -94,11 +107,6 @@ def preprocessing(input_img_path,ph_height,ph_width,ph_form='WHC'):
   # Normalization [0,255] -> [0,1]
   image_data /= 255.
 
-  # BGR -> RGB? The results do not change much
-  # copied_image = image_data
-  #image_data[:,:,2] = copied_image[:,:,0]
-  #image_data[:,:,0] = copied_image[:,:,2]
-
   # Add the dimension relative to the batch size needed for the input placeholder "x"
   image_array = np.expand_dims(image_data, 0)  # NWHC
 
@@ -111,46 +119,17 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
   input_image = cv2.imread(input_img_path)  # HWC
   input_image = cv2.resize(input_image,(ph_width, ph_height), interpolation = cv2.INTER_CUBIC)
 
-  n_classes = 20
-  n_grid_cells = 13
-  n_b_boxes = 5
-  n_b_box_coord = 4
-
-  # Names and colors for each class
-  classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
-  colors = [(254.0, 254.0, 254), (239.8, 211.6, 127), 
-              (225.7, 169.3, 0), (211.6, 127.0, 254),
-              (197.5, 84.6, 127), (183.4, 42.3, 0),
-              (169.3, 0.0, 254), (155.2, -42.3, 127),
-              (141.1, -84.6, 0), (127.0, 254.0, 254), 
-              (112.8, 211.6, 127), (98.7, 169.3, 0),
-              (84.6, 127.0, 254), (70.5, 84.6, 127),
-              (56.4, 42.3, 0), (42.3, 0.0, 254), 
-              (28.2, -42.3, 127), (14.1, -84.6, 0),
-              (0.0, 254.0, 254), (-14.1, 211.6, 127)]
-
-  # Pre-computed YOLOv2 shapes of the k=5 B-Boxes
-  anchors = [1.08,1.19,  3.42,4.41,  6.63,11.38,  9.42,5.11,  16.62,10.52]
-
   thresholded_predictions = []
   print('Thresholding on (Objectness score)*(Best class score) with threshold = {}'.format(score_threshold))
 
-  # IMPORTANT: reshape to have shape = [ 13 x 13 x (5 B-Boxes) x (4 Coords + 1 Obj score + 20 Class scores ) ]
-  # From now on the predictions are ORDERED and can be extracted in a simple way!
-  # We have 13x13 grid cells, each cell has 5 B-Boxes, each B-Box have 25 channels with 4 coords, 1 Obj score , 20 Class scores
-  # E.g. predictions[row, col, b, :4] will return the 4 coords of the "b" B-Box which is in the [row,col] grid cell
-  predictions = np.reshape(predictions,(9,11,5,25))
+  predictions = np.reshape(predictions,(grid_h, grid_w, n_b_boxes, n_info_per_grid))
 
-  # IMPORTANT: Compute the coordinates and score of the B-Boxes by considering the parametrization of YOLOv2
-  for row in range(9):
-    for col in range(11):
+  for row in range(grid_h):
+    for col in range(grid_w):
       for b in range(n_b_boxes):
 
         tx, ty, tw, th, tc = predictions[row, col, b, :5]
 
-        # IMPORTANT: (416 img size) / (13 grid cells) = 32!
-        # YOLOv2 predicts parametrized coordinates that must be converted to full size
-        # final_coordinates = parametrized_coordinates * 32.0 ( You can see other EQUIVALENT ways to do this...)
         center_x = (float(col) + sigmoid(tx)) * 32.0
         center_y = (float(row) + sigmoid(ty)) * 32.0
 
@@ -159,7 +138,6 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
 
         final_confidence = sigmoid(tc)
 
-        # Find best class
         class_predictions = predictions[row, col, b, 5:]
         class_predictions = softmax(class_predictions)
 
@@ -167,7 +145,6 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
         best_class = class_predictions.index(max(class_predictions))
         best_class_score = class_predictions[best_class]
 
-        # Compute the final coordinates on both axes
         left   = int(center_x - (roi_w/2.))
         right  = int(center_x + (roi_w/2.))
         top    = int(center_y - (roi_h/2.))
@@ -199,8 +176,20 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_h
       best_class_name = nms_predictions[i][2]
 
       # Put a class rectangle with B-Box coordinates and a class label on the image
-      input_image = cv2.rectangle(input_image,(nms_predictions[i][0][0],nms_predictions[i][0][1]),(nms_predictions[i][0][2],nms_predictions[i][0][3]),color)
-      cv2.putText(input_image,best_class_name,(int((nms_predictions[i][0][0]+nms_predictions[i][0][2])/2),int((nms_predictions[i][0][1]+nms_predictions[i][0][3])/2)),cv2.FONT_HERSHEY_SIMPLEX,1,color,3)
+      input_image = cv2.rectangle(
+        input_image,
+        ( nms_predictions[i][0][0], nms_predictions[i][0][1] ),
+        ( nms_predictions[i][0][2], nms_predictions[i][0][3] ),
+        color
+      )
+      cv2.putText(
+        input_image,
+        best_class_name,
+        (
+         int((nms_predictions[i][0][0]+nms_predictions[i][0][2])/2),
+         int((nms_predictions[i][0][1]+nms_predictions[i][0][3])/2)
+        ),
+        cv2.FONT_HERSHEY_SIMPLEX,1,color,3)
   
   return input_image
 
@@ -263,18 +252,30 @@ def main():
             txt_v       = f.read().strip().split()
             predictions = np.asarray([np.float(re.sub(',','',i)) for i in txt_v])
         print("inference dummy",predictions.shape, filename)
+
+#   _predictions________________________________________________________
+#   | 4 entries                 |1 entry |     20 entries               |
+#   | x..x | y..y | w..w | h..h | c .. c | p0 - p19      ..     p0 - p19| x 5(==num)
+#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   entiry size == grid_w x grid_h
     dets=[]
     for i in range(5):
         entries=[]
-        off  = 9*11*25*i
-        for j in range(25):
-            off2 = off+j*9*11*1
-            entry= predictions[off2:off2+9*11*1].reshape(9,11,1)
+        off  = grid_h*grid_w* n_info_per_grid*i
+        for j in range( n_info_per_grid):
+            off2 = off+j*grid_h*grid_w*1
+            entry= predictions[off2:off2+grid_h*grid_w*1].reshape(grid_h,grid_w,1)
             entries.append(entry)
         dets.append(np.concatenate(entries,axis=2))
-    result = np.stack(dets,axis=2)
-    print("result.shape",result.shape)
-    predictions = result
+    predictions = np.stack(dets,axis=2)
+#   _predictions_________________________________________
+#                          | 25 float32 words            |
+#     grid_h, grid_w, num, | x | y | w | h | c | p0..p19 |
+#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   predictions.shape=( 9,11,5,25)
+
+    print("predictions.shape",predictions.shape)
+
     # Postprocess the predictions and save the output image
     print('Postprocessing...')
     output_image = postprocessing(predictions,input_img_path,score_threshold,iou_threshold,ph_height,ph_width)
