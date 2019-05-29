@@ -22,14 +22,25 @@ class Dataset(object):
         self.epoch = 1
         self.count_t = 0
 
-    #    self.data_path       = os.path.join('data','Pascal_voc','VOCdevkit','VOC2007')
-    #    self.train_txt_path  = os.path.join(self.data_path, 'ImageSets','Main', 'trainval.txt')
-    #    self.test_txt_path   = os.path.join(self.data_path, 'ImageSets','Main', 'test.txt')
-    #    self.image_path      = os.path.join(self.data_path, 'JPEGImages')
-    #    self.annotation_path = os.path.join(self.data_path, 'Annotations')
+        if False:   # Default Paths
+            self.data_path       = os.path.join('data','Pascal_voc','VOCdevkit','VOC2007')
+            self.train_txt_path  = os.path.join(self.data_path, 'ImageSets','Main', 'trainval.txt')
+            self.test_txt_path   = os.path.join(self.data_path, 'ImageSets','Main', 'test.txt')
+            self.image_path      = os.path.join(self.data_path, 'JPEGImages')
+            self.annotation_path = os.path.join(self.data_path, 'Annotations')
 
-        #self.train_label = self.load_labels('train')
-        #self.test_label  = self.load_labels('test')
+    def preLoad(self):
+        self.train_label = self.load_labels('train')
+        self.test_label  = self.load_labels('test')
+        print('preLoad:',self.train_txt_path,len(self.train_label))
+        print('preLoad:',self.test_txt_path, len(self.test_label))
+
+    def takeIn(self, Ds_object):
+        self.train_label.extend(Ds_object.train_label)
+        self.test_label.extend(Ds_object.test_label)
+        print('takeIn:',Ds_object.train_txt_path,len(self.train_label))
+        print('takeIn:',Ds_object.test_txt_path, len(self.test_label))
+        return self
 
     def load_labels(self, model):
         txtname = self.train_txt_path if model == 'train' else self.test_txt_path
@@ -84,13 +95,13 @@ class Dataset(object):
         labels = np.zeros([self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, 5 + self.num_classes])
         num = 0
         while num < self.batch_size:
-            imagename = label[self.count]['imagename']
+            imagename = self.train_label[self.count]['imagename']
             images[num, :, :, :] = self.image_read(imagename)
-            labels[num, :, :, :, :] = label[self.count]['labels']
+            labels[num, :, :, :, :] = self.train_label[self.count]['labels']
             num += 1
             self.count += 1
-            if self.count >= len(label):
-                np.random.shuffle(label)
+            if self.count >= len(self.train_label):
+                np.random.shuffle(self.train_label)
                 self.count = 0
                 self.epoch += 1
         return images, labels
@@ -101,12 +112,12 @@ class Dataset(object):
         labels = np.zeros([self.batch_size, self.cell_size, self.cell_size, self.box_per_cell, 5 + self.num_classes])
         num = 0
         while num < self.batch_size:
-            imagename = label[self.count_t]['imagename']
+            imagename = self.test_label[self.count_t]['imagename']
             images[num, :, :, :] = self.image_read(imagename)
-            labels[num, :, :, :, :] = label[self.count_t]['labels']
+            labels[num, :, :, :, :] = self.test_label[self.count_t]['labels']
             num += 1
             self.count_t += 1
-            if self.count_t >= len(label):
+            if self.count_t >= len(self.test_label):
                 self.count_t = 0
         return images, labels
 
@@ -120,19 +131,20 @@ class Dataset(object):
 
 class Pascal_voc_VOC2007(Dataset):
     def __init__(self):
-        super(Pascal_voc,self).__init__()
+        super(Pascal_voc_VOC2007,self).__init__()
         self.data_path       = os.path.join('data','Pascal_voc','VOCdevkit','VOC2007')
         self.train_txt_path  = os.path.join(self.data_path, 'ImageSets','Main', 'trainval.txt')
         self.test_txt_path   = os.path.join(self.data_path, 'ImageSets','Main', 'test.txt')
         self.image_path      = os.path.join(self.data_path, 'JPEGImages')
         self.annotation_path = os.path.join(self.data_path, 'Annotations')
+        self.preLoad()
 
-class Pascal_voc(Dataset):
+class Pascal_voc_VOC2012(Dataset):
     def __init__(self):
-        super(Pascal_voc,self).__init__()
+        super(Pascal_voc_VOC2012,self).__init__()
         self.data_path       = os.path.join('data','Pascal_voc','VOCdevkit','VOC2012')
         self.train_txt_path  = os.path.join(self.data_path, 'ImageSets','Main', 'trainval.txt')
         self.test_txt_path   = os.path.join(self.data_path, 'ImageSets','Main', 'val.txt')
         self.image_path      = os.path.join(self.data_path, 'JPEGImages')
         self.annotation_path = os.path.join(self.data_path, 'Annotations')
-
+        self.preLoad()
