@@ -10,7 +10,7 @@ import time
 import os,sys
 import yolo.config as cfg
 
-from pascal_voc import Pascal_voc
+from dataset import Pascal_voc_VOC2012, Pascal_voc_VOC2007
 from six.moves import xrange
 from yolo.yolo_v2 import yolo_v2
 import random
@@ -90,8 +90,10 @@ class Train(object):
         self.writer.add_graph(self.sess.graph)
 
     def train(self):
-        labels_train = self.data.load_labels('train')
-        labels_test = self.data.load_labels('test')
+        #labels_train = self.data.load_labels('train')
+        #labels_test = self.data.load_labels('test')
+        labels_train = []
+        labels_test  = []
 
         num = 5
         loss = loss_t = 1e100
@@ -176,7 +178,9 @@ def main():
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.GPU
     yolo = yolo_v2()
     # yolo = Darknet19()
-    pre_data = Pascal_voc()
+    pre_data2012 = Pascal_voc_VOC2012()
+    pre_data2007 = Pascal_voc_VOC2007()
+    pre_data     = pre_data2012.takeIn(pre_data2007)
 
     train = Train(yolo, pre_data, optimizer_no=args.optimizer, var_set=args.var_set)
 
