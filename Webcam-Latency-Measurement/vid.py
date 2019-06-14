@@ -1,36 +1,54 @@
-from picamera.array import PiRGBArray
-from picamera import PiCamera
-import time
+import sys, os
+import threading
+from time import time
 import cv2
  
-camera = PiCamera()
-camera.resolution = (320, 240)
-camera.framerate = 32
-rawCapture = PiRGBArray(camera, size=(320, 240))
+import argparse
+args = argparse.ArgumentParser()
+args.add_argument('-th', action='store_true', dest='mthread')
+args = args.parse_args()
  
-# allow the camera to warmup
-time.sleep(0.1)
- 
+class UVC:
+    def __init__(self,deviceNo=0):
+        assert os.path.exists('/dev/video'+str(deviceNo))
+        self.cap = cv2.VideoCapture(deviceNo)
+        assert self.cap is not None
+        r,self.frame = self.cap.read()
+        assert r is True
+        self.cont  = True
+        self.thread= None
+    def _read_task(self):
+        while True:
+            if not self.cont:break
+            r,self.frame = self.cap.read()
+            assert r is True
+        self.cap.release()
+    def start(self):
+        self.thread = threading.Thread(target=self._read_task,args=())
+        self.thread.start()
+        return self
+    def stop(self):
+        self.cont=False
+        self.thread.join()
+    def read(self):
+        return True, self.frame
+
 count = 0
-# capture frames from the camera
-for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    # grab the raw NumPy array representing the image, then initialize the timestamp
-    # and occupied/unoccupied text
-    t1 = time.time()
-    image = frame.array
- 
-    # show the frame
+if args.mthread:
+    cap = UVC().start()
+else:
+    cap = cv2.VideoCapture(0)
+start = time()
+while True:
+    r,image = cap.read()
+    assert r is True
     cv2.imshow("Frame", image)
-    key = cv2.waitKey(100) & 0xFF
- 
-    # clear the stream in preparation for the next frame
-    rawCapture.truncate(0)
- 
-    if key == ord("q"):
+    key = cv2.waitKey(1)
+    if key != -1:
+        if args.mthread: cap.stop()
         break
-    count += 1
-    t2 = time.time()
-    if count >= 33:
-        fps = count / ( t2 - t1 )
-        print("%.3f %d / %.6f"%(fps,count,(t2-t1)))
-        count = 0
+    count+=1
+    sys.stdout.write('\b'*40)
+    sys.stdout.write('%.3f FPS'%(count/(time()-start)))
+    sys.stdout.flush()
+print("\nfin")
