@@ -43,4 +43,4 @@ while True:
     sys.stdout.write('\b'*40)
     sys.stdout.write('%.3f FPS'%(count/(time()-start)))
     sys.stdout.flush()
-print("fin")
+print("\nfin")
