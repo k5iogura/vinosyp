@@ -1,7 +1,7 @@
 import tensorflow as tf
-from tensorflow.python import debug as tf_debug
 import os,sys
 from time import time
+import threading
 import numpy as np
 import net
 import weights_loader
@@ -9,6 +9,31 @@ import cv2
 import warnings
 warnings.filterwarnings('ignore')
 from pdb import *
+
+class UVC:
+    def __init__(self,deviceNo=0):
+        assert os.path.exists('/dev/video'+str(deviceNo))
+        self.cap = cv2.VideoCapture(deviceNo)
+        assert self.cap is not None
+        r,self.frame = self.cap.read()
+        assert r is True
+        self.cont  = True
+        self.thread= None
+    def _read_task(self):
+        while True:
+            if not self.cont:break
+            r,self.frame = self.cap.read()
+            assert r is True
+        self.cap.release()
+    def start(self):
+        self.thread = threading.Thread(target=self._read_task,args=())
+        self.thread.start()
+        return self
+    def stop(self):
+        self.cont=False
+        self.thread.join()
+    def read(self):
+        return self.frame
 
 
 def sigmoid(x):
@@ -234,18 +259,20 @@ def main(_):
     saver = tf.train.Saver()
     _ = weights_loader.load(sess,weights_path,ckpt_folder_path,saver)
 
-    cam = cv2.VideoCapture(0)
-    assert cam is not None
-    print("Opened UVC-Camera via /dev/video0")
-    cam.set(cv2.CAP_PROP_FPS,30)
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH,320)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
+#    cam = cv2.VideoCapture(0)
+#    assert cam is not None
+#    print("Opened UVC-Camera via /dev/video0")
+#    cam.set(cv2.CAP_PROP_FPS,30)
+#    cam.set(cv2.CAP_PROP_FRAME_WIDTH,320)
+#    cam.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
 
     start = time()
+    uvc = UVC().start()
     img_count = 0
     while True:
-        r,input_image = cam.read()
-        assert r is True
+        #r,input_image = cam.read()
+        input_image = uvc.read()
+        #assert r is True
         # Preprocess the input image
         preprocessed_image = preprocessing(input_image,ph_height,ph_width)
 
@@ -266,6 +293,7 @@ def main(_):
 
     print("\nfinalize")
     cv2.destroyAllWindows()
+    uvc.stop()
 
 if __name__ == '__main__':
      tf.app.run(main=main) 
