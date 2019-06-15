@@ -18,7 +18,7 @@ yolov2-tiny-352x288 model is faster than 416x416 model.
   [yolov2-tiny-voc_352_288_final.weights](https://github.com/k5iogura/darknet_a10/tree/master/model)  
   
 ```
-  $ cat yolov2-tiny-voc_352_288_final.weights.* > yolov2-tiny-voc_352_288_final.weights
+  $ cat model/yolov2-tiny-voc_352_288_final.weights.* > yolov2-tiny-voc_352_288_final.weights
 ```
 
 - Create y.pb by test.py  
