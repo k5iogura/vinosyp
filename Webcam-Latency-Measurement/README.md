@@ -19,3 +19,15 @@ It requires the OpenCV2 package.
 
 [More info on usage and some results](https://www.makehardware.com/2016/03/29/finding-a-low-latency-webcam/)
 
+# To increase FPS by Threading UVC Camera capture
+
+UVC Camera capture contains 2 phase.  
+First phase is waiting for the end of image senser.  
+Second phase is processing of mozic to rgb data via isp.  
+So, both phasees are't load of cpu and only waiting for UVC Camera capture.  
+By moving capture proccess into sub thread, FPS increase.  
+
+- cam_threading.py  
+  main and capture 2threads to view video stream.  
+- vid.py  
+  Has -th option to switch multi thread or single thread.  
