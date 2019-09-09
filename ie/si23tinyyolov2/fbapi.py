@@ -523,7 +523,6 @@ if __name__=='__main__':
     g.tensors[g.inputs[0]].set(img)
     predictions = g.invoke(verbose=False)
 
-    set_trace()
     result_img = postprocessing(predictions,'dog.jpg',0.3,0.3,416,416)
     cv2.imwrite('result.jpg',result_img)
 
