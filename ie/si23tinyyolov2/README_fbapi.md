@@ -11,7 +11,7 @@ flatbuffers to parse tflite format
 - **Prepare tflite flatbuffers python modules**  
 - **Run inference with y.tflite.**  
 
-schema_v3+MUL+MAXIMUM.fbs is extended for **MUL** abd **MAXIMUM** as Builtin-Operator.  
+schema_v3+MUL+MAXIMUM.fbs is extended for **MUL** and **MAXIMUM** as Builtin-Operator.  
 MUL is No.18, MAXIMUM is No.55 used in tensorflow-lite and net.y uses these Builtin-Operator to represent **leaky-relu**.  
 
 ```
