@@ -308,8 +308,10 @@ class tensor():
         assert self.buffer>=0,"Invalid tensor.Buffer() {}".format(self.buffer)
         self.buff = buffers_fb[self.buffer].DataAsNumpy()
         if buffers_fb[self.buffer].DataLength()>0:
-            self.buff = self.dataWtype(self.buff, self.type, self.shape)
-            self.data = self.buff.copy()
+            self.data = self.buff.view(dtype='f4').reshape(self.shape)     # Ultra fast!
+        #    self.buff = self.dataWtype(self.buff, self.type, self.shape)  # Too slow
+        #    self.data = self.buff.copy()
+            pass
         else:
             self.data = np.zeros(tuple(self.shape),dtype=self.type2np(self.type))
 
