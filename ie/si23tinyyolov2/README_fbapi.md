@@ -1,9 +1,9 @@
 # Inference with tflite by numpy only python  
 
 ### Requirements  
-tensorflow  v1.11 or later  
-image viewer such as feh, eog, imagemagick     
-flatbuffers   
+tensorflow  v1.11 or later to convert pb to tflite format  
+image viewer such as feh, eog, imagemagick   
+flatbuffers to parse tflite format   
 
 ### How to test
 - **Create y.pb(include YOLOv2-Tiny network and weights)**  
