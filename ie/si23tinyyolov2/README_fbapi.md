@@ -33,6 +33,6 @@ flatbuffers
  $ feh result.jpg
 ```
 
-![](./result.jpb)
+![](./result.jpg)
 
 **Sep.10, 2019**
