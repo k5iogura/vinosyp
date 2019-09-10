@@ -2,7 +2,7 @@
 
 ### Requirements  
 tensorflow  v1.11 or later  
-feh or eog imagemagick some image viewer    
+image viewer such as feh, eog, imagemagick     
 flatbuffers   
 
 ### How to test
