@@ -1,15 +1,18 @@
 # Inference with tflite by numpy only python  
 
 ### Requirements  
-tensorflow  v1.11 or later  
-image viewer such as feh, eog, imagemagick     
-flatbuffers   
+tensorflow  v1.11 or later to convert pb to tflite format  
+image viewer such as feh, eog, imagemagick   
+flatbuffers to parse tflite format   
 
 ### How to test
 - **Create y.pb(include YOLOv2-Tiny network and weights)**  
 - **Convert to frozen.pb**  
 - **Prepare tflite flatbuffers python modules**  
 - **Run inference with y.tflite.**  
+
+schema_v3+MUL+MAXIMUM.fbs is extended for **MUL** and **MAXIMUM** as Builtin-Operator.  
+MUL is No.18, MAXIMUM is No.55 used in tensorflow-lite and net.y uses these Builtin-Operator to represent **leaky-relu**.  
 
 ```
  $ wget https://pjreddie.com/media/files/yolov2-tiny-voc.weights
