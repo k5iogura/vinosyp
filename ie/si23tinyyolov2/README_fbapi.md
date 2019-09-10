@@ -1,14 +1,15 @@
 # Inference with tflite by numpy only python  
 
 ### Requirements  
-tensorflow  
-feh or eog image viewer  
+tensorflow  v1.11 or later
+feh or eog imagemagick some image viewer  
+flatbuffers  
 
 ### How to test
-Create y.pb(include YOLOv2-Tiny network and weights)  
-Convert to frozen.pb  
-Prepare tflite flatbuffers python modules  
-Run inference with y.tflite.  
+- **Create y.pb(include YOLOv2-Tiny network and weights)**  
+- **Convert to frozen.pb**  
+- **Prepare tflite flatbuffers python modules**  
+- **Run inference with y.tflite.**  
 
 ```
  $ wget https://pjreddie.com/media/files/yolov2-tiny-voc.weights
