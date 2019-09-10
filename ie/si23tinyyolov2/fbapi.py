@@ -52,7 +52,7 @@ class operator():
         self.operator_codes_fb = operator_codes_fb
 
         self.name    = self.opcode_name = self.BuiltinCode2String(self.opcode_index)
-        self.nick    = re.sub('[_AIUEO0-9]','',self.name)[:5]
+        self.nick    = "{:5s}".format((self.name[:2]+re.sub('[_AIUEO0-9]','',self.name[2:]))[:5])
         self.padding = 0
 
     def Builtin_Options(self, verbose=False):
