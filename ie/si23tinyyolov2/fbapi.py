@@ -306,9 +306,14 @@ class tensor():
         self.buffer = tensor_fb.Buffer()
 
         assert self.buffer>=0,"Invalid tensor.Buffer() {}".format(self.buffer)
+        if self.type   == 'FLOAT32': dtype_string = 'f4'
+        elif self.type == 'FLOAT16': dtype_string = 'f2'
+        elif self.type == 'INT32'  : dtype_string = 'i4'
+        elif self.type == 'INT64'  : dtype_string = 'i8'
+        else                       : dtype_string = 'u1'    # unsigned integer 1Byte
         self.buff = buffers_fb[self.buffer].DataAsNumpy()
         if buffers_fb[self.buffer].DataLength()>0:
-            self.data = self.buff.view(dtype='f4').reshape(self.shape)     # Ultra fast!
+            self.data = self.buff.view(dtype=dtype_string).reshape(self.shape)     # Ultra fast!
         #    self.buff = self.dataWtype(self.buff, self.type, self.shape)  # Too slow
         #    self.data = self.buff.copy()
             pass
@@ -356,18 +361,6 @@ class tensor():
         elif TensorType == tflite.TensorType.TensorType.STRING:  return "STRING"
         else: assert False,"Unknown:TensorType2String(TensorType)"+str(TensorType)
 
-    def list2int(self, bdy, idx, Nbyte):
-        val = 0
-        for s, i in enumerate(range(idx, idx+Nbyte)): val += bdy[i]<<(8*s)
-        return val
-
-    def list2float(self, bdy, idx, Nbyte):
-        val = self.list2int(bdy,idx,Nbyte)
-        frm = "%0"+str(2*Nbyte)+"x"
-        sp  = frm%val
-        flt = struct.unpack('!f',sp.decode('hex'))[0]
-        return flt
-
     def type2np(self,type_string):
         if type_string == 'FLOAT32': return np.float32
         if type_string == 'FLOAT16': return np.float16
@@ -375,18 +368,6 @@ class tensor():
         if type_string == 'INT64': return np.int64
         if type_string == 'UINT8': return np.uint8
         return np.float
-
-    def dataWtype(self, bdy, type_string, shp):
-        np_type = self.type2np(type_string)
-        if type(bdy) != np.ndarray:set_trace()
-        assert type(bdy) == np.ndarray,"tensor:{} {}".format(self.idx, type(bdy))
-        if   type_string=='FLOAT32': data = np.asarray([self.list2float(bdy, i, 4) for i in range(0,len(bdy),4)], np_type)
-        elif type_string=='FLOAT16': data = np.asarray([self.list2float(bdy, i, 2) for i in range(0,len(bdy),2)], np_type)
-        elif type_string=='INT32':   data = np.asarray([self.list2int(  bdy, i, 4) for i in range(0,len(bdy),4)], np_type)
-        elif type_string=='INT64':   data = np.asarray([self.list2int(  bdy, i, 8) for i in range(0,len(bdy),8)], np_type)
-        elif type_string=='UINT8':   data = np.asarray(                 bdy,                                      np_type)
-        else : assert True, "Unsupported type"+type_string
-        return data.reshape(tuple(shp))
 
     def set(self, img):
         assert type(img) == np.ndarray,"Input image type must be numpy.ndarray but got "+str(type(img))
