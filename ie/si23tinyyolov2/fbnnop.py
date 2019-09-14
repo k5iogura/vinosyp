@@ -40,6 +40,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     input_shape = tensor_input.data.shape
     output_height, output_width = tensor_output.data.shape[1:3]
     
+    D = tensor_input.data.copy()
     # stride 1
     # output 1,14,14,64
     # input  1,14,14,32
@@ -52,11 +53,9 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     operator.padding = _pad
     #_pad = int(math.ceil(((output_height - 1)*stride - input_shape[1] + filter_size)/2))
     # Padding along height and width
-    before_padding = None
     if _pad > 0:
-        before_padding = tensor_input.data
-        tensor_input.data = np.pad(
-            tensor_input.data,
+        D = np.pad(
+            D,
             ((0,0),(_pad,_pad),(_pad,_pad),(0,0)),
             mode='constant', constant_values=(0,0)
         )
@@ -79,12 +78,11 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             col_end = col_start + filter_size
             #patches.append(tensor_input.data[:, row_start:row_end, col_start:col_end, :]) ##M
             # apatch 1,5,5,32
-            apatch=tensor_input.data[:, row_start:row_end, col_start:col_end, :]
-            if apatch.shape[1:]!=tensor_filter.data.shape[1:]:
+            apatch=D[:, row_start:row_end, col_start:col_end, :]
+            if apatch.shape[1:]!=F.shape[1:]:
                 set_trace()
-            assert apatch.shape[1:]==tensor_filter.data.shape[1:],"Failed {} {}".format(
-                                                apatch.shape, tensor_filter.data.shape)
-            patches.append(apatch.tolist())
+            assert apatch.shape[1:]==F.shape[1:],"Failed {} {}".format(apatch.shape, F.shape)
+            patches.append(apatch)
     # patches 14*14,5,5,32
     patches = np.concatenate(patches, axis=0)
     # temp_ = []  # for DepthWiseConv
@@ -96,7 +94,6 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             conv = (np.sum(patch_ * filter_) + bias)              # for CONV as scaler
             #conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
             temp_.append(conv)
-            #temp_.append(conv.tolist())                            # for DepthWiseConv
         #temp_ 14*14
         output_.append(np.array(temp_).reshape(output_height, output_width)) # for CONV
     # output_ 14,14,64
@@ -112,9 +109,6 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     assert output_.shape == tensor_output.data.shape,"Mismatch {} {}".format(
                             output_.shape,tensor_output.data.shape)
     tensor_output.data = output_
-
-    if before_padding is not None:
-        tensor_input.data = before_padding
     return output_
 
 def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
@@ -132,6 +126,7 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
     input_shape = tensor_input.data.shape
     output_height, output_width = tensor_output.data.shape[1:3]
     
+    D = tensor_input.data.copy()
     # <by depth_multiplier>
     # output 1,28,28,32
     # input  1,28,28,1  (depth_multiplier==32)
@@ -140,8 +135,8 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
     if depth_multiplier>0:
         np_concat = []
         for m in range(depth_multiplier):
-            np_concat.append(tensor_input.data)
-        tensor_input.data = np.concatenate(np_concat,axis=3)
+            np_concat.append(D)
+        D = np.concatenate(np_concat,axis=3)
     # output 1,28,28,32
     # input  1,28,28,32 <= changed
     # filter 1,5,5,32
@@ -153,11 +148,9 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
     operator.padding = _pad
     #_pad = int(math.ceil(((output_height - 1)*stride - input_shape[1] + filter_size)/2))
     # Padding along height and width
-    before_padding = None
     if _pad > 0:
-        before_padding = tensor_input.data
-        tensor_input.data = np.pad(
-            tensor_input.data,
+        D = np.pad(
+            D,
             ((0,0),(_pad,_pad),(_pad,_pad),(0,0)),
             mode='constant', constant_values=(0,0)
         )
@@ -179,10 +172,9 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
             col_end = col_start + filter_size
             #patches.append(tensor_input.data[:, row_start:row_end, col_start:col_end, :]) ##M
             # apatch 1,5,5,32
-            apatch=tensor_input.data[:, row_start:row_end, col_start:col_end, :]
-            assert apatch.shape == tensor_filter.data.shape,"Failed {} {}".format(
-                                                apatch.shape, tensor_filter.data.shape)
-            patches.append(apatch.tolist())
+            apatch=D[:, row_start:row_end, col_start:col_end, :]
+            assert apatch.shape == F.shape,"Failed {} {}".format(apatch.shape, F.shape)
+            patches.append(apatch)
     # patches N,5,5,32
     patches = np.concatenate(patches, axis=0)
     temp_ = []  # for DepthWiseConv
@@ -193,7 +185,7 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
             # patch_ 5,5,32
             #conv = (np.sum(patch_ * filter_) + bias)              # for CONV
             conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
-            temp_.append(conv.tolist())
+            temp_.append(conv)
         # output_.append(np.array(temp_).reshape(int(output_height), int(output_width))) # for CONV
     #output_ = np.transpose(np.array(output_), (1,2,0)) # for CONV
     output_ = np.asarray(temp_).reshape((1, output_height, output_width, -1))
@@ -205,9 +197,6 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
     assert output_.shape == tensor_output.data.shape,"Mismatch {} {}".format(
                             output_.shape,tensor_output.data.shape)
     tensor_output.data = output_
-
-    if before_padding is not None:
-        tensor_input.data = before_padding
     return output_
 
 def MAX_POOL_2D(operator, outputs, inputs, verbose=True):
@@ -222,6 +211,7 @@ def MAX_POOL_2D(operator, outputs, inputs, verbose=True):
     input_shape = tensor_input.data.shape
     output_height, output_width = tensor_output.data.shape[1:3]
     
+    D = tensor_input.data.copy()
     # input  1,28,28,32
     # output 1,14,14,32
 
@@ -229,11 +219,9 @@ def MAX_POOL_2D(operator, outputs, inputs, verbose=True):
     _pad = int(math.ceil(((output_height - 1)*stride - input_shape[1] + filter_size)/2))
     operator.padding = _pad
     # Padding along height and width
-    before_padding = None
     if _pad > 0:
-        before_padding = tensor_input.data
-        tensor_input.data = np.pad(
-            tensor_input.data,
+        D = np.pad(
+            D,
             ((0,0),(_pad,_pad),(_pad,_pad),(0,0)),
             mode='constant', constant_values=(0,0)
         )
@@ -248,11 +236,11 @@ def MAX_POOL_2D(operator, outputs, inputs, verbose=True):
             col_start = col*stride
             col_end = col_start + filter_size
             # apatch N,2,2,32
-            apatch=tensor_input.data[:, row_start:row_end, col_start:col_end, :]
+            apatch=D[:, row_start:row_end, col_start:col_end, :]
             mpatch=np.max(apatch, axis=(1), keepdims=True)   # N,1,2,32
             mpatch=np.max(mpatch, axis=(2), keepdims=False)  # N,1,32
             # mpatch N,14*14,32
-            patches.append(mpatch.tolist())
+            patches.append(mpatch)
     # patches N,14*14,32
     patches = np.concatenate(patches, axis=1)
     # patches N,14,14,32
@@ -265,8 +253,5 @@ def MAX_POOL_2D(operator, outputs, inputs, verbose=True):
         else: print(_activation_+' not supported')
     assert output_.shape == tensor_output.data.shape
     tensor_output.data = output_
-
-    if before_padding is not None:
-        tensor_input.data = before_padding
     return output_
 
