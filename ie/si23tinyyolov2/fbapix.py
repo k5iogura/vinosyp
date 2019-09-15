@@ -74,6 +74,12 @@ class operator():
             if scale_c is not None:
                 denomiC     = dati_dtype((scale_c)**-1)
                 assert self.denomi == denomiC,"Unsupports Denominator {} != {}".format(self.denomi,denomiC)
+        elif len(self.inputs)==2 and self.name=='MUL':
+            ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
+            ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
+            if scale_a is not None and scale_b is not None:
+                self.denomi = dati_dtype((scale_a*scale_b)**-1)
+                assert self.denomi > 0,"operator-{} Invalid Denominator {}(1/({}*{}))".format(self.nick,self.denomi,scale_a,scale_b)
 
     def Builtin_Options(self, verbose=False):
         def funcno2name(funcno):
@@ -301,6 +307,7 @@ class operator():
             a = self.tensors[self.inputs[0]].data
             x = self.tensors[self.inputs[1]].data
             r = self.tensors[self.outputs[0]].data = a * x
+            assert _floating_infer,"Quantization inference now, `MUL` supports Floating inference only {}".format(a)
             return r
         elif name == 'MAXIMUM':           # 55 additional support for schema_v3.fbs
             x0= self.tensors[self.inputs[0]].data
