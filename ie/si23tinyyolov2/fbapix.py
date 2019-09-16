@@ -522,9 +522,10 @@ class graph:
         opcode = self.operators[operator_idx].opcode_index
         o_obj  = self.operators[operator_idx]
         o_nick = self.operators[operator_idx].nick
-        print("dest_tensor {} {} <= operator {} {:3d}(code {:2d}) = src {}".format(
+        print("dest_tensor {} {} {:16s} <= operator {} {:3d}(code {:2d}) = src {}".format(
                 o_obj.outputs,
-                [self.tensors[o].type for o in o_obj.outputs],
+                self.tensors[o_obj.outputs[0]].type,
+                self.tensors[o_obj.outputs[0]].name,
                 o_nick,
                 operator_idx,
                 opcode,
