@@ -151,7 +151,7 @@ class operator():
             if verbose: print("Pool2DOptions")
             return (padding, stridew, strideh, _activation_,filterwidth, filterheight)
         else:
-            assert False,"Unknown:BuiltinOptions:"+str(op.BuiltinOptionsType())
+            return ()
 
     def BuiltinCode2String(self, opcode_index):
         builtin_code = self.operator_codes_fb(opcode_index).BuiltinCode()
@@ -222,7 +222,6 @@ class operator():
         elif name == 'AVERAGE_POOL_2D':   self.unsupported()
         elif name == 'CONCATENATION':
             _axis  = self.Builtin_Options()
-            #_axis_ = getordef(self.builtin_options,'axis',None)
             if _axis_ is None:self.view('Invalid conatenation axis',cont=False)
             temp_ = []
             for t in self.inputs:
@@ -245,7 +244,6 @@ class operator():
             b = self.tensors[self.inputs[2]].data
             r = self.fully_connected(x,w,b)
             _activation_ = self.Builtin_Options()
-            #_activation_ = getordef(self.builtin_options, 'fused_activation_function', None)
             if _activation_ is not None:
                 if   "RELU"  in _activation_: r = RELUx(r, 0)
                 elif "RELU1" in _activation_: r = RELUx(r, 1)
@@ -279,7 +277,6 @@ class operator():
             return r
         elif name == 'RESHAPE':
             s = self.Builtin_Options()
-            #s = getordef(self.builtin_options, 'new_shape', None)
             x = self.tensors[self.inputs[0]].data
             if s is None: s = self.tensors[self.inputs[1]].data
             r = self.tensors[self.outputs[0]].data = x.reshape(tuple(s))
@@ -289,7 +286,6 @@ class operator():
         elif name == 'SOFTMAX':
             assert len(self.inputs) == 1, "SOFTMAX not support dim {}".format(self.inputs)
             beta = self.Builtin_Options()
-            #beta = getordef(self.builtin_options, 'beta', 1.0)
             assert beta != 0, "SOFTMAX not support beta {}".format(beta)
             # x  = np.exp(self.tensors[self.inputs[0]].data - np.max(self.tensors[self.inputs[0]].data))
             input_tensor = self.tensors[self.inputs[0]]
@@ -319,7 +315,8 @@ class operator():
     def view(self, msg=None, cont=True):
         if msg is not None: print("\n***\n*** "+msg+"\n***")
         print("operator[{}]({}:{}) outputs {} inpus {}".format(self.idx, self.nick, self.opcode_index, self.outputs, self.inputs))
-        print("  builtin_options : {} padding@run {}".format(self.builtin_options, self.padding))
+        #print("  builtin_options : {} padding@run {}".format(self.builtin_options, self.padding))
+        print("  builtin_options : {} padding@run {}".format(self.Builtin_Options(), self.padding))
         for o in self.outputs: self.tensors[o].view()
         for i in self.inputs:  self.tensors[i].view()
         assert cont,"Fatal Error occurrence at operator"
@@ -451,6 +448,8 @@ class tensor():
         print("  type@tflite :{} type@run :{}".format(self.type,self.data.dtype))
         print("  shape@tflite:{} shape@run:{}".format(self.shape, self.data.shape))
         print("  quantization:min/max/scale/zerop {} {} {} {}".format(self.min, self.max, self.scale,self.zero_point))
+        print("  dati         min/max/mean        {} {} {:.3f}".format(self.dati.min(),self.dati.max(),self.dati.mean()))
+        print("  data         min/max/mean        {:.3f} {:.3f} {:.3f}".format(self.data.min(),self.data.max(),self.data.mean()))
         assert cont,"Fatal Error occurrence at tensor"
 
 class graph:
