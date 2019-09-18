@@ -3,7 +3,8 @@
 - tflite file `yq.lite` allows inference with experimental quantization  
 
 ## Try  
-Quantize y.pb to yq.tflite.  
+Following [README.md](../README.md), make `y.pb` first of all.  
+Next,Quantize y.pb to yq.tflite.  
 ```
  $ make_convert.sh
 ```
