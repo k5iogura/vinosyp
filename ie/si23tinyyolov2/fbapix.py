@@ -65,15 +65,17 @@ class operator():
 
         self.denomi  = denomiC = None
         if len(self.inputs)==3:
+            ( scale_y, max_y, min_y, zero_point_y ) = self.tensors[self.outputs[0]].Quantization_Options()
             ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
             ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
             ( scale_c, max_c, min_c, zero_point_c ) = self.tensors[self.inputs[2]].Quantization_Options()
-            if scale_a is not None and scale_b is not None:
-                self.denomi = dati_dtype((scale_a*scale_b)**-1)
+            if scale_y is not None and scale_a is not None and scale_b is not None:
+                self.denomi = dati_dtype(((scale_a*scale_b)/scale_y)**-1)
+                denomi_ab = dati_dtype((scale_a*scale_b)**-1)
                 assert self.denomi > 0,"Invalid Denominator {}".format(self.denomi)
             if scale_c is not None:
                 denomiC     = dati_dtype((scale_c)**-1)
-                assert self.denomi == denomiC,"Unsupports Denominator {} != {}".format(self.denomi,denomiC)
+                assert denomi_ab == denomiC,"Unsupports Denominator {} != {}".format(denomi_ab,denomiC)
         elif len(self.inputs)==2 and self.name=='MUL':
             ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
             ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
@@ -302,8 +304,10 @@ class operator():
         elif name == 'MUL':               # 18 additional support for schema_v3.fbs
             a = self.tensors[self.inputs[0]].data
             x = self.tensors[self.inputs[1]].data
+            #r = self.tensors[self.outputs[0]].data = 0.1 * x
             r = self.tensors[self.outputs[0]].data = a * x
-            assert _floating_infer,"Quantization inference now, `MUL` supports Floating inference only {}".format(a)
+            #R = self.tensors[self.outputs[0]].data = R.astype(np.int32)
+            #assert _floating_infer,"Quantization inference now, `MUL` supports Floating inference only {}".format(a)
             return r
         elif name == 'MAXIMUM':           # 55 additional support for schema_v3.fbs
             x0= self.tensors[self.inputs[0]].data
