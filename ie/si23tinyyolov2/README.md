@@ -2,6 +2,7 @@
 
 ## [original readme here](./README_original.md)  
 ## [Inference with tflite by numpy only python](./README_fbapi.md)  
+## [Inference with tflite by tensorflow lite](./README_tflite.md)  
 
 ### What you can do with this code
 Extract weights from binary file of the original yolo-v2, assign them to a TF network, save ckpt, perform detection on an input image or webcam
