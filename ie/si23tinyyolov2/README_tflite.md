@@ -29,7 +29,7 @@ B-Box 3 : [[78, 118, 324, 305], 0.4964802645519055, 'bicycle']
 ```
 ![](./result-float.jpg)  
 
-Experimental Quantization mode with uint8.  
+Last try experimental Quantization mode with uint8.  
 ```
  $ python dog_detect_tflite.py -t yq.tflite -q
 ('input image size:', (576, 768, 3), dtype('uint8'), 255, 0, 127.93668523483728)
