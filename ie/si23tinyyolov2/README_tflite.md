@@ -1,4 +1,4 @@
-# YOLO-tiny Inference with tflite_runtime  
+# TinyYOLOv2 Inference with tflite_runtime  
 - Use tflite_runtime python to infer dog.jpg  
 - tflite file `yq.lite` allows inference with experimental quantization  
 
