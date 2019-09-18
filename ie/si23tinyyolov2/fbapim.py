@@ -59,6 +59,14 @@ if __name__=='__main__':
     g.tensors[g.inputs[0]].set(img)
     predictions = g.invoke(verbose=False)
 
-    result_img = postprocessing(predictions,'dog.jpg',0.3,0.3,416,416)
+    if args.quantization:
+        predictions = 1.19607841969*g.tensors[g.outputs[0]].data
+        result_img = postprocessing(predictions,'dog.jpg',0.001,0.001,416,416)
+        print("realize from Quantization")
+    else:
+        predictions = g.tensors[g.outputs[0]].data
+        result_img = postprocessing(predictions,'dog.jpg',0.3,0.3,416,416)
+        print("realize from Floating")
+
     cv2.imwrite('result.jpg',result_img)
 
