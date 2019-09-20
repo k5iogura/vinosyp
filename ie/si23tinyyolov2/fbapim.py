@@ -61,7 +61,7 @@ if __name__=='__main__':
 
     if args.quantization:
         predictions = 1.19607841969*g.tensors[g.outputs[0]].data
-        result_img = postprocessing(predictions,'dog.jpg',0.001,0.001,416,416)
+        result_img = postprocessing(predictions,'dog.jpg',0.05,0.03,416,416)
         print("realize from Quantization")
     else:
         predictions = g.tensors[g.outputs[0]].data
