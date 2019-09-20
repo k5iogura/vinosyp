@@ -50,3 +50,9 @@ else:
 
 cv2.imwrite('result.jpg',result_img)
 
+def view(idx):
+    mx=ip.get_tensor(idx).max()
+    mn=ip.get_tensor(idx).min()
+    me=ip.get_tensor(idx).mean()
+    sd=ip.get_tensor(idx).std()
+    print("min/max/mean = {:.3f}/{:3f}/{:3f}:{:.6f}".format(mn,mx,me,sd))
