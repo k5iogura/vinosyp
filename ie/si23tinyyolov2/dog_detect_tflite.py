@@ -42,7 +42,8 @@ ip.set_tensor(indexi, img)
 ip.invoke()
 
 if args.quantization:
-    predictions = 1.19607841969*(ip.get_tensor(indexo) - 42.)
+    (scale, zero_point) = ip.get_tensor_details()[indexo]['quantization']
+    predictions = scale*(ip.get_tensor(indexo) - np.float32(zero_point))
     result_img = postprocessing(predictions,'dog.jpg',0.005,0.005,416,416)
 else:
     predictions = ip.get_tensor(indexo)
