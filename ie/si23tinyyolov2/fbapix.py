@@ -69,6 +69,10 @@ class operator():
             ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
             ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
             ( scale_c, max_c, min_c, zero_point_c ) = self.tensors[self.inputs[2]].Quantization_Options()
+            self.scale_y = scale_y
+            self.scale_a = scale_a
+            self.scale_b = scale_b
+            self.scale_c = scale_c
             if scale_y is not None and scale_a is not None and scale_b is not None:
                 self.denomi = dati_dtype(((scale_a*scale_b)/scale_y)**-1)
                 denomi_ab = dati_dtype((scale_a*scale_b)**-1)
@@ -76,11 +80,17 @@ class operator():
             if scale_c is not None:
                 denomiC     = dati_dtype((scale_c)**-1)
                 assert denomi_ab == denomiC,"Unsupports Denominator {} != {}".format(denomi_ab,denomiC)
-        elif len(self.inputs)==2 and self.name=='MUL':
+        elif len(self.inputs)==2 and (self.name=='MUL' or self.name=='MAXIMUM'):
             ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
             ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
             if scale_a is not None and scale_b is not None:
-                self.denomi = dati_dtype((scale_a*scale_b)**-1)
+                self.scale_y = 1.0
+            #    self.scale_a = scale_a
+            #    self.scale_b = scale_b
+                self.scale_a = 1.0
+                self.scale_b = 1.0
+                self.denomi = 1
+                #self.denomi = dati_dtype((scale_a*scale_b)**-1)
                 assert self.denomi > 0,"operator-{} Invalid Denominator {}(1/({}*{}))".format(self.nick,self.denomi,scale_a,scale_b)
 
     def Builtin_Options(self, verbose=False):
@@ -302,10 +312,18 @@ class operator():
         elif name == 'CALL':              self.unsupported()
         elif name == 'CUSTOM':            self.unsupported()
         elif name == 'MUL':               # 18 additional support for schema_v3.fbs
-            a = self.tensors[self.inputs[0]].data
             x = self.tensors[self.inputs[1]].data
-            #r = self.tensors[self.outputs[0]].data = 0.1 * x
-            r = self.tensors[self.outputs[0]].data = a * x
+            z = self.tensors[self.inputs[1]].zero_point
+            if _floating_infer:
+                a = self.tensors[self.inputs[0]].data
+                r = self.tensors[self.outputs[0]].data = a * x
+                print('MUL floating mode',a)
+            else:
+                a = self.tensors[self.inputs[0]].data
+                m = self.tensors[self.inputs[0]].max
+                r = np.int32(np.round(np.asarray(m,dtype=np.float32) * x))
+                self.tensors[self.outputs[0]].data = r
+                print('MUL Quantize mode',m,a)
             #R = self.tensors[self.outputs[0]].data = R.astype(np.int32)
             #assert _floating_infer,"Quantization inference now, `MUL` supports Floating inference only {}".format(a)
             return r
@@ -427,10 +445,10 @@ class tensor():
         assert type(img) == np.ndarray,"Input image type must be numpy.ndarray but got "+str(type(img))
         #assert img.dtype == self.type2np(self.type),"Cannot set tensor: expect {} but {}".format(self.type,img.dtype)
         self.buff = img
-        if verbose: print("set buff tensor range max/min/mean ={}/{}/{:.3f} type {}".format(img.max(), img.min(), img.mean(), img.dtype))
+        print("set buff tensor range max/min/mean ={}/{}/{:.3f} type {}".format(img.max(), img.min(), img.mean(), img.dtype))
         if self.type == 'UINT8':
             # 0 - 255 : range of dati
-            self.dati = img.astype(dati_dtype).copy() # Don't care zero_point of a input tensor!
+            self.dati = (img.astype(np.int32)-self.zero_point).astype(dati_dtype).copy() # Don't care zero_point of a input tensor!
         else:
             self.dati = img.copy()
         if verbose: print("set dati tensor range max/min/mean ={}/{}/{:.3f} type {}".format(self.dati.max(),self.dati.min(),self.dati.mean(),self.dati.dtype))
@@ -453,7 +471,7 @@ class tensor():
         print("  shape@tflite:{} shape@run:{}".format(self.shape, self.data.shape))
         print("  quantization:min/max/scale/zerop {} {} {} {}".format(self.min, self.max, self.scale,self.zero_point))
         print("  dati         min/max/mean        {} {} {:.3f}".format(self.dati.min(),self.dati.max(),self.dati.mean()))
-        print("  data         min/max/mean        {:.3f} {:.3f} {:.3f}".format(self.data.min(),self.data.max(),self.data.mean()))
+        print("  data         min/max/mean        {:.3f} {:.3f} {:.3f} {:.3f}".format(self.data.min(),self.data.max(),self.data.mean(),self.data.std()))
         assert cont,"Fatal Error occurrence at tensor"
 
 class graph:
@@ -559,6 +577,7 @@ class graph:
             pass
         if verbose: print("Allocatng Graph done.")
 
+    def f2x(self, f, shift): return np.int32(round(f*(1<<shift)))
     def invoke(self, verbose=False):
         global _floating_infer
         if verbose: print("----- INVOKING      -----")
@@ -572,7 +591,15 @@ class graph:
             tensor_output = self.tensors[operator.outputs[0]]
             if not _floating_infer and operator.denomi is not None:
                 if verbose: print(tensor_output.data.max(), operator.denomi)
-                tensor_output.data = dati_dtype( tensor_output.data / operator.denomi )   # To avoid dati_dtype overflow
+                factor = self.f2x(operator.scale_a*operator.scale_b/operator.scale_y,16)
+        # Found only car
+        #        tensor_output.data = tensor_output.data * operator.scale_a * operator.scale_b / operator.scale_y
+        #        tensor_output.data = np.int32(np.round(tensor_output.data))
+        # Found many objects, so precision of fixed point must be 16bits
+                tensor_output.data*= factor
+                tensor_output.data = tensor_output.data>>16
+                tensor_output.data = np.clip(tensor_output.data, np.int32(tensor_output.min), np.int32(tensor_output.max))
+                #tensor_output.data = dati_dtype( tensor_output.data / operator.denomi )   # To avoid dati_dtype overflow
             if verbose: operator.view()
         if verbose: print("----- DONE --------------")
         return ans
