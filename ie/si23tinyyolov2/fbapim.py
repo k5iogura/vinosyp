@@ -30,6 +30,8 @@ import tflite.BuiltinOperator
 import tflite.ActivationFunctionType
 
 import cv2
+from   flags import FLAGs
+flag = FLAGs()
 
 from   fbnnop import DEPTHWISE_CONV_2D, MAX_POOL_2D, CONV_2D, RELUx
 from   fbnnpp import *
@@ -49,6 +51,7 @@ if __name__=='__main__':
     floating_model = True
     img = preprocessing('dog.jpg', 416, 416)
     if args.quantization:
+        flag.floating_infer = False
         img *= 255
         img  = img.astype(np.uint8)
         floating_model = False
