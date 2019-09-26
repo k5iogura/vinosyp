@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, sys, re
+from   time import time
 import numpy as np
 from   pdb import set_trace
 from   inspect import getmembers
@@ -31,7 +32,7 @@ import tflite.ActivationFunctionType
 
 import cv2
 
-from   fbnnop import DEPTHWISE_CONV_2D, MAX_POOL_2D, CONV_2D, RELUx
+from   fbnnop import DEPTHWISE_CONV_2D, MAX_POOL_2D, CONV_2D, RELUx, MBQM
 #from   fbnnpp import *
 
 _floating_infer = False
@@ -51,6 +52,7 @@ def read_tflite_model(file):
 class operator():
     def __init__(self, operator_idx, operator_fb, operator_codes_fb, tensors):
         self.idx     = operator_idx
+        self.elapsed = 0.
         self.Operator= operator_fb
         self.tensors = tensors
         self.inputs  = list( operator_fb.InputsAsNumpy() )
@@ -77,6 +79,7 @@ class operator():
                 self.denomi = dati_dtype(((scale_a*scale_b)/scale_y)**-1)
                 denomi_ab = dati_dtype((scale_a*scale_b)**-1)
                 assert self.denomi > 0,"Invalid Denominator {}".format(self.denomi)
+                self.factor_fx  = self.f2x(self.scale_a*self.scale_b/self.scale_y, 16)
             if scale_c is not None:
                 denomiC     = dati_dtype((scale_c)**-1)
                 assert denomi_ab == denomiC,"Unsupports Denominator {} != {}".format(denomi_ab,denomiC)
@@ -92,7 +95,9 @@ class operator():
                 self.denomi = 1
                 #self.denomi = dati_dtype((scale_a*scale_b)**-1)
                 assert self.denomi > 0,"operator-{} Invalid Denominator {}(1/({}*{}))".format(self.nick,self.denomi,scale_a,scale_b)
+                self.factor_fx  = self.f2x(self.scale_a*self.scale_b/self.scale_y, 16)
 
+    def f2x(self, f, shift): return dati_dtype(round(f*(1<<shift)))
     def Builtin_Options(self, verbose=False):
         def funcno2name(funcno):
             if funcno == 0:return None
@@ -313,19 +318,15 @@ class operator():
         elif name == 'CUSTOM':            self.unsupported()
         elif name == 'MUL':               # 18 additional support for schema_v3.fbs
             x = self.tensors[self.inputs[1]].data
-            z = self.tensors[self.inputs[1]].zero_point
             if _floating_infer:
                 a = self.tensors[self.inputs[0]].data
                 r = self.tensors[self.outputs[0]].data = a * x
-                print('MUL floating mode',a)
             else:
-                a = self.tensors[self.inputs[0]].data
+                z = self.tensors[self.inputs[1]].zero_point
                 m = self.tensors[self.inputs[0]].max
+                x = x.astype(np.int32) - z
                 r = np.int32(np.round(np.asarray(m,dtype=np.float32) * x))
-                self.tensors[self.outputs[0]].data = r
-                print('MUL Quantize mode',m,a)
-            #R = self.tensors[self.outputs[0]].data = R.astype(np.int32)
-            #assert _floating_infer,"Quantization inference now, `MUL` supports Floating inference only {}".format(a)
+                self.tensors[self.outputs[0]].data = np.clip(r + z,0,255)
             return r
         elif name == 'MAXIMUM':           # 55 additional support for schema_v3.fbs
             x0= self.tensors[self.inputs[0]].data
@@ -448,7 +449,8 @@ class tensor():
         print("set buff tensor range max/min/mean ={}/{}/{:.3f} type {}".format(img.max(), img.min(), img.mean(), img.dtype))
         if self.type == 'UINT8':
             # 0 - 255 : range of dati
-            self.dati = (img.astype(np.int32)-self.zero_point).astype(dati_dtype).copy() # Don't care zero_point of a input tensor!
+            # self.dati = (img.astype(np.int32)-self.zero_point).astype(dati_dtype).copy() # Don't care zero_point of a input tensor!
+            self.dati = img.astype(np.int32).astype(dati_dtype).copy() # Care zero_point of a input tensor!
         else:
             self.dati = img.copy()
         if verbose: print("set dati tensor range max/min/mean ={}/{}/{:.3f} type {}".format(self.dati.max(),self.dati.min(),self.dati.mean(),self.dati.dtype))
@@ -582,25 +584,21 @@ class graph:
         global _floating_infer
         if verbose: print("----- INVOKING      -----")
         for order, operator_idx in enumerate(self.operate_order_list):
+            start = time()
             operator = self.operators[operator_idx]
             #for i in self.inputs:   # Check only
             #    input_ = self.tensors[i]
             #    assert tuple(input_.shape)==input_.data.shape,"Input shape mismatch {} {}".format(
             #            self.tensors[i].shape, self.tensors[i].data.shape)
             ans = operator.eval()
-            tensor_output = self.tensors[operator.outputs[0]]
-            if not _floating_infer and operator.denomi is not None:
-                if verbose: print(tensor_output.data.max(), operator.denomi)
-                factor = self.f2x(operator.scale_a*operator.scale_b/operator.scale_y,16)
-        # Found only car
-        #        tensor_output.data = tensor_output.data * operator.scale_a * operator.scale_b / operator.scale_y
-        #        tensor_output.data = np.int32(np.round(tensor_output.data))
-        # Found many objects, so precision of fixed point must be 16bits
-                tensor_output.data*= factor
-                tensor_output.data = tensor_output.data>>16
-                tensor_output.data = np.clip(tensor_output.data, np.int32(tensor_output.min), np.int32(tensor_output.max))
-                #tensor_output.data = dati_dtype( tensor_output.data / operator.denomi )   # To avoid dati_dtype overflow
             if verbose: operator.view()
+            operator.elapsed = (time()-start)
+        if not _floating_infer:
+            for output_idx in self.outputs:
+                graph_output = self.tensors[output_idx]
+                graph_output.data-= graph_output.zero_point
+                graph_output.data = graph_output.data.astype(graph_output.scale.dtype) * graph_output.scale
+                graph_output.data = graph_output.data.astype(dati_dtype)
         if verbose: print("----- DONE --------------")
         return ans
 
