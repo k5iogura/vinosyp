@@ -25,6 +25,14 @@ def RELUx(numpy_in, val=0, leaky=None):
         numpy_out[numpy_out < 0]   = 0
     return numpy_out
 
+# MultiplyByQuantizedMultiplier instead of tensorflow-lite reference code
+def MBQM(acc, multiplier_fx, shift):
+    f1 = (multiplier_fx * acc)
+    lsb= 1 if f1 & (1<<(shift - 1)) else 0
+    f1 = f1 >> shift
+    f1+=lsb
+    return f1
+
 def CONV_2D(operator, outputs, inputs, verbose=True):
     (padding, stride, strideh, _activation_) = operator.Builtin_Options()
     (tensor_idx_input, tensor_idx_filter, tensor_idx_bias) = inputs
@@ -41,6 +49,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     output_height, output_width = tensor_output.data.shape[1:3]
     
     D = tensor_input.data.copy()
+    if not _floating_infer: D -= tensor_input.zero_point
     # stride 1
     # output 1,14,14,64
     # input  1,14,14,32
@@ -93,11 +102,14 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             # patch_ 5,5,32
             conv = (np.sum(patch_ * filter_) + bias)              # for CONV as scaler
             #conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
+            if not _floating_infer: conv = MBQM(conv, operator.factor_fx, 16)
             temp_.append(conv)
         #temp_ 14*14
         output_.append(np.array(temp_).reshape(output_height, output_width)) # for CONV
     # output_ 14,14,64
     output_ = np.transpose(np.array(output_), (1,2,0)) # for CONV
+    if not _floating_infer: output_+= tensor_output.zero_point
+    if not _floating_infer: output_ = np.clip(output_, 0, np.int32(tensor_output.max))
     # output_ 1,14,14,64
     output_ = output_[np.newaxis, :]
     #output_ = np.asarray(temp_).reshape((1, output_height, output_width, -1)) # for DepthWiseConv
