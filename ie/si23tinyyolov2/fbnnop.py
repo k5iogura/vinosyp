@@ -3,6 +3,9 @@ import sys,os
 import math
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from pdb import *
+from flags import FLAGs
+flag = FLAGs()
+_floating_infer = False
 
 # NHWC : input  tensor shape   = ( batch,  h, w, in_ch )
 # NHWC : output tensor shape   = ( batch,  h, w, in_ch )
