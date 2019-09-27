@@ -1,4 +1,4 @@
-# Inference with tflite by numpy only python  
+# TinyYOLOv2 Inference with tflite by numpy only python  
 Python and numpy only script to infer dog and person jpg.  
 On both modes of floating and quantization, its accuracy is no bad, but **too slow**.  
 
