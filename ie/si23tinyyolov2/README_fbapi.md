@@ -138,6 +138,10 @@ realize from Quantization
 ```
 
 ![](./result_qin32.jpg)  
-Huum,,,
+Huum,,, Person? Chair?  
+
+More example inference for person.jpg.  
+![](../result_qin32_person.jpg)  
+No bad.  
 
 **Sep.27, 2019**
