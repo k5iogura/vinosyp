@@ -134,9 +134,10 @@ B-Box 3 : [[379, 297, 420, 438], 0.01913939351729995, 'chair']
 B-Box 4 : [[254, 60, 289, 99], 0.017940678323452912, 'car']
 realize from Quantization
 
- $ fh result.jpg
+ $ feh result.jpg
 ```
 
 ![](./result_qin32.jpg)  
+Huum,,,
 
 **Sep.27, 2019**
