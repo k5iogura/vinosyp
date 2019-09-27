@@ -33,15 +33,11 @@ import tflite.ActivationFunctionType
 import cv2
 
 from   fbnnop import DEPTHWISE_CONV_2D, MAX_POOL_2D, CONV_2D, RELUx, MBQM
+from   flags  import flags
 #from   fbnnpp import *
 
-_floating_infer = False
+#_floating_infer = False
 dati_dtype      = np.int32
-
-def floating_on(verbose=False):
-    global _floating_infer
-    _floating_infer = True
-    if verbose: print("floating inference On {}".format(_floating_infer))
 
 def read_tflite_model(file):
     buf = open(file, "rb").read()
@@ -227,6 +223,7 @@ class operator():
             tensor.data = np.minimum(tensor.data, tensor.min)
 
     def eval(self):
+        _floating_infer = flags.floating_infer
         name = self.name
         if   name == 'ADD':     # Untested yet
             r = self.tensors[0].data
@@ -346,7 +343,7 @@ class operator():
 
 class tensor():
     def __init__(self, tensor_idx, tensor_fb, buffers_fb):
-        global _floating_infer
+        _floating_infer = flags.floating_infer
         self.idx    = tensor_idx
         self.Tensor = tensor_fb
         self.shape  = list(tensor_fb.ShapeAsNumpy())
@@ -441,7 +438,7 @@ class tensor():
     #   reference : https://github.com/raymond-li/tflite_tensor_outputter/blob/master/tflite_tensor_outputter.py
     #
     def set(self, img, verbose=False):
-        global _floating_infer
+        _floating_infer = flags.floating_infer
         # If input-type QUINT8 and inference-typ FLOAT then converter generates DEQUANT operator
         assert type(img) == np.ndarray,"Input image type must be numpy.ndarray but got "+str(type(img))
         #assert img.dtype == self.type2np(self.type),"Cannot set tensor: expect {} but {}".format(self.type,img.dtype)
@@ -477,8 +474,7 @@ class tensor():
         assert cont,"Fatal Error occurrence at tensor"
 
 class graph:
-    def __init__(self, tflite='mnist.tflite', floating=False, verbose=False):
-        if floating: floating_on(verbose=verbose)
+    def __init__(self, tflite='mnist.tflite', verbose=False):
         self.model    = read_tflite_model(tflite)
         self.subgraph = self.model.Subgraphs(0)
         self.inputs   = list(self.subgraph.InputsAsNumpy())
@@ -581,7 +577,7 @@ class graph:
 
     def f2x(self, f, shift): return np.int32(round(f*(1<<shift)))
     def invoke(self, verbose=False):
-        global _floating_infer
+        _floating_infer = flags.floating_infer
         if verbose: print("----- INVOKING      -----")
         for order, operator_idx in enumerate(self.operate_order_list):
             start = time()
@@ -616,7 +612,7 @@ if __name__=='__main__':
         print("Inference with UINT8 Quantization")
     else:
         print("Inference with Default type")
-        _floating_infer = True
+        flags.floating_infer = False
     if args.int16:
         dati_dtype = np.int16
 

@@ -3,9 +3,7 @@ import sys,os
 import math
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from pdb import *
-from flags import FLAGs
-flag = FLAGs()
-_floating_infer = False
+from flags import flags
 
 # NHWC : input  tensor shape   = ( batch,  h, w, in_ch )
 # NHWC : output tensor shape   = ( batch,  h, w, in_ch )
@@ -37,6 +35,7 @@ def MBQM(acc, multiplier_fx, shift):
     return f1
 
 def CONV_2D(operator, outputs, inputs, verbose=True):
+    _floating_infer = flags.floating_infer
     (padding, stride, strideh, _activation_) = operator.Builtin_Options()
     (tensor_idx_input, tensor_idx_filter, tensor_idx_bias) = inputs
     tensor_input     = operator.tensors[tensor_idx_input]
