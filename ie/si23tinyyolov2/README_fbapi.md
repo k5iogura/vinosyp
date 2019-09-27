@@ -1,4 +1,6 @@
 # Inference with tflite by numpy only python  
+Python and numpy only script to infer dog and person jpg.  
+When quantization mode, its accuracy is no bad, but **too slow**.  
 
 ### Requirements  
 tensorflow  v1.11 or later to convert pb to tflite format  
@@ -141,6 +143,9 @@ realize from Quantization
 Huum,,, Person? Chair?  
 
 More example inference for person.jpg.  
+```
+ $ python fbapim.py -t yq.tflite -v -q -i person.jpg
+```
 ![](./result_qin32_person.jpg)  
 No bad.  
 
