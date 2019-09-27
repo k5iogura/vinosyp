@@ -589,6 +589,7 @@ class graph:
             ans = operator.eval()
             if verbose: operator.view()
             operator.elapsed = (time()-start)
+            print(operator.name,operator.elapsed)
         if not _floating_infer:
             for output_idx in self.outputs:
                 graph_output = self.tensors[output_idx]

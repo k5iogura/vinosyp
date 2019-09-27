@@ -168,9 +168,9 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,inpu
   # Sort the B-boxes by their final score
   thresholded_predictions.sort(key=lambda tup: tup[1],reverse=True)
 
-  print('Printing {} B-boxes survived after score thresholding:'.format(len(thresholded_predictions)))
-  for i in range(len(thresholded_predictions)):
-    print('B-Box {} : {}'.format(i+1,thresholded_predictions[i]))
+#  print('Printing {} B-boxes survived after score thresholding:'.format(len(thresholded_predictions)))
+#  for i in range(len(thresholded_predictions)):
+#    print('B-Box {} : {}'.format(i+1,thresholded_predictions[i]))
 
   # Non maximal suppression
   print('Non maximal suppression with iou threshold = {}'.format(iou_threshold))
@@ -178,8 +178,8 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,inpu
 
   # Print survived b-boxes
   print('Printing the {} B-Boxes survived after non maximal suppression:'.format(len(nms_predictions)))
-  for i in range(len(nms_predictions)):
-    print('B-Box {} : {}'.format(i+1,nms_predictions[i]))
+#  for i in range(len(nms_predictions)):
+#    print('B-Box {} : {}'.format(i+1,nms_predictions[i]))
 
   # Draw final B-Boxes and label on input image
   for i in range(len(nms_predictions)):
