@@ -9,10 +9,12 @@ flatbuffers to parse tflite format
 - **Create y.pb(include YOLOv2-Tiny network and weights)**  
 - **Convert to frozen.pb**  
 - **Prepare tflite flatbuffers python modules**  
-- **Run inference with y.tflite.**  
+- **Run inference with y*.tflite.** y.tflite for floating and yq.tflite for quantized int32  
 
 schema_v3+MUL+MAXIMUM.fbs is extended for **MUL** and **MAXIMUM** as Builtin-Operator.  
 MUL is No.18, MAXIMUM is No.55 used in tensorflow-lite and net.y uses these Builtin-Operator to represent **leaky-relu**.  
+
+## Floating inference mode  
 
 ```
  $ wget https://pjreddie.com/media/files/yolov2-tiny-voc.weights
@@ -32,7 +34,7 @@ MUL is No.18, MAXIMUM is No.55 used in tensorflow-lite and net.y uses these Buil
  $ ls -d tflite
    tflite/
    
- $ python fbapi.py -v
+ $ python fbapim.py -v -t y.tflite
  
  Creating tensors structure ..
  Creating operators structure ..
@@ -89,4 +91,52 @@ B-Box 3 : [[79, 118, 323, 305], 0.49625845924786466, 'bicycle']
 
 ![](./result.jpg)
 
-**Sep.10, 2019**
+## Quantized int32 inference mode  
+```
+ $ tflite_convert \
+--output_file=yq.tflite \
+--graph_def_file=y.pb \
+--inference_type=QUANTIZED_UINT8 \
+--inference_input_type=QUANTIZED_UINT8 \
+--input_arrays=input/Placeholder \
+--std_dev_values 127 \
+--mean_values 127 \
+--default_ranges_min=-50 \
+--default_ranges_max=255 \
+--output_array="xoutput,add,mul,Maximum,MaxPool,add_1,mul_1,Maximum_1,MaxPool_1,add_2,mul_2,Maximum_2,MaxPool_2,add_3,mul_3,Maximum_3,MaxPool_3,add_4,mul_4,Maximum_4,MaxPool_4,add_5,mul_5,Maximum_5,MaxPool_5,add_6,mul_6,Maximum_6,add_7,mul_7,Maximum_7"
+
+ $ python fbapim.py -t yq.tflite -v -q
+False
+Creating tensors structure ..
+convert tensor-0   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-1   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-2   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-3   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-4   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-5   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-6   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-7   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-8   INT32 to float by self.zero_point 0 dati offset by self.zero_point    0
+convert tensor-9   UINT8 to float by self.min  -50.235 dati offset by self.zero_point   42
+convert tensor-10  UINT8 to float by self.min  -50.235 dati offset by self.zero_point   42
+...
+B-Box 8 : [[273, 9, 383, 150], 0.017977221614363204, 'car']
+B-Box 9 : [[153, 30, 454, 193], 0.017961899410691113, 'car']
+B-Box 10 : [[254, 60, 289, 99], 0.017940678323452912, 'car']
+B-Box 11 : [[153, -1, 454, 161], 0.01790726810551899, 'car']
+B-Box 12 : [[230, 60, 264, 99], 0.017792807467671163, 'car']
+B-Box 13 : [[-4, 34, 36, 175], 0.017218744865430388, 'person']
+Non maximal suppression with iou threshold = 0.025
+Printing the 4 B-Boxes survived after non maximal suppression:
+B-Box 1 : [[77, 1, 289, 365], 0.10161927589022982, 'motorbike']
+B-Box 2 : [[-1, 60, 33, 99], 0.03105784164354563, 'person']
+B-Box 3 : [[379, 297, 420, 438], 0.01913939351729995, 'chair']
+B-Box 4 : [[254, 60, 289, 99], 0.017940678323452912, 'car']
+realize from Quantization
+
+ $ fh result.jpg
+```
+
+![](./result_qin32.jpg)  
+
+**Sep.27, 2019**
