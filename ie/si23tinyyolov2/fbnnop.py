@@ -108,22 +108,33 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
 
     # FF 64,14*14,5,5,32
     # Q  64,14*14,5,5,32
-    if output_ch<512:
-        FF = []
-        for i in range(output_ch):
-            temp_ = []
-            for j in range(output_height*output_width):
-                temp_.append(F[i][np.newaxis,:])
-            FF.append(np.concatenate(temp_, axis=0)[np.newaxis,:])
-        FF= np.concatenate(FF,axis=0)
-        Q = FF.copy()
-        for i in range(output_ch):
-            Q[i] *= patches
-        Q = np.sum(Q, axis=(2,3,4)).reshape(-1, output_height, output_width)
-        for i in range(output_ch):
-            Q[i] += B[i]
-        output_ = mbqm(Q, operator.factor_fx, 16) if not _floating_infer else Q
+  #  if True:
+    if output_ch<=512:
+        if output_ch>=256:
+            FF = []
+            for i in range(output_ch):
+                temp_ = []
+                for j in range(output_height*output_width):
+                    temp_.append(F[i][np.newaxis,:])
+                FF.append(np.concatenate(temp_, axis=0)[np.newaxis,:])
+            FF= np.concatenate(FF,axis=0)
 
+            Q = FF.copy()
+            for i in range(output_ch):
+                Q[i] *= patches
+            Q = np.sum(Q, axis=(2,3,4)).reshape(-1, output_height, output_width)
+            for i in range(output_ch):
+                Q[i] += B[i]
+            output_ = mbqm(Q, operator.factor_fx, 16) if not _floating_infer else Q
+        else:
+            sl= list(F.shape)
+            sl.insert(1,1)
+            st = tuple(sl)
+            FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+            tt = patches[np.newaxis,:] * FX
+            tt = np.sum(tt, axis=(2,3,4)).reshape(-1, output_height, output_width)
+            tt+= B[:,np.newaxis,np.newaxis]
+            output_ = mbqm(tt, operator.factor_fx, 16) if not _floating_infer else tt
     else:
         # temp_ = []  # for DepthWiseConv
         for filter_, bias in zip(F, B):
