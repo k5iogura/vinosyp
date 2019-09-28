@@ -122,7 +122,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
         Q = np.sum(Q, axis=(2,3,4)).reshape(-1, output_height, output_width)
         for i in range(output_ch):
             Q[i] += B[i]
-        output_ = mbqm(Q, operator.factor_fx, 16)
+        output_ = mbqm(Q, operator.factor_fx, 16) if not _floating_infer else Q
 
     else:
         # temp_ = []  # for DepthWiseConv

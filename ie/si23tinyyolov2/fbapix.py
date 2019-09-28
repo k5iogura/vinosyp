@@ -578,6 +578,7 @@ class graph:
     def f2x(self, f, shift): return np.int32(round(f*(1<<shift)))
     def invoke(self, verbose=False):
         _floating_infer = flags.floating_infer
+        elapsed = 0.
         if verbose: print("----- INVOKING      -----")
         for order, operator_idx in enumerate(self.operate_order_list):
             start = time()
@@ -589,7 +590,8 @@ class graph:
             ans = operator.eval()
             if verbose: operator.view()
             operator.elapsed = (time()-start)
-            print(operator.name,operator.elapsed)
+            elapsed += operator.elapsed
+            print("{:16s} {:.6f}/{:6f}".format(operator.name,operator.elapsed,elapsed))
         if not _floating_infer:
             for output_idx in self.outputs:
                 graph_output = self.tensors[output_idx]
