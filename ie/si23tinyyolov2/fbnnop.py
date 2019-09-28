@@ -109,8 +109,8 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     # FF 64,14*14,5,5,32
     # Q  64,14*14,5,5,32
   #  if True:
-    if output_ch<=512:
-        if output_ch>=256:
+    if output_ch<512:
+        if False:
             FF = []
             for i in range(output_ch):
                 temp_ = []
