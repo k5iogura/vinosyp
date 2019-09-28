@@ -130,7 +130,8 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             sl= list(F.shape)
             sl.insert(1,1)
             st = tuple(sl)
-            FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+            #FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+            FX = F.reshape(st)
             tt = patches[np.newaxis,:] * FX
             tt = np.sum(tt, axis=(2,3,4)).reshape(-1, output_height, output_width)
             tt+= B[:,np.newaxis,np.newaxis]

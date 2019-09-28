@@ -93,6 +93,16 @@ class operator():
                 assert self.denomi > 0,"operator-{} Invalid Denominator {}(1/({}*{}))".format(self.nick,self.denomi,scale_a,scale_b)
                 self.factor_fx  = self.f2x(self.scale_a*self.scale_b/self.scale_y, 16)
 
+        if self.name == 'CONV_2D':
+            F = self.tensors[self.inputs[1]].data
+            output_ch = F.shape[0]
+            output_height, output_width = self.tensors[self.outputs[0]].data.shape[1:3]
+            sl= list(F.shape)
+            sl.insert(1,1)
+            st = tuple(sl)
+            if output_ch<512:self.FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+            print(st,output_ch, output_height,output_width,output_height*output_width)
+
     def f2x(self, f, shift): return dati_dtype(round(f*(1<<shift)))
     def Builtin_Options(self, verbose=False):
         def funcno2name(funcno):
@@ -591,7 +601,10 @@ class graph:
             if verbose: operator.view()
             operator.elapsed = (time()-start)
             elapsed += operator.elapsed
-            print("{:16s} {:.6f}/{:6f}".format(operator.name,operator.elapsed,elapsed))
+            output_shape = self.tensors[operator.outputs[0]].data.shape
+            sys.stdout.write("{:16s} {:.6f}/{:6f} {} <= ".format(operator.name, operator.elapsed, elapsed, output_shape))
+            for input_idx in operator.inputs: sys.stdout.write("{} ".format(self.tensors[input_idx].data.shape))
+            sys.stdout.write("\n")
         if not _floating_infer:
             for output_idx in self.outputs:
                 graph_output = self.tensors[output_idx]
