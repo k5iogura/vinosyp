@@ -108,7 +108,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
 
     # FF 64,14*14,5,5,32
     # Q  64,14*14,5,5,32
-  #  if True:
+  #  if False:
     if output_ch<512:
         if False:
             FF = []
@@ -127,10 +127,14 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
                 Q[i] += B[i]
             output_ = mbqm(Q, operator.factor_fx, 16) if not _floating_infer else Q
         else:
+            # FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+            #
+            # patches  1, 14*14, 5, 5, 32
+            # FX      64,     1, 5, 5, 32
+            # tt      64, 14*14, 5, 5, 32   by broadcast
             sl= list(F.shape)
             sl.insert(1,1)
             st = tuple(sl)
-            #FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
             FX = F.reshape(st)
             tt = patches[np.newaxis,:] * FX
             tt = np.sum(tt, axis=(2,3,4)).reshape(-1, output_height, output_width)
