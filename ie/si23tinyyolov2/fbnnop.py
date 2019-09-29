@@ -142,23 +142,36 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             output_ = mbqm(tt, operator.factor_fx, 16) if not _floating_infer else tt
     else:
         # temp_ = []  # for DepthWiseConv
-        # outputX = []
+        outputX = []
         if True:
             if not _floating_infer:
                 F       = F.astype(np.int16)
                 patches = patches.astype(np.int16)
-            for filter_, bias in zip(F, B):
-                # Fx          1,5,5,32
-                # patches 14*14,5,5,32
-                # tt      14*14,5,5,32
-                # tsum(f) 14*14
-                Fx    = filter_[np.newaxis,:]
-                tt    = patches * Fx
-                tsum  = np.sum(tt, axis=(1,2,3))
-                tsum += bias
-                tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
-                output_.append(tsum.reshape(output_height, output_width))
-            output_ = np.array(output_)
+            if output_ch < 256:
+                for filter_, bias in zip(F, B):
+                    # Fx          1,5,5,32
+                    # patches 14*14,5,5,32
+                    # tt      14*14,5,5,32
+                    # tsum(f) 14*14
+                    Fx    = filter_[np.newaxis,:]
+                    tt    = patches * Fx
+                    tsum  = np.sum(tt, axis=(1,2,3))
+                    tsum += bias
+                    tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
+                    output_.append(tsum.reshape(output_height, output_width))
+                output_ = np.array(output_)
+            else:
+                for patche_ in patches:
+                    # patche_  1,5,5,32
+                    # F       64,5,5,32
+                    # tsum    64
+                    tt = F * patche_[np.newaxis,:]
+                    tsum  = np.sum(tt, axis=(1,2,3))
+                    tsum += B
+                    tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
+                    output_.append(tsum)
+                output_ = np.array(output_).reshape(output_height, output_width, -1)
+                output_ = np.transpose(output_,(2,0,1))
         else:
             for filter_, bias in zip(F, B):
                 temp_ = []  # for CONV
