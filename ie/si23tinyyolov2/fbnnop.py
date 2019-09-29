@@ -144,13 +144,16 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
         # temp_ = []  # for DepthWiseConv
         # outputX = []
         if True:
+            if not _floating_infer:
+                F       = F.astype(np.int16)
+                patches = patches.astype(np.int16)
             for filter_, bias in zip(F, B):
                 # Fx          1,5,5,32
                 # patches 14*14,5,5,32
                 # tt      14*14,5,5,32
                 # tsum(f) 14*14
                 Fx    = filter_[np.newaxis,:]
-                tt    = patches*Fx
+                tt    = patches * Fx
                 tsum  = np.sum(tt, axis=(1,2,3))
                 tsum += bias
                 tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
