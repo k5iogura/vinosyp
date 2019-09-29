@@ -178,8 +178,8 @@ def postprocessing(predictions,input_img_path,score_threshold,iou_threshold,inpu
 
   # Print survived b-boxes
   print('Printing the {} B-Boxes survived after non maximal suppression:'.format(len(nms_predictions)))
-#  for i in range(len(nms_predictions)):
-#    print('B-Box {} : {}'.format(i+1,nms_predictions[i]))
+  for i in range(len(nms_predictions)):
+    print('B-Box {} : {}'.format(i+1,nms_predictions[i]))
 
   # Draw final B-Boxes and label on input image
   for i in range(len(nms_predictions)):

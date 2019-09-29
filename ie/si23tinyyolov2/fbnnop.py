@@ -108,8 +108,8 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
 
     # FF 64,14*14,5,5,32
     # Q  64,14*14,5,5,32
-  #  if False:
-    if output_ch<512:
+    if False:
+  #  if output_ch<512:
         if False:
             FF = []
             for i in range(output_ch):
@@ -142,19 +142,33 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
             output_ = mbqm(tt, operator.factor_fx, 16) if not _floating_infer else tt
     else:
         # temp_ = []  # for DepthWiseConv
-        for filter_, bias in zip(F, B):
-            temp_ = []  # for CONV
-            # filter_ 5,5,32
-            for patch_idx, patch_ in enumerate(patches):
-                # patch_ 5,5,32
-                conv = (np.sum(patch_ * filter_) + bias)              # for CONV as scaler
-                #conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
-                if not _floating_infer: conv = MBQM(conv, operator.factor_fx, 16)
-                temp_.append(conv)
-            #temp_ 14*14
-            output_.append(np.array(temp_).reshape(output_height, output_width)) # for CONV
-        output_ = np.array(output_)
-    # output_ 14,14,64
+        # outputX = []
+        if True:
+            for filter_, bias in zip(F, B):
+                # Fx          1,5,5,32
+                # patches 14*14,5,5,32
+                # tt      14*14,5,5,32
+                # tsum(f) 14*14
+                Fx    = filter_[np.newaxis,:]
+                tt    = patches*Fx
+                tsum  = np.sum(tt, axis=(1,2,3))
+                tsum += bias
+                tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
+                output_.append(tsum.reshape(output_height, output_width))
+            output_ = np.array(output_)
+        else:
+            for filter_, bias in zip(F, B):
+                temp_ = []  # for CONV
+                for patch_idx, patch_ in enumerate(patches):
+                    # patch_ 5,5,32
+                    conv = (np.sum(patch_ * filter_) + bias)              # for CONV as scaler
+                    #conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
+                    if not _floating_infer: conv = MBQM(conv, operator.factor_fx, 16)
+                    temp_.append(conv)
+                #temp_ 14*14
+                output_.append(np.array(temp_).reshape(output_height, output_width)) # for CONV
+            output_ = np.array(output_)
+    # output_ 64,14,14
     output_ = np.transpose(output_, (1,2,0)) # for CONV
     if not _floating_infer: output_+= tensor_output.zero_point
     if not _floating_infer: output_ = np.clip(output_, 0, np.int32(tensor_output.max))
