@@ -61,7 +61,7 @@ predictions = g.invoke(verbose=False)
 if args.quantization:
     predictions = g.tensors[g.outputs[0]].data
     #result_img = postprocessing(predictions,args.image,0.015,0.025,416,416)
-    result_img = postprocessing(predictions,args.image,0.090,0.125,416,416)
+    result_img = postprocessing(predictions,args.image,0.110,0.125,416,416)
     print("realize from Quantization")
 else:
     predictions = g.tensors[g.outputs[0]].data
