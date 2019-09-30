@@ -28,6 +28,7 @@ def RELUx(numpy_in, val=0, leaky=None):
 
 # MultiplyByQuantizedMultiplier instead of tensorflow-lite reference code
 def MBQM(acc, multiplier_fx, shift):
+    set_trace()
     f1 = (multiplier_fx * acc)
     lsb= 1 if f1 & (1<<(shift - 1)) else 0
     f1 = f1 >> shift
@@ -187,7 +188,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     # output_ 64,14,14
     output_ = np.transpose(output_, (1,2,0)) # for CONV
     if not _floating_infer: output_+= tensor_output.zero_point
-    if not _floating_infer: output_ = np.clip(output_, 0, np.int32(tensor_output.max))
+    if not _floating_infer: output_ = np.clip(output_, 0, np.iinfo(np.uint8).max)
     # output_ 1,14,14,64
     output_ = output_[np.newaxis, :]
     #output_ = np.asarray(temp_).reshape((1, output_height, output_width, -1)) # for DepthWiseConv
@@ -202,6 +203,7 @@ def CONV_2D(operator, outputs, inputs, verbose=True):
     return output_
 
 def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
+    _floating_infer = flags.floating_infer
     (padding, stride, strideh, _activation_,depth_multiplier) = operator.Builtin_Options()
     (tensor_idx_input, tensor_idx_filter, tensor_idx_bias)    = inputs
     tensor_input     = operator.tensors[tensor_idx_input]
@@ -217,6 +219,7 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
     output_height, output_width = tensor_output.data.shape[1:3]
     
     D = tensor_input.data.copy()
+    if not _floating_infer: D -= tensor_input.zero_point
     # <by depth_multiplier>
     # output 1,28,28,32
     # input  1,28,28,1  (depth_multiplier==32)
@@ -267,19 +270,40 @@ def DEPTHWISE_CONV_2D(operator, outputs, inputs, verbose=True):
             patches.append(apatch)
     # patches N,5,5,32
     patches = np.concatenate(patches, axis=0)
-    temp_ = []  # for DepthWiseConv
-    for filter_, bias in zip(F, B):
-        # temp_ = []  # for CONV
-        # filter_ 5,5,32
-        for patch_idx, patch_ in enumerate(patches):
-            # patch_ 5,5,32
-            #conv = (np.sum(patch_ * filter_) + bias)              # for CONV
-            conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
-            temp_.append(conv)
-        # output_.append(np.array(temp_).reshape(int(output_height), int(output_width))) # for CONV
-    #output_ = np.transpose(np.array(output_), (1,2,0)) # for CONV
-    output_ = np.asarray(temp_).reshape((1, output_height, output_width, -1))
-    if _activation_ is not None:
+    if not _floating_infer:
+        F       = F.astype(np.int16)
+        patches = patches.astype(np.int16)
+
+    if True:
+        for filter_, bias in zip(F, B):
+            # Fx          1,5,5,32
+            # patches 28*28,5,5,32
+            # tt      28*28,5,5,32
+            # tsum(f) 28*28,32
+            Fx    = filter_[np.newaxis,:]
+            tt    = patches * Fx
+            tsum  = np.sum(tt, axis=(1,2))
+            tsum += bias
+            tsum = mbqm(tsum, operator.factor_fx, 16) if not _floating_infer else tsum
+            output_.append(tsum.reshape(output_height, output_width,-1))
+        output_ = np.array(output_)
+    else:
+        temp_ = []  # for DepthWiseConv
+        for filter_, bias in zip(F, B):
+            # temp_ = []  # for CONV
+            # filter_ 5,5,32
+            for patch_idx, patch_ in enumerate(patches):
+                # patch_ 5,5,32
+                #conv = (np.sum(patch_ * filter_) + bias)              # for CONV
+                conv = (np.sum(patch_ * filter_, axis=(0,1)) + bias)   # for DepthWiseConv
+                if not _floating_infer: conv = mbqm(conv, operator.factor_fx, 16)
+                temp_.append(conv)
+            # output_.append(np.array(temp_).reshape(int(output_height), int(output_width))) # for CONV
+        #output_ = np.transpose(np.array(output_), (1,2,0)) # for CONV
+        output_ = np.asarray(temp_).reshape((1, output_height, output_width, -1))
+    if not _floating_infer: output_+= tensor_output.zero_point
+    if not _floating_infer: output_ = np.clip(output_, 0, np.iinfo(np.uint8).max)
+    elif _activation_ is not None:
         if   "RELU"  in _activation_: output_ = RELUx(output_, 0)
         elif "RELU1" in _activation_: output_ = RELUx(output_, 1)
         elif "RELU6" in _activation_: output_ = RELUx(output_, 6)

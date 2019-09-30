@@ -76,9 +76,9 @@ class operator():
                 denomi_ab = dati_dtype((scale_a*scale_b)**-1)
                 assert self.denomi > 0,"Invalid Denominator {}".format(self.denomi)
                 self.factor_fx  = self.f2x(self.scale_a*self.scale_b/self.scale_y, 16)
-            if scale_c is not None:
-                denomiC     = dati_dtype((scale_c)**-1)
-                assert denomi_ab == denomiC,"Unsupports Denominator {} != {}".format(denomi_ab,denomiC)
+    #        if scale_c is not None:
+    #            denomiC     = dati_dtype((scale_c)**-1)
+    #            assert denomi_ab == denomiC,"Unsupports Denominator {} != {}".format(denomi_ab,denomiC)
         elif len(self.inputs)==2 and (self.name=='MUL' or self.name=='MAXIMUM'):
             ( scale_a, max_a, min_a, zero_point_a ) = self.tensors[self.inputs[0]].Quantization_Options()
             ( scale_b, max_b, min_b, zero_point_b ) = self.tensors[self.inputs[1]].Quantization_Options()
@@ -93,15 +93,15 @@ class operator():
                 assert self.denomi > 0,"operator-{} Invalid Denominator {}(1/({}*{}))".format(self.nick,self.denomi,scale_a,scale_b)
                 self.factor_fx  = self.f2x(self.scale_a*self.scale_b/self.scale_y, 16)
 
-        if self.name == 'CONV_2D':
-            F = self.tensors[self.inputs[1]].data
-            output_ch = F.shape[0]
-            output_height, output_width = self.tensors[self.outputs[0]].data.shape[1:3]
-            sl= list(F.shape)
-            sl.insert(1,1)
-            st = tuple(sl)
-            if output_ch<512:self.FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
-            print(st,output_ch, output_height,output_width,output_height*output_width)
+    #    if self.name == 'CONV_2D':
+    #        F = self.tensors[self.inputs[1]].data
+    #        output_ch = F.shape[0]
+    #        output_height, output_width = self.tensors[self.outputs[0]].data.shape[1:3]
+    #        sl= list(F.shape)
+    #        sl.insert(1,1)
+    #        st = tuple(sl)
+    #        if output_ch<512:self.FX = np.tile(F.reshape(st),(1,output_height*output_width,1,1,1))
+    #        print(st,output_ch, output_height,output_width,output_height*output_width)
 
     def f2x(self, f, shift): return dati_dtype(round(f*(1<<shift)))
     def Builtin_Options(self, verbose=False):
@@ -173,6 +173,12 @@ class operator():
             _activation_ = funcno2name(_activation_)
             if verbose: print("Pool2DOptions")
             return (padding, stridew, strideh, _activation_,filterwidth, filterheight)
+        elif option_type == tflite.BuiltinOptions.BuiltinOptions.ConcatenationOptions:
+            opt = tflite.ConcatenationOptions.ConcatenationOptions()
+            opt.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
+            axis = opt.Axis()
+            if verbose: print("ConcatenationOptions",axis)
+            return axis
         else:
             return ()
 
@@ -245,7 +251,7 @@ class operator():
             return r
         elif name == 'AVERAGE_POOL_2D':   self.unsupported()
         elif name == 'CONCATENATION':
-            _axis  = self.Builtin_Options()
+            _axis_  = self.Builtin_Options()
             if _axis_ is None:self.view('Invalid conatenation axis',cont=False)
             temp_ = []
             for t in self.inputs:
@@ -360,7 +366,7 @@ class tensor():
         self.type   = self.TensorType2String(tensor_fb.Type())
         self.name   = tensor_fb.Name()
         self.buffer = tensor_fb.Buffer()
-        self.warn_convert = 1
+        self.show_info = True
 
         assert self.buffer>=0,"Invalid tensor.Buffer() {}".format(self.buffer)
         if self.type   == 'FLOAT32': dtype_string = 'f4'
@@ -451,9 +457,10 @@ class tensor():
         _floating_infer = flags.floating_infer
         # If input-type QUINT8 and inference-typ FLOAT then converter generates DEQUANT operator
         assert type(img) == np.ndarray,"Input image type must be numpy.ndarray but got "+str(type(img))
-        #assert img.dtype == self.type2np(self.type),"Cannot set tensor: expect {} but {}".format(self.type,img.dtype)
+        assert img.dtype == self.type2np(self.type),"Cannot set tensor: expect {} but {}".format(self.type,img.dtype)
         self.buff = img
-        print("set buff tensor range max/min/mean ={}/{}/{:.3f} type {}".format(img.max(), img.min(), img.mean(), img.dtype))
+        if self.show_info:print("set buff tensor range max/min/mean ={}/{}/{:.3f} type {}".format(img.max(), img.min(), img.mean(), img.dtype))
+        self.show_info = False
         if self.type == 'UINT8':
             # 0 - 255 : range of dati
             # self.dati = (img.astype(np.int32)-self.zero_point).astype(dati_dtype).copy() # Don't care zero_point of a input tensor!
@@ -490,6 +497,7 @@ class graph:
         self.inputs   = list(self.subgraph.InputsAsNumpy())
         self.outputs  = list(self.subgraph.OutputsAsNumpy())
         buffers_fb    = [ self.model.Buffers(b) for b in range(self.model.BuffersLength()) ]
+        self.show_timer = True
 
         if verbose: print("Creating tensors structure ..")
         self.tensors  = []
@@ -602,15 +610,17 @@ class graph:
             operator.elapsed = (time()-start)
             elapsed += operator.elapsed
             output_shape = self.tensors[operator.outputs[0]].data.shape
-            sys.stdout.write("{:16s} {:.6f}/{:6f} {} <= ".format(operator.name, operator.elapsed, elapsed, output_shape))
-            for input_idx in operator.inputs: sys.stdout.write("{} ".format(self.tensors[input_idx].data.shape))
-            sys.stdout.write("\n")
+            if self.show_timer:
+                sys.stdout.write("{:18s} {:.6f}/{:6f} {} <= ".format(operator.name, operator.elapsed, elapsed, output_shape))
+                for input_idx in operator.inputs: sys.stdout.write("{} ".format(self.tensors[input_idx].data.shape))
+                sys.stdout.write("\n")
         if not _floating_infer:
             for output_idx in self.outputs:
                 graph_output = self.tensors[output_idx]
                 graph_output.data-= graph_output.zero_point
                 graph_output.data = graph_output.data.astype(graph_output.scale.dtype) * graph_output.scale
                 graph_output.data = graph_output.data.astype(dati_dtype)
+        self.show_timer=False
         if verbose: print("----- DONE --------------")
         return ans
 
