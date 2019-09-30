@@ -37,9 +37,9 @@ def MBQM(acc, multiplier_fx, shift):
 def mbqm(acc, multiplier_fx, shift):
     f1 = (multiplier_fx * acc)
     # 1 or 0 to get round with ndarray
-    #lsb= (f1 & (1<<(shift - 1)))>>(shift - 1)
+    lsb= (f1 & (1<<(shift - 1)))>>(shift - 1)
     f1 = f1 >> shift
-    #f1+=lsb
+    f1+=lsb
     return f1
 
 def CONV_2D(operator, outputs, inputs, verbose=True):
